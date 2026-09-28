@@ -131,3 +131,20 @@ Cinco capturas de tela e o texto da Análise do sistema (23:26): modal "Ciência
 
 ## Verificações v19.9.1
 Sintaxe 42 blocos / 0 erros; cruzamento de chamadas e IDs sem faltas; manifesto 32/32 + config; Playwright **54 OK / 0 falhas** (12 novas); a suíte na v19.9 reproduz o defeito (46 OK / 8 falhas na v19.9, e as 8 falhas são exatamente as verificações novas: o modal de ciência lista "Conclusão e conduta final ausentes" como item marcável, o alerta que só a planilha gera nunca encerra o caso, e o cartão do paciente fica a −886 px no fim da aba SRPA).
+
+---
+
+# Correções pontuais de tela → v19.9.2 (28/09/2026)
+
+Onze pedidos do Daniel após a v19.9.1, cada um anotado e avaliado antes de qualquer edição (`correcoes-pontuais-pos-v19.9.1.md`). Nove executados, um retirado a pedido (Cloro/Cálcio), um sem necessidade (retenção dos rascunhos já é ilimitada).
+
+| # | Achado durante a avaliação | Correção |
+|---|---|---|
+| 10.1 | Selos informativos herdavam o cursor de mão do cabeçalho recolhível (v18) e o clique neles era ignorado de propósito: mão sem função. | `.subbox-head span.chip`: pílula, fundo suave, cursor normal. |
+| 10.2 | A barra de atalhos do pré-anestésico não tinha estado "atual"; o único estado era "preenchido", em verde fixo independente do tema. | `is-current` no clique, com `--brand`/`--ia-accent-rgb` do tema ativo. |
+| 10.3 | Tamanho da fonte era salvo por navegador, não por usuário. | `prefKeyUsuario()`; aplicado após o login; volta ao geral ao sair. |
+| 10.4 | Menu esquerdo da ficha nascia aberto e o direito fechado (regras assimétricas em `Intra.html` 1074–1075). | Regra espelhada; preferência lembrada continua valendo. |
+| 10.5 | Reordenar blocos é seguro porque o vínculo dos campos é por `data-field`; a barra de atalhos era montada uma única vez na ordem do DOM. | `montarBarraPreop()` refeita a cada mudança; ordem por usuário; `PREOP_ORDEM_PADRAO`; sem `markDirty`. |
+| 10.6 | Rascunhos locais não têm prazo de validade; o código nunca apaga rascunho para liberar quota. A exposição real é a janela de autosave (30 s). | Sem alteração; anotado. |
+
+**Verificações v19.9.2:** sintaxe 42 blocos / 0 erros; cruzamento sem faltas; manifesto 32/32 + config; Playwright 72 OK / 0 falhas, zero erros de console (18 novas), zero erros de console.

@@ -1288,6 +1288,34 @@
       .sup-foot .btn { flex:1 1 auto; }
       .sup-foot .sup-foot-info { flex-basis:100%; margin:0 0 4px; }
     }
+    /* ===== v19.9.2: correções pontuais autorizadas em 28/09/2026 ===== */
+    /* 1. Visão: cor de aviso em "Retomar rascunho local" e vermelho em "Ver alertas". */
+    #lastDraftBtn { color:var(--warn); border-color:rgba(180,83,9,.38); background:var(--warn-soft); }
+    #lastDraftBtn:hover { background:rgba(245,158,11,.22); }
+    #visionAlertsBtn { color:var(--danger); border-color:rgba(180,35,24,.38); background:var(--danger-soft); }
+    #visionAlertsBtn:hover { background:rgba(180,35,24,.16); }
+    /* 2. Selos informativos nos cabeçalhos dos blocos: pílula e sem mãozinha (o cabeçalho é clicável para recolher; o selo, não). */
+    .subbox-head span.chip { cursor:default; border-radius:999px; background:var(--soft); border-color:transparent; }
+    /* 3. Atalhos rápidos de medicações recolhidos por padrão (botão "Atalhos" no cabeçalho do bloco). */
+    #medChipsToggleBtn.is-active { background:var(--soft); border-color:rgba(30,87,78,.28); color:var(--brand); }
+    /* 5. Escala de dor do adulto só com números; a pediátrica mantém os desenhos. */
+    #painAdultFaces { display:none; }
+    /* 6. Atalho clicado na barra do pré-anestésico: destaque que segue a cor do tema ativo. */
+    .jump-bar .jump-chip.is-current { box-shadow: inset 0 0 0 1px var(--brand), 0 0 0 3px rgba(var(--ia-accent-rgb, 30,87,78), .16); font-weight:900; background:var(--soft); }
+    /* 7. Cabeçalho: Novo na cor do tema, Sair em vermelho discreto. */
+    #newBtn { color:var(--brand); border-color:rgba(var(--ia-accent-rgb, 30,87,78), .35); background:var(--soft); }
+    #newBtn:hover { background:rgba(var(--ia-accent-rgb, 30,87,78), .14); }
+    #logoutBtn { color:var(--danger); border-color:rgba(180,35,24,.35); background:var(--danger-soft); }
+    #logoutBtn:hover { background:rgba(180,35,24,.16); }
+    /* 11. Reordenar blocos do pré-anestésico com setas (ordem guardada por usuário neste navegador). */
+    .subbox-move { display:none; gap:4px; flex:0 0 auto; }
+    .preop-reordenando .subbox-move { display:inline-flex; }
+    .subbox-move button { width:28px; height:28px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--brand); display:inline-grid; place-items:center; cursor:pointer; font-size:11px; padding:0; }
+    .subbox-move button:disabled { opacity:.35; cursor:default; }
+    .preop-reordenando > .subbox.collapsible { outline:1px dashed rgba(var(--ia-accent-rgb, 30,87,78), .45); outline-offset:2px; }
+    .jump-bar .jump-tools .jump-chip.is-active { box-shadow: inset 0 0 0 1px var(--brand); font-weight:900; }
+    .jump-bar .jump-tools [data-preop-restore] { display:none; }
+    .jump-bar.reordenando .jump-tools [data-preop-restore] { display:inline-flex; }
   </style>
 
 <!-- CLAV_IA_VISUAL_START: camada exclusivamente visual; regras originais preservadas. -->
@@ -1758,7 +1786,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
     logo depois por google.script.run.inicializar(). Assim, a página também mostra
     uma mensagem útil quando a ponte do Apps Script ou a autorização falham.
   -->
-  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9.1-encerramento-cartao-manifesto","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
+  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9.2-ajustes-visuais-blocos-reordenaveis","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
   <script>
     // Defesa adicional para Google Sites: mesmo que uma extensão do navegador
     // ou uma manutenção futura introduza uma tag <form>, a navegação nativa
@@ -1890,10 +1918,10 @@ html[data-clav-ia-theme]{color-scheme:light;}
           <button id="supChamadoBtn" class="chip sup-chip" type="button" title="Abrir chamado de suporte sem sair do atendimento" aria-label="Abrir chamado de suporte"><i class="fa-solid fa-life-ring"></i><span>Chamado</span></button>
           <button id="supAnaliseBtn" class="chip sup-chip hide" type="button" title="Análise do sistema: versão, arquivo, implantação e planilha" aria-label="Análise do sistema"><i class="fa-solid fa-microscope"></i><span>Análise</span></button>
           <button id="saveBtn" class="btn save-local" type="button"><i class="fa-solid fa-floppy-disk"></i><span>Salvar na planilha</span></button>
-          <button id="closeCaseBtn" class="btn btn-primary medical-only" type="button"><i class="fa-solid fa-lock"></i> Encerrar</button>
-          <button id="reopenBtn" class="btn btn-outline medical-only hide" type="button"><i class="fa-solid fa-lock-open"></i> Reabrir</button>
-          <button id="newBtn" class="btn btn-muted" type="button"><i class="fa-solid fa-file-circle-plus"></i> Novo</button>
-          <button id="logoutBtn" class="btn btn-muted" type="button"><i class="fa-solid fa-power-off"></i> Sair</button>
+          <button id="closeCaseBtn" class="btn btn-primary medical-only" type="button" title="Conclui o atendimento na planilha e trava o registro. Antes, pede a ciência dos alertas graves. Pode ser desfeito pelo botão Reabrir."><i class="fa-solid fa-lock"></i> Encerrar</button>
+          <button id="reopenBtn" class="btn btn-outline medical-only hide" type="button" title="Destrava um atendimento já encerrado para novas alterações."><i class="fa-solid fa-lock-open"></i> Reabrir</button>
+          <button id="newBtn" class="btn btn-muted" type="button" title="Abre um atendimento em branco para outro paciente ou procedimento. O atendimento atual fica guardado como rascunho neste navegador e, se já foi salvo, continua na planilha."><i class="fa-solid fa-file-circle-plus"></i> Novo</button>
+          <button id="logoutBtn" class="btn btn-muted" type="button" title="Fecha a sua sessão neste aparelho e volta à tela de entrada do sistema. O atendimento aberto fica guardado como rascunho neste navegador."><i class="fa-solid fa-power-off"></i> Sair</button>
         </div>
       </div>
       <!-- v19.8: paciente em foco quando o menu lateral está recolhido ou empilhado (tablet/celular) -->
@@ -2181,11 +2209,11 @@ html[data-clav-ia-theme]{color-scheme:light;}
                     <div class="field col-6"><label>Outras intercorrências familiares</label><textarea data-field="anamnese.familiar" placeholder="Hipertermia maligna, reações graves, óbito relacionado à anestesia etc."></textarea></div>
                   </div>
                 </div>
-                <div class="subbox"><div class="subbox-head"><div><h3>Medicações em uso atual/recente</h3><p>Pesquise pelo nome: a base traz dose e posologia prontas (ex.: Losartana 50 mg de 12/12h). Posologia diferente: digite e pressione Enter. Estas medicações alimentam automaticamente a prescrição pré-operatória.</p></div></div>
+                <div class="subbox"><div class="subbox-head"><div><h3>Medicações em uso atual/recente</h3><p>Pesquise pelo nome: a base traz dose e posologia prontas (ex.: Losartana 50 mg de 12/12h). Posologia diferente: digite e pressione Enter. Estas medicações alimentam automaticamente a prescrição pré-operatória.</p></div><div class="staff-badges"><button id="medChipsToggleBtn" class="chip-btn" type="button" title="Mostrar ou ocultar os atalhos rápidos de medicações" aria-expanded="false" aria-controls="medChips"><i class="fa-solid fa-bolt"></i> Atalhos</button></div></div>
                   <div class="msel" id="medsMsel"><div class="msel-control" id="medsControl"><div class="msel-chips" id="medsChips"></div><input id="medsSearch" class="msel-search" placeholder="Pesquisar medicação e posologia" autocomplete="off" /></div><div class="msel-panel" id="medsPanel" hidden></div></div>
                   <input type="hidden" id="medicacoes" data-field="anamnese.medicacoes" />
-                  <div class="chiprow" id="medChips" style="margin-top:10px"></div>
-                  <span class="help-text">Atalhos rápidos: 1º clique insere; cliques seguintes alternam a dose; o clique após a última dose remove.</span>
+                  <div class="chiprow hide" id="medChips" style="margin-top:10px"></div>
+                  <span class="help-text hide" id="medChipsHelp">Atalhos rápidos: 1º clique insere; cliques seguintes alternam a dose; o clique após a última dose remove.</span>
                   <div class="subbox interacoes-box" id="interacoesBox" style="margin-top:12px">
                     <div class="subbox-head">
                       <div><h3>Interações medicamentosas e duplicidades terapêuticas</h3><p>Verificação automática das medicações acima e das medicações do período de internação. Combinações graves aparecem também nos alertas e na ficha impressa.</p></div>
@@ -3081,6 +3109,12 @@ html[data-clav-ia-theme]{color-scheme:light;}
         toggle.setAttribute('aria-label', 'Recolher ou expandir ' + titulo);
         toggle.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
         head.appendChild(summary);
+        // v19.9.2: setas para mudar a ordem do bloco (visíveis só no modo "Reorganizar").
+        const move = document.createElement('span');
+        move.className = 'subbox-move';
+        move.innerHTML = '<button type="button" data-move="-1" title="Mover este bloco para cima" aria-label="Mover ' + escapeAttr(titulo) + ' para cima"><i class="fa-solid fa-arrow-up"></i></button><button type="button" data-move="1" title="Mover este bloco para baixo" aria-label="Mover ' + escapeAttr(titulo) + ' para baixo"><i class="fa-solid fa-arrow-down"></i></button>';
+        move.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); moverSubboxPreop(box, Number(b.dataset.move)); }));
+        head.appendChild(move);
         head.appendChild(toggle);
         const alternar = () => { box.classList.toggle('collapsed'); atualizarResumoSubbox(box); };
         toggle.addEventListener('click', e => { e.stopPropagation(); alternar(); });
@@ -3089,18 +3123,117 @@ html[data-clav-ia-theme]{color-scheme:light;}
           alternar();
         });
         const curto = titulo.length > 26 ? titulo.slice(0, 24).trim() + '…' : titulo;
-        chips.push(`<button type="button" class="jump-chip" data-jump="${escapeAttr(box.id)}" title="${escapeAttr(titulo)}">${escapeHtml(curto)}</button>`);
+        box.dataset.chipTitulo = titulo;
+        box.dataset.chipCurto = curto;
       });
-      bar.innerHTML = chips.join('') + '<span class="jump-tools"><button type="button" class="jump-chip" data-jump-all="collapse" title="Recolher todos os blocos"><i class="fa-solid fa-compress"></i> Recolher todos</button><button type="button" class="jump-chip" data-jump-all="expand" title="Expandir todos os blocos"><i class="fa-solid fa-expand"></i> Expandir todos</button></span>';
+      void chips;
+      PREOP_ORDEM_PADRAO = caixas.filter(box => box.classList.contains('collapsible')).map(box => box.id);
+      montarBarraPreop();
+      aplicarOrdemPreop();
+    }
+    // ===== v19.9.2: ordem dos blocos do pré-anestésico por usuário (neste navegador) =====
+    // Os campos continuam ligados por data-field: mudar a posição de um bloco não altera
+    // o que é salvo, carregado ou impresso, e não marca o formulário como alterado.
+    let PREOP_ORDEM_PADRAO = [];
+    function caixasPreop() {
+      const grid = $('#preopGrid');
+      return grid ? Array.from(grid.querySelectorAll(':scope > .subbox.collapsible')) : [];
+    }
+    function montarBarraPreop() {
+      const grid = $('#preopGrid');
+      const bar = $('#preopJumpBar');
+      if (!grid || !bar) return;
+      const atualId = (bar.querySelector('.jump-chip.is-current') || { dataset: {} }).dataset.jump || '';
+      const reordenando = grid.classList.contains('preop-reordenando');
+      const chips = caixasPreop().map(box => `<button type="button" class="jump-chip" data-jump="${escapeAttr(box.id)}" title="${escapeAttr(box.dataset.chipTitulo || '')}">${escapeHtml(box.dataset.chipCurto || box.id)}</button>`);
+      bar.innerHTML = chips.join('') + '<span class="jump-tools"><button type="button" class="jump-chip" data-jump-all="collapse" title="Recolher todos os blocos"><i class="fa-solid fa-compress"></i> Recolher todos</button><button type="button" class="jump-chip" data-jump-all="expand" title="Expandir todos os blocos"><i class="fa-solid fa-expand"></i> Expandir todos</button>'
+        + `<button type="button" class="jump-chip${reordenando ? ' is-active' : ''}" data-preop-reorder="1" aria-pressed="${reordenando ? 'true' : 'false'}" title="Mostrar setas para mudar a ordem dos blocos. A ordem fica guardada para você neste navegador."><i class="fa-solid fa-arrow-down-up-across-line"></i> ${reordenando ? 'Concluir' : 'Reorganizar'}</button>`
+        + '<button type="button" class="jump-chip" data-preop-restore="1" title="Voltar à ordem padrão dos blocos"><i class="fa-solid fa-rotate-left"></i> Ordem padrão</button></span>';
+      bar.classList.toggle('reordenando', reordenando);
+      if (atualId) { const c = bar.querySelector(`[data-jump="${atualId}"]`); if (c) c.classList.add('is-current'); }
       bar.querySelectorAll('[data-jump]').forEach(chip => chip.addEventListener('click', () => irParaSubbox(chip.dataset.jump)));
       bar.querySelectorAll('[data-jump-all]').forEach(btn => btn.addEventListener('click', () => {
         const recolher = btn.dataset.jumpAll === 'collapse';
         grid.querySelectorAll(':scope > .subbox.collapsible').forEach(box => { box.classList.toggle('collapsed', recolher); atualizarResumoSubbox(box); });
       }));
+      const btnReord = bar.querySelector('[data-preop-reorder]'); if (btnReord) btnReord.addEventListener('click', () => alternarReordenacaoPreop());
+      const btnRest = bar.querySelector('[data-preop-restore]'); if (btnRest) btnRest.addEventListener('click', () => restaurarOrdemPreop());
+      atualizarChipsPreop();
+      atualizarSetasPreop();
+    }
+    function chaveOrdemPreop() { return prefKeyUsuario('clav.ui.preopOrder'); }
+    function ordemPreopSalva() {
+      try {
+        const raw = storageGet('local', chaveOrdemPreop());
+        const arr = raw ? JSON.parse(raw) : null;
+        return Array.isArray(arr) && arr.length ? arr.map(String) : null;
+      } catch (ignored) { return null; }
+    }
+    function aplicarOrdemPreop() {
+      const grid = $('#preopGrid');
+      if (!grid || !grid.dataset.collapsibleReady || !PREOP_ORDEM_PADRAO.length) return;
+      const caixas = caixasPreop();
+      const salva = ordemPreopSalva();
+      const desejada = (salva || PREOP_ORDEM_PADRAO).filter(id => caixas.some(b => b.id === id));
+      PREOP_ORDEM_PADRAO.forEach(id => { if (!desejada.includes(id) && caixas.some(b => b.id === id)) desejada.push(id); });
+      if (desejada.join('|') === caixas.map(b => b.id).join('|')) { atualizarSetasPreop(); return; }
+      const porId = {}; caixas.forEach(b => { porId[b.id] = b; });
+      // Reinsere os mesmos nós na ordem desejada (ouvintes e selects preservados).
+      const marcador = document.createComment('preop-ordem');
+      grid.insertBefore(marcador, caixas[0]);
+      desejada.forEach(id => grid.insertBefore(porId[id], marcador));
+      marcador.remove();
+      montarBarraPreop();
+    }
+    function salvarOrdemPreop() {
+      const ordem = caixasPreop().map(b => b.id);
+      if (ordem.join('|') === PREOP_ORDEM_PADRAO.join('|')) storageRemove('local', chaveOrdemPreop());
+      else storageSet('local', chaveOrdemPreop(), JSON.stringify(ordem));
+    }
+    function moverSubboxPreop(box, delta) {
+      const grid = $('#preopGrid');
+      if (!grid || !box) return;
+      const caixas = caixasPreop();
+      const i = caixas.indexOf(box); const j = i + delta;
+      if (i < 0 || j < 0 || j >= caixas.length) return;
+      const topoAntes = box.getBoundingClientRect().top;
+      if (delta < 0) grid.insertBefore(box, caixas[j]); else grid.insertBefore(caixas[j], box);
+      // O bloco movido continua no mesmo lugar da tela.
+      const topoDepois = box.getBoundingClientRect().top;
+      if (Math.abs(topoDepois - topoAntes) > 2) window.scrollBy(0, topoDepois - topoAntes);
+      salvarOrdemPreop();
+      montarBarraPreop();
+      box.classList.add('subbox-hilite');
+      setTimeout(() => box.classList.remove('subbox-hilite'), 900);
+    }
+    function atualizarSetasPreop() {
+      const caixas = caixasPreop();
+      caixas.forEach((box, i) => {
+        const up = box.querySelector(':scope > .subbox-head .subbox-move [data-move="-1"]');
+        const down = box.querySelector(':scope > .subbox-head .subbox-move [data-move="1"]');
+        if (up) up.disabled = i === 0;
+        if (down) down.disabled = i === caixas.length - 1;
+      });
+    }
+    function alternarReordenacaoPreop(forcar) {
+      const grid = $('#preopGrid');
+      if (!grid) return;
+      const ligar = forcar === undefined ? !grid.classList.contains('preop-reordenando') : !!forcar;
+      grid.classList.toggle('preop-reordenando', ligar);
+      montarBarraPreop();
+      if (ligar) toast('Use as setas ao lado do título de cada bloco. A ordem fica guardada para você neste navegador; "Ordem padrão" desfaz.', 'info', 6500);
+    }
+    function restaurarOrdemPreop() {
+      storageRemove('local', chaveOrdemPreop());
+      aplicarOrdemPreop();
+      montarBarraPreop();
+      toast('Blocos de volta à ordem padrão.', 'success', 3200);
     }
    function irParaSubbox(id) {
       const box = document.getElementById(id);
       if (!box) return;
+      // v19.9.2: o atalho clicado fica em destaque (cor do tema) até outro ser escolhido.
+      $$('#preopJumpBar [data-jump]').forEach(chip => chip.classList.toggle('is-current', chip.dataset.jump === id));
       box.classList.remove('collapsed');
       atualizarResumoSubbox(box);
 
@@ -4827,6 +4960,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
       $('#newProcBtn')?.addEventListener('click', novoProcedimentoMesmoPaciente);
       $('#triageStaffChangeBtn')?.addEventListener('click', () => toggleTriageStaffPicker());
       $('#triageChipsToggleBtn')?.addEventListener('click', () => toggleTriageChips());
+      $('#medChipsToggleBtn')?.addEventListener('click', () => toggleMedChips());
       $('#bateEscalaBtn')?.addEventListener('click', () => gerarBateEscala());
       $('#bateEscalaData')?.addEventListener('change', () => gerarBateEscala());
       $('#bateEscalaCopiarBtn')?.addEventListener('click', copiarBateEscala);
@@ -5188,6 +5322,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
       activateCaseContext();
       STATE.dirty = false;
       STATE.lastServerFingerprint = ''; STATE.serverBase = null;
+      applyFontPreference(); // v19.9.2: volta ao nível geral do navegador ao sair
       if (t) server('encerrarSessao', t, navigator.userAgent).catch(() => {});
       $('#appRoot').classList.add('hide');
       $('#loginCover').classList.remove('hide');
@@ -5325,6 +5460,16 @@ html[data-clav-ia-theme]{color-scheme:light;}
       const abrir = show === undefined ? row.classList.contains('hide') : !!show;
       row.classList.toggle('hide', !abrir);
       if (btn) btn.classList.toggle('is-active', abrir);
+    }
+    // v19.9.2: atalhos rápidos de medicações recolhidos por padrão; a escolha fica por usuário neste navegador.
+    function toggleMedChips(show, persist) {
+      const row = $('#medChips'); const help = $('#medChipsHelp'); const btn = $('#medChipsToggleBtn');
+      if (!row) return;
+      const abrir = show === undefined ? row.classList.contains('hide') : !!show;
+      row.classList.toggle('hide', !abrir);
+      if (help) help.classList.toggle('hide', !abrir);
+      if (btn) { btn.classList.toggle('is-active', abrir); btn.setAttribute('aria-expanded', abrir ? 'true' : 'false'); }
+      if (persist !== false) storageSet('local', prefKeyUsuario('clav.ui.medChipsOpen'), abrir ? '1' : '0');
     }
     function toggleTriageStaffPicker(show) {
       const picker = $('#triageStaffPicker');
@@ -6103,14 +6248,30 @@ html[data-clav-ia-theme]{color-scheme:light;}
     function refreshEnhancedSelects() { $$('select').forEach(refreshEnhancedSelect); }
     function syncEnhancedSelectsFromNative() { refreshEnhancedSelects(); }
 
+    // v19.9.2: preferências de tela guardadas por usuário (neste navegador). Sem usuário
+    // logado vale a chave geral do navegador, como antes.
+    function prefKeyUsuario(base) {
+      const u = STATE.user || {};
+      const id = String(u.usuario_id || u.usuario || '').trim();
+      return id ? base + '.' + encodeURIComponent(id) : base;
+    }
+    function aplicarPreferenciasDoUsuario() {
+      applyFontPreference();
+      toggleMedChips(storageGet('local', prefKeyUsuario('clav.ui.medChipsOpen')) === '1', false);
+      aplicarOrdemPreop();
+    }
     function applyFontPreference() {
-      STATE.fontLevel = Number(storageGet('local','clav.ui.fontLevel') || 0);
+      // v19.9.2: nível de fonte por usuário; quem nunca ajustou herda o nível geral do navegador.
+      const proprio = STATE.user ? storageGet('local', prefKeyUsuario('clav.ui.fontLevel')) : null;
+      const bruto = (proprio !== null && proprio !== undefined && String(proprio) !== '') ? proprio : (storageGet('local','clav.ui.fontLevel') || 0);
+      STATE.fontLevel = Number(bruto) || 0;
       STATE.fontLevel = Math.max(-2, Math.min(3, STATE.fontLevel));
       document.documentElement.style.setProperty('--q200-zoom', String(1 + STATE.fontLevel * 0.06));
     }
     function changeFontScale(delta) {
       STATE.fontLevel = Math.max(-2, Math.min(3, Number(STATE.fontLevel || 0) + delta));
-      storageSet('local','clav.ui.fontLevel', String(STATE.fontLevel));
+      storageSet('local', prefKeyUsuario('clav.ui.fontLevel'), String(STATE.fontLevel));
+      if (!STATE.user) storageSet('local','clav.ui.fontLevel', String(STATE.fontLevel));
       applyFontPreference();
       toast(`Tamanho da interface: ${STATE.fontLevel > 0 ? '+' : ''}${STATE.fontLevel}`, 'info', 1800);
     }
@@ -6861,7 +7022,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
         const be = $('#bateEscalaData'); if (be && !be.value) be.value = bateEscalaDataPadrao();
       }
       if (name === 'relatorios') { setupRelatoriosUI(); if (!STATE.relatorio) gerarRelatorio(); }
-      if (name === 'preop') { setupPreopCollapsibles(); atualizarChipsPreop(); }
+      if (name === 'preop') { setupPreopCollapsibles(); aplicarOrdemPreop(); atualizarChipsPreop(); }
       if (name === 'paciente') { try { pacRenderTimeline(); } catch (ignored) {} }
       if (name === 'intraop') {
         setupGestureCanvas();
@@ -11230,6 +11391,8 @@ html[data-clav-ia-theme]{color-scheme:light;}
       } else {
         $$('#previewType option').forEach(option => option.disabled = false);
       }
+      // v19.9.2: fonte, atalhos de medicações e ordem dos blocos do pré-anestésico por usuário.
+      try { aplicarPreferenciasDoUsuario(); } catch (ignoredPrefs) {}
     }
     // Rótulos de exibição dos perfis (as permissões internas ENFERMEIRA_CHEFE e
     // TECNICA não mudam; apenas o texto mostrado, a pedido da equipe).

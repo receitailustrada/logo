@@ -311,6 +311,101 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       await ctx.close();
     }
 
+    /* ===================== INDEX/INTRA: ajustes v19.9.2 ===================== */
+    console.log('\n[INDEX] v19.9.2: botões, selos, atalhos de medicações, escala de dor, atalho atual, fonte por usuário, blocos reordenáveis');
+    {
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page);
+      const est = await page.evaluate(() => {
+        const cs = el => getComputedStyle(el);
+        return {
+          rascunho: cs(document.getElementById('lastDraftBtn')).color, alertas: cs(document.getElementById('visionAlertsBtn')).color,
+          novo: cs(document.getElementById('newBtn')).color, sair: cs(document.getElementById('logoutBtn')).color,
+          brand: (() => { const t = document.createElement('span'); t.style.color = 'var(--brand)'; document.body.appendChild(t); const c = cs(t).color; t.remove(); return c; })(),
+          titulos: ['closeCaseBtn', 'reopenBtn', 'newBtn', 'logoutBtn'].map(id => (document.getElementById(id).getAttribute('title') || '').length > 20),
+          selo: { cursor: cs(document.getElementById('airwayBadge')).cursor, raio: cs(document.getElementById('airwayBadge')).borderRadius },
+          facesAdulto: cs(document.getElementById('painAdultFaces')).display, facesPed: cs(document.getElementById('painFaces')).display,
+          medChipsOcultos: document.getElementById('medChips').classList.contains('hide') && document.getElementById('medChipsHelp').classList.contains('hide')
+        };
+      });
+      check('v19.9.2: cores dos botões (rascunho âmbar, alertas vermelho, Novo na cor do tema ativo, Sair vermelho)', est.rascunho === 'rgb(180, 83, 9)' && est.alertas === 'rgb(180, 35, 24)' && est.novo === est.brand && est.sair === 'rgb(180, 35, 24)', JSON.stringify(est));
+      check('v19.9.2: legendas em Encerrar, Reabrir, Novo e Sair', est.titulos.every(Boolean), JSON.stringify(est.titulos));
+      check('v19.9.2: selo "Via aérea" sem mãozinha e em pílula', est.selo.cursor === 'default' && /999px/.test(est.selo.raio), JSON.stringify(est.selo));
+      check('v19.9.2: escala do adulto sem desenhos; pediátrica com desenhos', est.facesAdulto === 'none' && est.facesPed !== 'none', JSON.stringify({ a: est.facesAdulto, p: est.facesPed }));
+      check('v19.9.2: atalhos de medicações nascem recolhidos', est.medChipsOcultos);
+      await page.evaluate(() => showSection('preop'));
+      await sleep(300);
+      await page.click('#medChipsToggleBtn');
+      const medAberto = await page.evaluate(() => ({ visivel: !document.getElementById('medChips').classList.contains('hide'), chave: Object.keys(localStorage).find(k => k.startsWith('clav.ui.medChipsOpen.')) || '' }));
+      check('v19.9.2: botão "Atalhos" abre a fileira e guarda a escolha por usuário', medAberto.visivel && /clav\.ui\.medChipsOpen\.U1$/.test(medAberto.chave), JSON.stringify(medAberto));
+      /* atalho atual */
+      await page.click('#preopJumpBar [data-jump="sb-exame-fisico"]');
+      await sleep(300);
+      const atual = await page.evaluate(() => Array.from(document.querySelectorAll('#preopJumpBar .jump-chip.is-current')).map(c => c.dataset.jump));
+      check('v19.9.2: atalho clicado fica em destaque (um só)', atual.length === 1 && atual[0] === 'sb-exame-fisico', JSON.stringify(atual));
+      /* fonte por usuário */
+      await page.evaluate(() => changeFontScale(1));
+      const fonte = await page.evaluate(() => ({ chave: localStorage.getItem('clav.ui.fontLevel.U1'), zoom: document.documentElement.style.getPropertyValue('--q200-zoom') }));
+      check('v19.9.2: nível de fonte guardado por usuário', fonte.chave === '1' && fonte.zoom === '1.06', JSON.stringify(fonte));
+      /* reordenar blocos */
+      const ordemAntes = await page.evaluate(() => Array.from(document.querySelectorAll('#preopGrid > .subbox.collapsible')).map(b => b.id));
+      const fpAntes = await page.evaluate(() => fingerprintData(collectForm()));
+      await page.click('#preopJumpBar [data-preop-reorder]');
+      await sleep(200);
+      const modo = await page.evaluate(() => ({ classe: document.getElementById('preopGrid').classList.contains('preop-reordenando'), setasVisiveis: getComputedStyle(document.querySelector('#sb-exame-fisico .subbox-move')).display !== 'none', restaurarVisivel: getComputedStyle(document.querySelector('#preopJumpBar [data-preop-restore]')).display !== 'none' }));
+      check('v19.9.2: modo "Reorganizar" mostra setas e "Ordem padrão"', modo.classe && modo.setasVisiveis && modo.restaurarVisivel, JSON.stringify(modo));
+      await page.click('#sb-exame-fisico .subbox-move [data-move="-1"]');
+      await sleep(150);
+      await page.click('#sb-exame-fisico .subbox-move [data-move="-1"]');
+      await sleep(300);
+      const depois = await page.evaluate(() => ({
+        ordem: Array.from(document.querySelectorAll('#preopGrid > .subbox.collapsible')).map(b => b.id),
+        chips: Array.from(document.querySelectorAll('#preopJumpBar [data-jump]')).map(c => c.dataset.jump),
+        salvo: localStorage.getItem('clav.ui.preopOrder.U1'), dirty: STATE.dirty, pendente: hasUnpersistedChanges(), fp: fingerprintData(collectForm())
+      }));
+      const idxAntes = ordemAntes.indexOf('sb-exame-fisico'), idxDepois = depois.ordem.indexOf('sb-exame-fisico');
+      check('v19.9.2: duas setas para cima movem o bloco duas posições, barra de atalhos acompanha', idxDepois === idxAntes - 2 && depois.chips.join('|') === depois.ordem.join('|'), JSON.stringify({ idxAntes, idxDepois, chipsIguais: depois.chips.join('|') === depois.ordem.join('|') }));
+      check('v19.9.2: ordem guardada por usuário e formulário NÃO fica alterado', !!depois.salvo && JSON.parse(depois.salvo).join('|') === depois.ordem.join('|') && depois.dirty === false && depois.pendente === false && depois.fp === fpAntes, JSON.stringify({ salvo: !!depois.salvo, dirty: depois.dirty, pendente: depois.pendente, fpIgual: depois.fp === fpAntes }));
+      /* persiste após recarregar */
+      await page.reload({ waitUntil: 'load' });
+      await page.waitForFunction(() => window.__CLAV_CLIENT_READY__ === true, null, { timeout: 20000 });
+      await page.waitForFunction(() => typeof STATE !== 'undefined' && STATE.user && STATE.user.usuario === 'denis', null, { timeout: 20000 }).catch(() => {});
+      const logado = await page.evaluate(() => !!(typeof STATE !== 'undefined' && STATE.user));
+      if (!logado) { await page.fill('#loginUser', 'denis'); await page.fill('#loginPass', 'Senha!12345'); await page.click('#loginBtn'); await page.waitForFunction(() => typeof STATE !== 'undefined' && STATE.user && STATE.user.usuario === 'denis', null, { timeout: 20000 }); }
+      await page.evaluate(async () => { await abrirRegistro('ATD-1'); showSection('preop'); });
+      await sleep(500);
+      const recarregado = await page.evaluate(() => ({ ordem: Array.from(document.querySelectorAll('#preopGrid > .subbox.collapsible')).map(b => b.id), zoom: document.documentElement.style.getPropertyValue('--q200-zoom'), medAberto: !document.getElementById('medChips').classList.contains('hide') }));
+      check('v19.9.2: ordem, fonte e atalhos abertos sobrevivem a recarregar a página', recarregado.ordem.indexOf('sb-exame-fisico') === idxAntes - 2 && recarregado.zoom === '1.06' && recarregado.medAberto, JSON.stringify(recarregado));
+      /* ordem padrão */
+      await page.click('#preopJumpBar [data-preop-reorder]');
+      await sleep(150);
+      await page.click('#preopJumpBar [data-preop-restore]');
+      await sleep(300);
+      const restaurado = await page.evaluate(() => ({ ordem: Array.from(document.querySelectorAll('#preopGrid > .subbox.collapsible')).map(b => b.id), salvo: localStorage.getItem('clav.ui.preopOrder.U1') }));
+      check('v19.9.2: "Ordem padrão" devolve a sequência original e limpa a preferência', restaurado.ordem.join('|') === ordemAntes.join('|') && !restaurado.salvo, JSON.stringify({ igual: restaurado.ordem.join('|') === ordemAntes.join('|'), salvo: restaurado.salvo }));
+      /* sair volta ao nível geral da fonte */
+      await page.evaluate(() => logout());
+      await sleep(400);
+      check('v19.9.2: ao sair, a fonte volta ao nível geral do navegador', await page.evaluate(() => document.documentElement.style.getPropertyValue('--q200-zoom') === '1'));
+      check('v19.9.2: sem erros de JavaScript no console', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await newPage(browser, { init: "window.__MOCK_HASH__='clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789';", viewport: { width: 1400, height: 800 } });
+      await page.goto(BASE + '/intra_caso.html', { waitUntil: 'load' });
+      await page.waitForFunction(() => /Vinculado/.test(document.getElementById('ponteChip').textContent), null, { timeout: 15000 });
+      const ficha = await page.evaluate(() => ({
+        menuFechado: document.body.classList.contains('sb-fechada'), painelFechado: document.body.classList.contains('rp-fechado'),
+        cabTela: !!document.querySelector('.cab.cab-tela'), estadoBtn: (document.querySelector('.cab.cab-tela .b.btn') || { className: '' }).className,
+        chipEstado: (document.getElementById('chipStatus') || { className: '' }).className,
+        pacienteDestacado: (() => { const b = document.querySelector('.cab.cab-tela .r2 > .b:first-child'); return b ? getComputedStyle(b).borderTopWidth : ''; })()
+      }));
+      check('Intra v19.9.2: menu esquerdo e painel direito recolhidos por padrão', ficha.menuFechado && ficha.painelFechado, JSON.stringify(ficha));
+      check('Intra v19.9.2: Paciente/Cirurgia destacados na tela e estado do caso com classe própria', ficha.cabTela && /estado-iniciar/.test(ficha.estadoBtn) && /estado-nao-iniciado/.test(ficha.chipEstado) && ficha.pacienteDestacado === '2px', JSON.stringify(ficha));
+      check('Intra v19.9.2: sem erros de JavaScript no console', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+
     /* ===================== INTRA: XSS refletido ===================== */
     console.log('\n[INTRA] parâmetro malicioso no template');
     {

@@ -90,6 +90,17 @@
   .cab .b .ro{font-size:13.5px; font-weight:600; padding:1px 0; min-height:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .cab .b.calc{background:#f5f9f8}
   .cab .b.btn{border-style:dashed; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--teal-d); font-weight:700; font-size:12.5px}
+  /* v19.9.2: destaque de Paciente, Cirurgia realizada e estado do caso — só na tela (.cab-tela); a folha impressa não muda */
+  .cab.cab-tela .r2 > .b:first-child, .cab.cab-tela .r3 > .b:first-child{border:2px solid var(--teal); background:#f2faf8; box-shadow:0 0 0 3px rgba(15,138,126,.08)}
+  .cab.cab-tela .r2 > .b:first-child small, .cab.cab-tela .r3 > .b:first-child small{color:var(--teal-d)}
+  .cab.cab-tela .r2 > .b:first-child input, .cab.cab-tela .r2 > .b:first-child .ro, .cab.cab-tela .r3 > .b:first-child input, .cab.cab-tela .r3 > .b:first-child .ro{font-size:16px; font-weight:800}
+  .cab.cab-tela .b.btn{border-width:2px; font-size:13px; letter-spacing:.2px}
+  .cab.cab-tela .b.btn.estado-iniciar{border-style:solid; background:var(--teal); border-color:var(--teal); color:#fff}
+  .cab.cab-tela .b.btn.estado-encerrar{border-style:solid; background:var(--warn-bg); border-color:var(--warn); color:var(--warn)}
+  .cab.cab-tela .b.btn.estado-encerrado{border-style:dashed; background:#eef2f7; border-color:#94a3b8; color:#334155; cursor:default}
+  .chip.estado-iniciado{background:#e7f6ec; border-color:#9ad4ae; color:var(--ok); font-weight:700}
+  .chip.estado-encerrado{background:#eef2f7; border-color:#b6c2d1; color:#334155; font-weight:700}
+  .chip.estado-nao-iniciado{background:var(--warn-bg); border-color:#f3c9b3; color:var(--warn); font-weight:700}
   .r1{grid-template-columns:3fr 1fr}
   .r2{grid-template-columns:3fr 1fr 1fr 1fr 1fr}
   .r3{grid-template-columns:3fr 1.5fr 1.5fr}
@@ -634,7 +645,7 @@
     var logoHtml = inter ? 'CLAV' : ('<img class="logo-img" src="'+esc(LOGO_URL)+'" alt="CLAV" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'inline\'"><span style="display:none">CLAV</span>');
     var topo = div('ficha-topo', '<div class="lg">'+logoHtml+'</div><div class="tt">Ficha de anestesia<br>e registro intraoperatório</div>', root);
     void topo;
-    var cab = div('cab', null, root);
+    var cab = div('cab' + (inter ? ' cab-tela' : ''), null, root); /* v19.9.2: destaque só na tela; a folha impressa (.pagina) não recebe */
     function box(parent, rot, chave, tipo, extra){
       var b = div('b'+(extra||''), '<small>'+rot+'</small>', parent);
       if(chave===null) return b;
@@ -650,7 +661,7 @@
     box(r4,'Anestesista','anestesista');
     box(r4,'Posicionamento', (estado.cfg.posicao.join(', ')||'—'),'ro',' calc');
     if(inter){
-      var bt=div('b btn', iniciado ? (estado.fim?'Caso encerrado':'Encerrar caso') : 'Iniciar caso', r4);
+      var bt=div('b btn ' + (iniciado ? (estado.fim ? 'estado-encerrado' : 'estado-encerrar') : 'estado-iniciar'), iniciado ? (estado.fim?'Caso encerrado':'Encerrar caso') : 'Iniciar caso', r4);
       bt.addEventListener('click', function(){
         if(!iniciado){ iniciarCaso(new Date()); }
         else if(!estado.fim){ estado.fim=hhmm(new Date(agora())); reconstruir(); autosave(); msg('Fim da anestesia às '+estado.fim); }
@@ -805,7 +816,8 @@
     var pend=0; SERIES.forEach(function(s){ if(!estado.ligadas[s.id]) return; estado.pontos[s.id].forEach(function(p){ if(p.ativo&&p.pendente) pend++; }); });
     var cp=$('chipPend'); cp.textContent='Pendentes: '+pend; cp.style.opacity=pend?'1':'.55';
     var arr=estado.pontos[SERIES[0].id], feitas=0; arr.forEach(function(p){ if(p.ativo) feitas++; });
-    $('chipStatus').textContent = !iniciado ? 'Caso não iniciado' : (estado.fim ? 'Encerrado · '+hhmm(estado.inicio)+'–'+estado.fim : 'Anestesia desde '+hhmm(estado.inicio))+' · '+feitas+' de '+arr.length+' marcações';
+    var cs=$('chipStatus'); cs.className='chip '+(!iniciado?'estado-nao-iniciado':(estado.fim?'estado-encerrado':'estado-iniciado')); /* v19.9.2 */
+    cs.textContent = !iniciado ? 'Caso não iniciado' : (estado.fim ? 'Encerrado · '+hhmm(estado.inicio)+'–'+estado.fim : 'Anestesia desde '+hhmm(estado.inicio))+' · '+feitas+' de '+arr.length+' marcações';
     $('chipZoom').textContent='Zoom '+(zoomIdx+1)+'/'+ZOOMS.length;
   }
   function atualizarProxima(){
@@ -1071,7 +1083,8 @@
   }
   redim('hEsq','--sbw',1,220,520); redim('hDir','--rpw',-1,260,560);
   try{
-    if(localStorage.getItem(STORAGE_KEY+'_sb')==='1'||window.innerWidth<900) document.body.classList.add('sb-fechada');
+    /* v19.9.2: menu esquerdo recolhido por padrão, como o painel direito; quem abrir e o navegador lembrar continua aberto */
+    if(localStorage.getItem(STORAGE_KEY+'_sb')!=='0'||window.innerWidth<900) document.body.classList.add('sb-fechada');
     if(localStorage.getItem(STORAGE_KEY+'_rp')!=='0'||window.innerWidth<1000) document.body.classList.add('rp-fechado');
   }catch(e){}
 
