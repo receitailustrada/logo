@@ -9,6 +9,7 @@ Motivo: contem telefones, e-mails e hashes de senha da equipe (usuarios semente 
 Nao devem ficar em repositorio publico. Foram entregues completos no ZIP privado enviado no chat
 (CLAV_v19.11_completo_36_arquivos.zip), junto com os outros arquivos.
 
+No ajuste 19.11.1 mudaram 3 arquivos: 12_Calculos.gs, 99_Diagnostico.gs (aqui) e 28_Versao.gs (ZIP CLAV_v19.11.1_completo_36_arquivos.zip; manifesto 392 funcoes).
 Na v19.11 mudaram 8 arquivos: Index.html, 00_Config.gs, 06_Documentos_API.gs, 10_Payload_Clinico.gs, 19_PDF_Core.gs,
 20_PDF_Layout.gs, 21_PDF_Secoes.gs (aqui) e 28_Versao.gs (ZIP).
 Na v19.10 mudaram 12 arquivos: Index.html, 00_Config.gs, 04_Atendimentos.gs, 10_Payload_Clinico.gs, 12_Calculos.gs,

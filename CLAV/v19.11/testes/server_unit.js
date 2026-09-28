@@ -15,7 +15,21 @@ function fmt(date, tz, pattern) {
   const map = { yyyy: g('year'), MM: g('month'), dd: g('day'), HH: hh, mm: g('minute'), ss: g('second') };
   return String(pattern).replace(/'T'/g, 'T').replace(/yyyy|MM|dd|HH|mm|ss|XXX/g, k => k === 'XXX' ? '-03:00' : map[k]);
 }
-ctx.Utilities = new Proxy({}, { get: (t, p) => p === 'formatDate' ? fmt : (p === 'getUuid' ? () => 'uuid-' + Math.random().toString(16).slice(2) : stub()) });
+// Utilities.parseDate(texto, fuso, "yyyy-MM-dd'T'HH:mm:ss"): instante correspondente ao horário local do fuso.
+function parseDateTz(text, tz) {
+  const m = String(text).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
+  if (!m) return new Date(NaN);
+  const alvo = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  let t = alvo;
+  for (let i = 0; i < 3; i++) {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date(t));
+    const g = k => Number((p.find(x => x.type === k) || {}).value);
+    const local = Date.UTC(g('year'), g('month') - 1, g('day'), g('hour') === 24 ? 0 : g('hour'), g('minute'), g('second'));
+    t += alvo - local;
+  }
+  return new Date(t);
+}
+ctx.Utilities = new Proxy({}, { get: (t, p) => p === 'formatDate' ? fmt : (p === 'parseDate' ? parseDateTz : (p === 'getUuid' ? () => 'uuid-' + Math.random().toString(16).slice(2) : stub())) });
 vm.createContext(ctx); ctx.globalThis = ctx;
 for (const f of fs.readdirSync(SRC).filter(f => f.endsWith('.gs')).sort()) {
   try { vm.runInContext(fs.readFileSync(path.join(SRC, f), 'utf8'), ctx, { filename: f }); } catch (e) { console.error('ERRO ao carregar', f, e.message); process.exit(2); }
@@ -161,6 +175,31 @@ const exS = pedS.find(x => x.title === 'SOLICITAÇÃO DE EXAMES'), avS = pedS.fi
 check('C12 servidor: documento de pedidos com identificação, triagem, contexto, exames e avaliações numerados, texto por item e campo livre', pedS[0].title === 'IDENTIFICAÇÃO DO PACIENTE E DO PROCEDIMENTO' && pedS.some(x => x.title === 'CONTEXTO DA SOLICITAÇÃO') && exS && exS.rows[0].join('|') === '1|ECG|Rotina (HAS)' && avS && avS.rows[0][1] === 'Avaliação cardiológica' && outS && outS.grid[0][1] === 'Hemograma recente' && run("pdfTitle_('PEDIDOS')") === 'SOLICITAÇÃO DE EXAMES E AVALIAÇÕES', JSON.stringify(pedS.map(x => x.title)));
 check('C12 servidor: normalizePayload_ garante solicitacoes_detalhes como objeto', (() => { ctx.__p = { conduta: { solicitacoes_detalhes: ['x'] } }; return JSON.stringify(run('normalizePayload_(__p)').conduta.solicitacoes_detalhes) === '{}'; })());
 check('Relatório narrativo continua gerando texto com as seções novas', /IDENTIFICAÇÃO DO PACIENTE/.test(run("relatorioNarrativoServidor_(__pl, 'RELATORIO_NARRATIVO', __user)")));
+
+/* ---------- v19.11.1: datas legadas da restauração ("2026-07-13 9:00") ---------- */
+console.log('\n[v19.11.1] datas legadas da aba ATENDIMENTOS');
+ctx.__tzPlan = 'America/Sao_Paulo'; ctx.CLAV_FUSO_PLANILHA_CACHE_ = '';
+check('"2026-07-13 9:00" (formato do backup restaurado) → dia 2026-07-13, hora 9', dia('2026-07-13 9:00') === '2026-07-13' && run("partesDataClav_('2026-07-13 9:00').hora") === 9 && run("partesDataClav_('2026-07-13 9:00').minuto") === 0);
+check('"2026-08-07 22:15" → 2026-08-07 22:15; "2026-07-15 0:00" → data pura', dia('2026-08-07 22:15') === '2026-08-07' && run("partesDataClav_('2026-08-07 22:15').hora") === 22 && run("textoDataLegado_('2026-07-15 0:00')") === '2026-07-15T00:00');
+check('"13/07/2026 9:00" e "13/07/2026" (formato brasileiro) → 2026-07-13', dia('13/07/2026 9:00') === '2026-07-13' && dia('13/07/2026') === '2026-07-13');
+check('datas impossíveis continuam inválidas ("2026-13-45 9:00", "31/02/2026", "2026-07-13 25:00")', dia('2026-13-45 9:00') === '' && dia('31/02/2026') === '' && dia('2026-07-13 25:00') === '');
+check('dataCivilEstrita_ continua estrita (não aceita o formato legado)', run("dataCivilEstrita_('2026-07-13 9:00')") === '' && run("dataCivilEstrita_('2026-07-13')") === '2026-07-13');
+check('parseIsoMillis_ ordena o formato legado como hora local', (() => { const a = run("parseIsoMillis_('2026-07-13 9:00')"), b = run("parseIsoMillis_('2026-07-13T09:00')"), c = run("parseIsoMillis_('2026-07-13 10:30')"); return a > 0 && a === b && c > a; })());
+check('textoDataCanonico_: padrão do sistema sim; legado não', run("textoDataCanonico_('2026-07-13T09:00') && textoDataCanonico_('2026-07-13') && !textoDataCanonico_('2026-07-13 9:00') && !textoDataCanonico_('13/07/2026')"));
+// diagnóstico e normalização com a planilha falsa contendo o formato legado
+linhas.length = 0; escritas.length = 0; formatos.length = 0;
+linha('ATD-L1', 'Lucas Almeida Pereira', '2026-07-13 9:00', '2026-07-15 0:00');
+linha('ATD-L2', 'Jurema Cardoso de Mello', '2026-08-07 22:15', '13/08/2026');
+linha('ATD-L3', 'Já civil', '2026-09-28T09:00', '2026-09-29');
+const diagL = run('clavLinhasDatasForaDoPadrao_()');
+const porIdL = {}; diagL.forEach(l => { porIdL[l.atendimento_id + ':' + l.campo] = l; });
+check('diagnóstico classifica as células legadas como "texto-legado" e ignora as já civis', porIdL['ATD-L1:data_consulta'] && porIdL['ATD-L1:data_consulta'].tipo === 'texto-legado' && porIdL['ATD-L1:data_cirurgia'] && porIdL['ATD-L2:data_consulta'] && porIdL['ATD-L2:data_cirurgia'] && !porIdL['ATD-L3:data_consulta'] && !porIdL['ATD-L3:data_cirurgia'] && diagL.length === 4, JSON.stringify(Object.keys(porIdL)));
+check('texto proposto: consulta com hora "2026-07-13T09:00" / "2026-08-07T22:15"; cirurgia só o dia "2026-07-15" / "2026-08-13"', porIdL['ATD-L1:data_consulta'].texto === '2026-07-13T09:00' && porIdL['ATD-L1:data_cirurgia'].texto === '2026-07-15' && porIdL['ATD-L2:data_consulta'].texto === '2026-08-07T22:15' && porIdL['ATD-L2:data_cirurgia'].texto === '2026-08-13', JSON.stringify(diagL.map(l => l.atendimento_id + ':' + l.campo + '=' + l.texto)));
+const relat = run('clavDiagnosticoDatas()');
+check('relatório mostra "antes: não era lido" para o legado', /texto-legado/.test(relat) && /antes: não era lido/.test(relat));
+const resumoL = run('clavNormalizarDatasAtendimentos(true)');
+check('normalização regrava as 4 células legadas como texto civil e depois nada mais fica fora do padrão', escritas.length === 4 && linhas[0][col('data_consulta')] === '2026-07-13T09:00' && linhas[0][col('data_cirurgia')] === '2026-07-15' && linhas[1][col('data_cirurgia')] === '2026-08-13' && run('clavLinhasDatasForaDoPadrao_()').length === 0 && /4 célula/.test(resumoL), JSON.stringify({ escritas, resumoL }));
+check('agenda lê o dia certo antes e depois da normalização', dia('2026-07-13 9:00') === '2026-07-13' && dia(linhas[0][col('data_consulta')]) === '2026-07-13');
 
 const falhas = results.filter(r => !r.ok).length;
 console.log(`\nRESULTADO SERVIDOR: ${results.length - falhas} OK / ${falhas} FALHA(S)`);

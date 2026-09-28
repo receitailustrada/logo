@@ -188,9 +188,39 @@ function dataCivilEstrita_(valor) {
 }
 
 // Distingue data pura, data/hora local e timestamp com fuso explícito.
+// v19.11.1 (diagnóstico de 28/09/2026: 296 células "2026-07-13 9:00", texto vindo da
+// restauração do backup de 06/09). Converte formatos de exibição da planilha para o
+// padrão civil: "aaaa-m-d h:mm", "dd/mm/aaaa h:mm" (com ou sem hora/segundos). Devolve
+// "" quando o texto não é um desses formatos; datas impossíveis continuam inválidas.
+function textoDataLegado_(texto) {
+  var t = String(texto || '').trim();
+  if (!t) return '';
+  var m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  var ano, mes, dia, hora, minuto, segundo;
+  if (m) { ano = m[1]; mes = m[2]; dia = m[3]; hora = m[4]; minuto = m[5]; segundo = m[6]; }
+  else {
+    m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (!m) return '';
+    dia = m[1]; mes = m[2]; ano = m[3]; hora = m[4]; minuto = m[5]; segundo = m[6];
+  }
+  var p2 = function (n) { return ('0' + String(Number(n))).slice(-2); };
+  var civil = dataCivilEstrita_(ano + '-' + p2(mes) + '-' + p2(dia));
+  if (!civil) return '';
+  if (hora === undefined) return civil;
+  if (Number(hora) > 23 || Number(minuto) > 59 || (segundo !== undefined && Number(segundo) > 59)) return '';
+  return civil + 'T' + p2(hora) + ':' + p2(minuto) + (segundo !== undefined ? ':' + p2(segundo) : '');
+}
+// Texto já no padrão gravado pelo sistema (data civil ou data/hora local sem fuso).
+function textoDataCanonico_(texto) {
+  return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$/.test(String(texto || '').trim());
+}
+
 function partesDataClav_(valor) {
   if (typeof valor !== 'string') return null;
   var texto = valor.trim();
+  // v19.11.1: formato legado da planilha ("2026-07-13 9:00") é lido como data/hora local.
+  var legado = textoDataLegado_(texto);
+  if (legado && legado !== texto) texto = legado;
   var civil = dataCivilEstrita_(texto);
   if (civil) return { dia: civil, hora: 0, minuto: 0, segundo: 0, milissegundo: 0, fuso: '', dataPura: true };
   var m = texto.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/);

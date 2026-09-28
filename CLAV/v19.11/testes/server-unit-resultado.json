@@ -1,6 +1,6 @@
 {
   "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-fix",
-  "data": "2026-09-28T13:36:25.106Z",
+  "data": "2026-09-28T16:33:06.645Z",
   "resultados": [
     {
       "name": "Meniscectomia (SIDE na aba) com \"Direita\" não gera LATERALIDADE_INDEVIDA",
@@ -196,6 +196,54 @@
     },
     {
       "name": "Relatório narrativo continua gerando texto com as seções novas",
+      "ok": true
+    },
+    {
+      "name": "\"2026-07-13 9:00\" (formato do backup restaurado) → dia 2026-07-13, hora 9",
+      "ok": true
+    },
+    {
+      "name": "\"2026-08-07 22:15\" → 2026-08-07 22:15; \"2026-07-15 0:00\" → data pura",
+      "ok": true
+    },
+    {
+      "name": "\"13/07/2026 9:00\" e \"13/07/2026\" (formato brasileiro) → 2026-07-13",
+      "ok": true
+    },
+    {
+      "name": "datas impossíveis continuam inválidas (\"2026-13-45 9:00\", \"31/02/2026\", \"2026-07-13 25:00\")",
+      "ok": true
+    },
+    {
+      "name": "dataCivilEstrita_ continua estrita (não aceita o formato legado)",
+      "ok": true
+    },
+    {
+      "name": "parseIsoMillis_ ordena o formato legado como hora local",
+      "ok": true
+    },
+    {
+      "name": "textoDataCanonico_: padrão do sistema sim; legado não",
+      "ok": true
+    },
+    {
+      "name": "diagnóstico classifica as células legadas como \"texto-legado\" e ignora as já civis",
+      "ok": true
+    },
+    {
+      "name": "texto proposto: consulta com hora \"2026-07-13T09:00\" / \"2026-08-07T22:15\"; cirurgia só o dia \"2026-07-15\" / \"2026-08-13\"",
+      "ok": true
+    },
+    {
+      "name": "relatório mostra \"antes: não era lido\" para o legado",
+      "ok": true
+    },
+    {
+      "name": "normalização regrava as 4 células legadas como texto civil e depois nada mais fica fora do padrão",
+      "ok": true
+    },
+    {
+      "name": "agenda lê o dia certo antes e depois da normalização",
       "ok": true
     }
   ]

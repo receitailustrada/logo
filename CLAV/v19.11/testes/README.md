@@ -23,3 +23,6 @@ Requisitos: Node 22, Playwright 1.56 com Chromium. Nada aqui toca o Apps Script 
 - `server_unit.js`: seção "[v19.11]" com a folha impressa no motor do servidor (`buildPdfSections_`), grade fixa, célula em linha e o documento PEDIDOS (49 OK).
 - `e2e.js`: bloco "v19.11" (15 verificações: tela e estrutura da folha). Resultado em `e2e-resultado-v1911.json` (128 OK).
 - `shots_v1911.js`: capturas em `shots-v1911/` (exame físico, revisão, via aérea, solicitações, folha e pedidos).
+
+## 19.11.1
+- `server_unit.js`: seção "[v19.11.1]" — formato legado `2026-07-13 9:00` e `13/07/2026 9:00` (leitura, ordenação, diagnóstico e normalização com planilha simulada); `Utilities.parseDate` simulado no sandbox. Resultado: 61 OK.

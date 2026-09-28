@@ -317,6 +317,18 @@ function clavLinhasDatasForaDoPadrao_() {
       var texto = String(v).trim();
       var partes = partesDataClav_(texto);
       if (!partes) { item.tipo = 'texto-invalido'; item.original = texto; saida.push(item); return; }
+      // v19.11.1: texto legado ("2026-07-13 9:00", "13/07/2026 9:00") é lido, mas fica
+      // fora do padrão gravado pelo sistema: proposta = texto civil equivalente.
+      if (!partes.fuso && !textoDataCanonico_(texto)) {
+        item.tipo = 'texto-legado';
+        item.original = texto;
+        item.dia = partes.dia;
+        item.diaAntigo = '';
+        var temHora = !partes.dataPura && (partes.hora || partes.minuto);
+        item.texto = (campo === 'data_consulta' && temHora) ? partes.dia + 'T' + ('0' + partes.hora).slice(-2) + ':' + ('0' + partes.minuto).slice(-2) : partes.dia;
+        saida.push(item);
+        return;
+      }
       if (partes.dataPura || !partes.fuso) return; // já está no padrão civil/local
       item.tipo = 'instante-com-fuso';
       item.original = texto;
@@ -346,7 +358,7 @@ function clavDiagnosticoDatas() {
   ];
   linhas.forEach(function (l) {
     texto.push('linha ' + l.row + ' | ' + l.atendimento_id + ' | ' + l.paciente + ' | ' + l.campo + ' = ' + l.original + ' [' + l.tipo + ']'
-      + (l.dia ? ' → dia lido agora: ' + l.dia + (l.diaAntigo && l.diaAntigo !== l.dia ? ' (antes: ' + l.diaAntigo + ')' : '') : '')
+      + (l.dia ? ' → dia lido agora: ' + l.dia + (l.tipo === 'texto-legado' ? ' (antes: não era lido)' : (l.diaAntigo && l.diaAntigo !== l.dia ? ' (antes: ' + l.diaAntigo + ')' : '')) : '')
       + (l.texto ? ' → texto proposto: ' + l.texto : ' → sem normalização automática'));
   });
   var saida = texto.join('\n');

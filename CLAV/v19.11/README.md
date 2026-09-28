@@ -1,4 +1,4 @@
-# CLAV v19.11 — Pedidos da equipe, lote 2: folha impressa e layouts
+# CLAV v19.11 (+ ajuste 19.11.1) — Pedidos da equipe, lote 2: folha impressa e layouts
 
 **Data:** 28/09/2026 · **Base:** v19.10 (mesmo projeto Apps Script `app_clav_07092026-0423`, 36 arquivos) · **Planilha:** CLAV | Sistema Perioperatório | Base de Dados (esquema 8, sem alteração)
 
@@ -7,6 +7,33 @@ Versão gravada no código: `2026.09.28-clav-perioperatorio-v19.11-folha-impress
 Histórico: `README-v19.10.md` (lote 1: servidor, tela, encerrar e imprimir), `README-v19.9.3.md`, `README-v19.9.2.md`, `README-v19.9.1.md`, `README-v19.9.md`. Lista completa dos pedidos e situação em `pente-fino-pedidos-equipe.md`.
 
 **Com esta versão, toda a lista do irmão do Daniel está executada** (autorização de 28/09/2026: "pode corrigir tudo… ele decide"). Duas ressalvas técnicas: as figurinhas da escala de faces não saem na folha impressa (só o valor; a impressão não pode depender de imagem remota) e o PDF arquivado no Drive não tem cantos arredondados (limitação do Google Docs).
+
+---
+
+## 0. Ajuste 19.11.1 (28/09/2026, depois da implantação da 19.11) — datas legadas da aba ATENDIMENTOS
+
+**O que o diagnóstico mostrou:** `clavDiagnosticoDatas()` listou **296 células** de `data_consulta`/`data_cirurgia` no formato de exibição da planilha, `2026-07-13 9:00` (espaço e hora sem zero), todas de registros de julho até o início de setembro. É a marca da restauração do backup de 06/09 (o CSV/xlsx grava o texto exibido). O sistema atual grava `2026-07-13T09:00`; os atendimentos novos não estão na lista. Antes deste ajuste, essas células não eram lidas: os atendimentos ficavam fora da agenda do seu dia e sem data no histórico do paciente. Não era um erro do sistema nem risco para os dados.
+
+**O que mudou (2 módulos + versão):**
+
+| Arquivo | Mudança |
+|---|---|
+| `12_Calculos.gs` | `textoDataLegado_`: converte `aaaa-m-d h:mm` e `dd/mm/aaaa h:mm` (com ou sem hora) para o padrão civil; `partesDataClav_` passa a aceitar esses textos como data/hora **local**. Vale para agenda, fila da ficha, bate-escala, relatórios, histórico do paciente e ordenação. Datas impossíveis continuam inválidas; a validação estrita da gravação não mudou. |
+| `99_Diagnostico.gs` | O diagnóstico classifica essas células como `texto-legado` (com "antes: não era lido") e a normalização as regrava no padrão do sistema: `2026-07-13T09:00` na consulta, `2026-07-15` na cirurgia. |
+| `28_Versao.gs` | Pacote `19.11.1`, manifesto regenerado (392 funções). **Só no ZIP privado.** |
+
+`Index.html` e `00_Config.gs` **não mudaram**: o código interno continua `v19.11-folha-impressa`; a Análise mostra "Pacote: 19.11.1" com esse código interno, e isso é o esperado.
+
+**Verificação:** servidor em sandbox **61 OK / 0 falhas** (12 verificações novas, inclusive diagnóstico e normalização com planilha simulada contendo o formato legado); sintaxe 42/0; manifesto 32/32.
+
+**Implantação (3 arquivos):** colar `12_Calculos.gs` e `99_Diagnostico.gs` (pasta `codigo/`) e `28_Versao.gs` (ZIP privado) → **Nova versão** → `adminSelarManifestoHtml` → Análise "Pacote: 19.11.1 … ÍNTEGRO".
+
+**Depois, a normalização (uma vez, opcional mas recomendada):**
+1. Planilha: Arquivo → Fazer download → .xlsx (backup).
+2. Editor: executar `clavDiagnosticoDatas` e conferir no registro que as linhas aparecem como `[texto-legado] → texto proposto: …` (o registro é truncado pelo Apps Script; o total no topo é o que importa).
+3. Editor: executar `clavNormalizarDatasAtendimentos(true)`. Resultado esperado no registro: "Datas normalizadas: 296 célula(s)…".
+4. Rodar `clavDiagnosticoDatas` de novo: "Células fora do padrão civil: 0".
+Sem a normalização o sistema já lê as datas certas; ela só deixa a planilha no padrão e evita nova conversão.
 
 ---
 
