@@ -1,0 +1,647 @@
+{
+  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-fix",
+  "versao": "2026.09.28-clav-perioperatorio-v19.11-folha-impressa",
+  "data": "2026-09-28T13:37:19.361Z",
+  "resultados": [
+    {
+      "name": "Index: módulo principal carregou e login habilitado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: login por validarLogin e sessão persistida",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: HTML_VERSION igual à versão do servidor (sem aviso de divergência)",
+      "ok": true,
+      "detail": "2026.09.28-clav-perioperatorio-v19.11-folha-impressa vs 2026.09.28-clav-perioperatorio-v19.11-folha-impressa"
+    },
+    {
+      "name": "Index: abrirRegistro(ATD-1) carregou o atendimento",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: URL da ficha leva caso, slot e sessão no fragmento",
+      "ok": true,
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-csvwsj6yk6w"
+    },
+    {
+      "name": "Index: URL da ficha não leva o token na query",
+      "ok": true,
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-csvwsj6yk6w"
+    },
+    {
+      "name": "Index: botão \"Abrir a ficha em outra aba\" abre a URL com sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-csvwsj6yk6w\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Index: PA 180/80 gera alerta SV_PAS_CRITICO no painel",
+      "ok": true,
+      "detail": "SV_PAS_CRITICO,BETA_HCG_PENDENTE,RISCO_PROCEDIMENTO_AUSENTE,RISCO_PACIENTE_AUSENTE,ABERTURA_ORAL_AUSENTE,PROTRUSAO_MANDIBULAR_AUSENTE,MOBILIDADE_CERVICAL_AUSENTE,DTM_AUSENTE,CIRCUNFERENCIA_CERVICAL_AUSENTE,CONCLUSAO_AUSENTE"
+    },
+    {
+      "name": "Index: resumo da triagem destaca a PA 180/80 para o médico",
+      "ok": true,
+      "detail": "[\"PA180/80 mmHg · Crítico\"]"
+    },
+    {
+      "name": "Index: salvar após a ficha gravar → conflito resolvido sozinho e gravação confirmada",
+      "ok": true,
+      "detail": "{\"salvo\":true,\"db\":{\"revision\":3,\"fr\":\"18\",\"intraop\":\"preservado\",\"tecnica\":\"Geral balanceada\"},\"enviados\":[{\"temIntraop\":false,\"base\":1}]}"
+    },
+    {
+      "name": "Index: o bloco intraop da ficha foi preservado (Index não o envia)",
+      "ok": true,
+      "detail": "{\"db\":{\"revision\":3,\"fr\":\"18\",\"intraop\":\"preservado\",\"tecnica\":\"Geral balanceada\"},\"enviados\":[{\"temIntraop\":false,\"base\":1}]}"
+    },
+    {
+      "name": "Index: a tela incorporou o intraop gravado pela ficha",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: chip de salvamento indica planilha salva",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: ficha vinculada com o token do fragmento",
+      "ok": true,
+      "detail": "Vinculado · Maria da Silva"
+    },
+    {
+      "name": "Intra: token persistido no armazenamento da própria aba",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: fragmento apagado da URL após a leitura (history.replace com hash vazio e page=intra)",
+      "ok": true,
+      "detail": "[{\"op\":\"replace\",\"params\":{\"page\":\"intra\",\"caso\":\"ATD-1\",\"slot\":\"1\",\"modo\":\"completo\"},\"hash\":\"\"}]"
+    },
+    {
+      "name": "Intra: veil de login não aparece quando há sessão",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: contexto do paciente aplicado (peso, ASA, alergia)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: biblioteca de fármacos carregada (88 fármacos)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: busca de fármaco calcula dose total pelo peso (70 kg)",
+      "ok": true,
+      "detail": "Indutores e hipnóticosPropofol 1%Amp/fr 200 mg/20 mL (10 mg/mL), emulsão lipídicaDiluição: Uso puro; se diluir, SG 5% até no mínimo 2 mg/mL. Assepsia rigorosa e desprezar sobras (meio de cultura).Indu"
+    },
+    {
+      "name": "Intra: salvar no prontuário confirma (intraopSalvar)",
+      "ok": true,
+      "detail": "Salvo no prontuário às 13:36:27 · rev. 2"
+    },
+    {
+      "name": "Intra: após o Index gravar, a ficha relê a revisão e reenvia (conflito resolvido)",
+      "ok": true,
+      "detail": "{\"s2\":true,\"revAntes\":3,\"revDepois\":4,\"conflitos\":3}"
+    },
+    {
+      "name": "Intra: código de erro do servidor lido de error.code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: atendimento encerrado → para de insistir e avisa",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sessão expirada durante a cirurgia abre o login na própria ficha",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: após reentrar, a ficha volta a gravar no prontuário",
+      "ok": true,
+      "detail": "Salvo no prontuário às 13:36:28 · rev. 5"
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem token → veil de login aberto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: senha errada mostra a mensagem do servidor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: login correto vincula a ficha ao atendimento",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: fila do dia aparece com o paciente do dia",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: tocar no paciente abre a ficha vinculada com a sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: prontuário mais novo prevalece sobre o rascunho antigo deste aparelho",
+      "ok": true,
+      "detail": "PRONTUARIO NOVO"
+    },
+    {
+      "name": "Intra: o rascunho antigo NÃO foi enviado ao prontuário",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra RO: vinculada em modo visualização, banner visível e botão Fila oculto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra RO: \"Abrir em outra aba para registrar\" abre a ficha de registro com sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Intra RO: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: conclusão em branco abre \"Encerramento bloqueado\" (sem checkbox, sem chamar a planilha)",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"titulo\":\"Encerramento bloqueado\",\"impedimentos\":[\"Conclusão da avaliação pré-anestésica\"],\"textos\":[\"Escolha a Conclusão (Apto, Apto com recomendações, Pendente de exames/parecer…) no bloco \\\"Conclusão e anestesia proposta\\\" da consulta pré-anestésica.\"],\"acks\":[],\"confirmVisivel\":fa"
+    },
+    {
+      "name": "Encerrar: \"Ir ao campo\" abre o pré-anestésico, expande o bloco e foca a Conclusão",
+      "ok": true,
+      "detail": "{\"secao\":true,\"modalFechado\":true,\"boxAberto\":true,\"focado\":true}"
+    },
+    {
+      "name": "Encerrar: Conclusão \"Apto\" gravada no formulário pelo controle pesquisável",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: com a conclusão preenchida, pede a ciência dos alertas graves da tela (PAS 180)",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[\"SV_PAS_CRITICO\"],\"confirmVisivel\":true,\"chamadasEncerrar\":0,\"toasts\":[\"Acesso autorizado.\",\"Atendimento carregado. Rascunhos anteriores permanecem em Retomar rascunho local.\",\"Salvo com sucesso na planilha.\"]}"
+    },
+    {
+      "name": "Encerrar: alerta que só a planilha gera (lateralidade indevida) chega ao modal de ciência",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[\"LATERALIDADE_INDEVIDA\"],\"confirmVisivel\":true,\"chamadasEncerrar\":1,\"toasts\":[\"Acesso autorizado.\",\"Atendimento carregado. Rascunhos anteriores permanecem em Retomar rascunho local.\",\"Salvo com sucesso na plani"
+    },
+    {
+      "name": "Encerrar: ciência do alerta do servidor gravada com o texto exato e atendimento ENCERRADO na planilha",
+      "ok": true,
+      "detail": "{\"status\":\"ENCERRADO\",\"textoLat\":\"Procedimento sem lateralidade anatômica registrado como \\\"Direita\\\". Confirme o procedimento e o lado antes do time out: nomes parecidos (umbilical x inguinal) mudam o sítio cirúrgico.\",\"modalFechado\":true,\"chamadas\":2,\"locked\":true}"
+    },
+    {
+      "name": "Encerrar: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: bloqueio devolvido pela planilha vira \"Encerramento bloqueado\" com a mensagem do servidor e botão para o campo",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"titulo\":\"Encerramento bloqueado\",\"impedimentos\":[\"Anestesiologista responsável\"],\"textos\":[\"Encerramento bloqueado (simulado pela planilha): ANESTESIOLOGISTA_OBRIGATORIO.\"],\"acks\":[],\"confirmVisivel\":false,\"chamadasEncerrar\":1,\"toasts\":[\"Acesso autorizado.\",\"Atendimento carregado. Ra"
+    },
+    {
+      "name": "Encerrar: se a planilha repete a mesma exigência após a ciência salva, a tela avisa em vez de reabrir o modal sem fim",
+      "ok": true,
+      "detail": "{\"antes\":[\"SO_SERVIDOR_TEIMOSO\"],\"depois\":{\"aberto\":false,\"chamadas\":3,\"toasts\":[\"Salvo com sucesso na planilha.\",\"A planilha não reconheceu a ciência registrada para: SIMULACAO. Salve o atendimento, recarregue a página e tente encerrar de novo; se persistir, abra um chamado informando o horário.\"]}"
+    },
+    {
+      "name": "Cartão do paciente: no fim da aba SRPA continua inteiro e visível logo abaixo do cabeçalho",
+      "ok": true,
+      "detail": "{\"scrollY\":635,\"top\":114,\"bottom\":285,\"topbarBottom\":106,\"altura\":800,\"nome\":\"Maria da Silva\",\"railAltura\":1169}"
+    },
+    {
+      "name": "Cartão do paciente: idem na aba Documentos",
+      "ok": true,
+      "detail": "{\"scrollY\":956,\"top\":114,\"topbarBottom\":106,\"bottom\":285,\"altura\":800}"
+    },
+    {
+      "name": "Encerrar/cartão: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.9.2: cores dos botões (rascunho âmbar, alertas vermelho, Novo na cor do tema ativo, Sair vermelho)",
+      "ok": true,
+      "detail": "{\"rascunho\":\"rgb(180, 83, 9)\",\"alertas\":\"rgb(180, 35, 24)\",\"novo\":\"rgb(24, 92, 78)\",\"sair\":\"rgb(180, 35, 24)\",\"brand\":\"rgb(24, 92, 78)\",\"titulos\":[true,true,true,true],\"selo\":{\"cursor\":\"default\",\"raio\":\"999px\"},\"facesAdulto\":\"none\",\"facesPed\":\"flex\",\"medChipsOcultos\":true}"
+    },
+    {
+      "name": "v19.9.2: legendas em Encerrar, Reabrir, Novo e Sair",
+      "ok": true,
+      "detail": "[true,true,true,true]"
+    },
+    {
+      "name": "v19.9.2: selo \"Via aérea\" sem mãozinha e em pílula",
+      "ok": true,
+      "detail": "{\"cursor\":\"default\",\"raio\":\"999px\"}"
+    },
+    {
+      "name": "v19.9.2: escala do adulto sem desenhos; pediátrica com desenhos",
+      "ok": true,
+      "detail": "{\"a\":\"none\",\"p\":\"flex\"}"
+    },
+    {
+      "name": "v19.9.2: atalhos de medicações nascem recolhidos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (C3): atalhos rápidos de medicações retirados (botão, fileira e ajuda ocultos; campo de medicações continua)",
+      "ok": true,
+      "detail": "{\"btn\":\"none\",\"fileira\":\"none\",\"ajuda\":\"none\",\"campoMed\":true}"
+    },
+    {
+      "name": "v19.9.2: atalho clicado fica em destaque (um só)",
+      "ok": true,
+      "detail": "[\"sb-exame-fisico\"]"
+    },
+    {
+      "name": "v19.9.2: nível de fonte guardado por usuário",
+      "ok": true,
+      "detail": "{\"chave\":\"1\",\"zoom\":\"1.06\"}"
+    },
+    {
+      "name": "v19.9.2: modo \"Reorganizar\" mostra setas e \"Ordem padrão\"",
+      "ok": true,
+      "detail": "{\"classe\":true,\"setasVisiveis\":true,\"restaurarVisivel\":true}"
+    },
+    {
+      "name": "v19.9.2: duas setas para cima movem o bloco duas posições, barra de atalhos acompanha",
+      "ok": true,
+      "detail": "{\"idxAntes\":12,\"idxDepois\":10,\"chipsIguais\":true}"
+    },
+    {
+      "name": "v19.9.2: ordem guardada por usuário e formulário NÃO fica alterado",
+      "ok": true,
+      "detail": "{\"salvo\":true,\"dirty\":false,\"pendente\":false,\"fpIgual\":true}"
+    },
+    {
+      "name": "v19.9.2: ordem e fonte sobrevivem a recarregar a página (atalhos de medicações seguem retirados, v19.10)",
+      "ok": true,
+      "detail": "{\"ordem\":[\"triagemResumoBox\",\"sb-cirurgias-e-procedimentos-previos\",\"sb-complicacoes-anestesicas-pessoais-previa\",\"sb-complicacoes-anestesicas-familiares\",\"sb-medicacoes-em-uso-atual-recente\",\"glp1Box\",\"sb-alergias-farmacos-latex-e-alimentos\",\"sb-habitos\",\"sb-capacidade-funcional-em-mets\",\"sb-revisa"
+    },
+    {
+      "name": "v19.9.2: \"Ordem padrão\" devolve a sequência original e limpa a preferência",
+      "ok": true,
+      "detail": "{\"igual\":true,\"salvo\":null}"
+    },
+    {
+      "name": "v19.9.2: ao sair, a fonte volta ao nível geral do navegador",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.9.2: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra v19.9.2: menu esquerdo e painel direito recolhidos por padrão",
+      "ok": true,
+      "detail": "{\"menuFechado\":true,\"painelFechado\":true,\"cabTela\":true,\"estadoBtn\":\"b btn estado-iniciar\",\"chipEstado\":\"chip estado-nao-iniciado\",\"pacienteDestacado\":\"2px\"}"
+    },
+    {
+      "name": "Intra v19.9.2: Paciente/Cirurgia destacados na tela e estado do caso com classe própria",
+      "ok": true,
+      "detail": "{\"menuFechado\":true,\"painelFechado\":true,\"cabTela\":true,\"estadoBtn\":\"b btn estado-iniciar\",\"chipEstado\":\"chip estado-nao-iniciado\",\"pacienteDestacado\":\"2px\"}"
+    },
+    {
+      "name": "Intra v19.9.2: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.9.3: ao voltar para a aba, a revisão da ficha é absorvida em silêncio, mesmo sem cópia do servidor",
+      "ok": true,
+      "detail": "{\"ok\":true,\"rev\":3,\"dbrev\":3,\"base\":true,\"sinais\":1,\"pendente\":false,\"tipo\":\"saved\"}"
+    },
+    {
+      "name": "v19.9.3: Encerrar conclui depois de a ficha ter gravado (sem \"alterado em outra aba\")",
+      "ok": true,
+      "detail": "{\"status\":\"ENCERRADO\",\"tipo\":\"saved\",\"locked\":true}"
+    },
+    {
+      "name": "v19.9.3 (a): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.9.3: com edição pendente, o servidor aceita a gravação por cima das revisões da ficha, preserva a ficha e encerra",
+      "ok": true,
+      "detail": "{\"status\":\"ENCERRADO\",\"tipo\":\"saved\",\"locked\":true,\"fr\":\"18\",\"sinais\":1,\"ops\":[\"INTRA5\",\"f5a110\"]}"
+    },
+    {
+      "name": "v19.9.3 (b): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.9.3: gravação de outra pessoa continua sendo conflito (nada sobrescrito, caso não encerrado)",
+      "ok": true,
+      "detail": "{\"status\":\"ABERTO\",\"tipo\":\"error\",\"texto\":\"Conflito: rascunho preservado\",\"locked\":false,\"fr\":\"16\",\"fc\":\"99\"}"
+    },
+    {
+      "name": "v19.9.3 (c): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (A1): lista de alertas do menu nasce recolhida também em tela larga",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (A2): painel dos casos hipotéticos escondido (botões continuam no HTML)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (B1): botão \"Atalhos\" da observação da triagem oculto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (B2): Cloro, Cálcio e Magnésio fora da grade; demais exames visíveis",
+      "ok": true,
+      "detail": "{\"o\":[true,true,true],\"v\":[true,true,true,true]}"
+    },
+    {
+      "name": "v19.10 (C4): lista de alergias enxuta (nega + 12 itens, com látex, penicilina, dipirona, AAS, contraste, alimentos)",
+      "ok": true,
+      "detail": "[\"Nega alergias\",\"Látex\",\"Penicilina (benzetacil, amoxicilina)\",\"Cefazolina / cefalexina\",\"Sulfas (Bactrim e outras)\",\"Dipirona\",\"AAS\",\"Metoclopramida\",\"Morfina e demais opioides\",\"Contraste iodado\",\"Picada de abelha\",\"Pólen / poeira / ácaros\",\"Alimentos (descrever na caixa livre)\"]"
+    },
+    {
+      "name": "v19.10 (C9): aba \"Calculadora\" no menu com os três escores; bloco fora do pré-anestésico",
+      "ok": true,
+      "detail": "{\"nav\":true,\"calc\":true,\"preop\":false}"
+    },
+    {
+      "name": "v19.10 (C10): capacidade funcional acima da revisão por sistemas e com fonte maior",
+      "ok": true,
+      "detail": "{\"mets\":8,\"rev\":9,\"font\":13}"
+    },
+    {
+      "name": "v19.10 (C11): título \"Estratificação final / ASA\" com id estável",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (C15): Conclusão e anestesia proposta em bloco recolhível com atalho na barra",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (C6): Beta-HCM numa linha (\"Resultado do Beta-HCG\") e terceira linha escondida",
+      "ok": true,
+      "detail": "{\"l\":\"Resultado do Beta-HCG\",\"o\":true}"
+    },
+    {
+      "name": "v19.10 (D1): folha do navegador com caixas arredondadas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (item 13): botão do modal de ciência \"Ciente de todos os alertas: encerrar\"",
+      "ok": true,
+      "detail": "Ciente de todos os alertas: encerrar"
+    },
+    {
+      "name": "v19.10 (C6): \"Resultado do Beta-HCG\" espelha o resultado detalhado (Positivo/Aguardando/Negativo) e mantém o alerta da menor de 14 anos",
+      "ok": true,
+      "detail": "{\"r1\":\"Positivo\",\"r2\":\"Aguardando resultado\",\"r3\":\"Negativo\",\"alertaPos\":true,\"antes\":true,\"depois\":true}"
+    },
+    {
+      "name": "v19.10 (C6): observação de registro antigo faz a terceira linha aparecer",
+      "ok": true,
+      "detail": "{\"r1\":\"Positivo\",\"r2\":\"Aguardando resultado\",\"r3\":\"Negativo\",\"alertaPos\":true,\"antes\":true,\"depois\":true}"
+    },
+    {
+      "name": "v19.10 (C4): alergia de lista anterior aparece como caixa extra marcada, é gravada e some quando não está mais no registro",
+      "ok": true,
+      "detail": "{\"extra\":true,\"coletado\":[\"Dipirona\",\"Vancomicina\"],\"removido\":true}"
+    },
+    {
+      "name": "v19.10 (B2): Cloro com valor antigo continua visível e gravado; Cálcio vazio segue oculto; sem valor volta a sumir",
+      "ok": true,
+      "detail": "{\"cloro\":\"grid\",\"calcio\":\"none\",\"coletado\":\"101\",\"depois\":\"none\"}"
+    },
+    {
+      "name": "v19.10 (C13): lista nunca tocada → prescrição lista as medicações em uso (comportamento antigo preservado)",
+      "ok": true,
+      "detail": "[\"Jejum a partir da(s) ______\",\"CSVR\",\"Rotinas pré-operatórias\",\"Acesso venoso periférico (Abocath n° ____) no MS ____\",\"SF 0,9% ---- 100 ml EV + ________________ no bloco\",\"Losartana 50 mg\",\"Metformina 850 mg\"]"
+    },
+    {
+      "name": "v19.10 (C13): remover uma medicação da internação tira da prescrição e \"Importar\" não a recoloca",
+      "ok": true,
+      "detail": "{\"antes\":[\"Jejum a partir da(s) ______\",\"CSVR\",\"Rotinas pré-operatórias\",\"Acesso venoso periférico (Abocath n° ____) no MS ____\",\"SF 0,9% ---- 100 ml EV + ________________ no bloco\",\"Losartana 50 mg\",\"Metformina 850 mg\"],\"importadas\":[\"Losartana 50 mg\",\"Metformina 850 mg\"],\"aposRemover\":{\"lista\":[\"M"
+    },
+    {
+      "name": "v19.10 (C13): lista esvaziada pela equipe → prescrição declara \"Sem medicações de uso contínuo\" (não volta tudo)",
+      "ok": true,
+      "detail": "{\"lista\":0,\"tocada\":\"SIM\",\"rx\":[\"Jejum a partir da(s) ______\",\"CSVR\",\"Rotinas pré-operatórias\",\"Acesso venoso periférico (Abocath n° ____) no MS ____\",\"SF 0,9% ---- 100 ml EV + ________________ no bloco\",\"Sem medicações de uso contínuo a manter no período de internação\"]}"
+    },
+    {
+      "name": "v19.10 (C13): \"Restaurar\" libera as removidas para reimportar",
+      "ok": true,
+      "detail": "{\"r\":true,\"l\":[\"Losartana 50 mg\",\"Metformina 850 mg\"]}"
+    },
+    {
+      "name": "v19.10 (C14): imprimir com alteração pendente grava na planilha antes de abrir a impressão",
+      "ok": true,
+      "detail": "{\"antesPrint\":{\"dirty\":true,\"salvos\":0,\"abertas\":0},\"depoisPrint\":{\"dirty\":false,\"pendente\":false,\"salvos\":1,\"abertas\":1,\"fr\":\"19\"}}"
+    },
+    {
+      "name": "v19.10 (C14): imprimir sem alteração pendente não grava de novo",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "v19.10 (tela): sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (item 13): anestesiologista em branco não é impedimento para quem pode assumir",
+      "ok": true,
+      "detail": "{\"anest\":\"\",\"impedimentos\":[]}"
+    },
+    {
+      "name": "v19.10 (item 13): Encerrar preenche o responsável com quem encerra e abre a ciência já marcada (sem \"Encerramento bloqueado\")",
+      "ok": true,
+      "detail": "{\"titulo\":\"Ciência de alertas graves\",\"marcados\":true,\"qtd\":1,\"anest\":\"Denis Paim Cipriani\"}"
+    },
+    {
+      "name": "v19.10 (item 13): um clique registra a ciência de todos os alertas e encerra",
+      "ok": true,
+      "detail": "{\"status\":\"ENCERRADO\",\"locked\":true,\"cientes\":[\"SV_PAS_CRITICO\"],\"anest\":\"Denis Paim Cipriani\"}"
+    },
+    {
+      "name": "v19.10 (item 13 a): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (item 13): gravação de outra pessoa ao encerrar abre a escolha (Recarregar / Encerrar mesmo assim) em vez de só falhar",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"botao\":\"Encerrar mesmo assim\",\"status\":\"ABERTO\"}"
+    },
+    {
+      "name": "v19.10 (item 13): \"Encerrar mesmo assim\" encerra o registro atual da planilha (a gravação da outra pessoa é preservada) e o servidor recebe forcarRevisao",
+      "ok": true,
+      "detail": "{\"status\":\"ENCERRADO\",\"locked\":true,\"fc\":\"99\",\"forcados\":[{\"fn\":\"encerrarAtendimento\",\"de\":2,\"para\":3}]}"
+    },
+    {
+      "name": "v19.10 (item 13 b): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.10 (item 13): conflito real ao salvar abre a escolha e nada é gravado sem decisão",
+      "ok": true,
+      "detail": "{\"salvo1\":false,\"s1\":{\"aberto\":true,\"botao\":\"Gravar por cima\",\"fr\":\"16\"}}"
+    },
+    {
+      "name": "v19.10 (item 13): \"Gravar por cima\" grava a edição desta tela com revisão forçada (auditada)",
+      "ok": true,
+      "detail": "{\"dirty\":false,\"fr\":\"21\",\"rev\":3,\"forcados\":1,\"chip\":\"Planilha salva 13:37\"}"
+    },
+    {
+      "name": "v19.10 (item 13): \"Recarregar da planilha\" traz a versão mais nova sem gravar a edição (que fica em rascunho local)",
+      "ok": true,
+      "detail": "{\"fr\":\"21\",\"fc\":\"99\",\"dirty\":false,\"rascunhos\":3}"
+    },
+    {
+      "name": "v19.10 (item 13 c): sem erros de JavaScript",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "v19.11 (C2): escala de dor dentro do bloco Exame físico (mesmos ids), sem atalho próprio na barra",
+      "ok": true,
+      "detail": "{\"d\":true,\"c\":false}"
+    },
+    {
+      "name": "v19.11 (C5): revisão por sistemas em 9 blocos de duas colunas, caixa de texto sempre visível e sem botão \"Outras\"",
+      "ok": true,
+      "detail": "{\"b\":9,\"dc\":9,\"cx\":9,\"o\":true}"
+    },
+    {
+      "name": "v19.11 (C5): ginecológico/obstétrico como caixa dentro de \"Outros sistemas\" (campos e situação preservados)",
+      "ok": true,
+      "detail": "{\"g\":true,\"t\":\"Outros sistemas e ginecológico/obstétrico\"}"
+    },
+    {
+      "name": "v19.11 (C7): ausculta cardíaca como texto padrão editável; seletor antigo oculto",
+      "ok": true,
+      "detail": "{\"t\":\"RCR, 2T, BNF, sem sopros\",\"o\":true}"
+    },
+    {
+      "name": "v19.11 (C8): desenhos do Mallampati à esquerda, dentição à direita em duas colunas, \"Outros achados da via aérea\"",
+      "ok": true,
+      "detail": "{\"o\":true,\"c\":2,\"l\":\"Outros achados da via aérea\"}"
+    },
+    {
+      "name": "v19.11 (C12): documento \"Solicitação de exames e avaliações\" no seletor, no botão e no lote",
+      "ok": true,
+      "detail": "{\"o\":true,\"t\":\"SOLICITAÇÃO DE EXAMES E AVALIAÇÕES\"}"
+    },
+    {
+      "name": "v19.11 (C5): texto na caixa vira \"Com alterações\" e sai na folha",
+      "ok": true,
+      "detail": "{\"livre\":\"Sopro sistólico conhecido\",\"status\":\"Com alterações\",\"chip\":\"1 achado\",\"impresso\":\"Sopro sistólico conhecido\"}"
+    },
+    {
+      "name": "v19.11 (C7): texto diferente do padrão grava \"Com alterações\" + descrição e sai assim na folha; voltar ao padrão (ou apagar) restaura o normal",
+      "ok": true,
+      "detail": "{\"a\":{\"s\":\"Com alterações\",\"d\":\"Sopro sistólico 2+/6 em foco mitral\"},\"impresso\":\"Sopro sistólico 2+/6 em foco mitral\",\"alterada\":true,\"b\":{\"s\":\"RCR, 2T, BNF, sem sopros\",\"d\":\"\"},\"c\":{\"s\":\"RCR, 2T, BNF, sem sopros\",\"d\":\"\",\"txt\":\"RCR, 2T, BNF, sem sopros\"}}"
+    },
+    {
+      "name": "v19.11 (C12): item marcado ganha caixa de objetivo; o documento de pedidos lista exames e avaliações numerados com o texto",
+      "ok": true,
+      "detail": "{\"temInput\":true,\"detalhe\":\"Rotina pré-operatória (HAS)\",\"solicitacoes\":\"Avaliação cardiológica; ECG\",\"titulos\":[\"IDENTIFICAÇÃO DO PACIENTE E DO PROCEDIMENTO\",\"TRIAGEM, SINAIS VITAIS E DADOS ANTROPOMÉTRICOS\",\"CONTEXTO DA SOLICITAÇÃO\",\"SOLICITAÇÃO DE EXAMES\",\"SOLICITAÇÃO DE AVALIAÇÃO ESPECIALIZADA / "
+    },
+    {
+      "name": "v19.11 (D3): cabeçalho fixo 3×4 em linha, nome em caixa alta, só três rótulos, sem nascimento",
+      "ok": true,
+      "detail": "{\"f\":true,\"n\":\"MARIA DA SILVA\",\"r\":[\"\",\"\",\"\",\"Data da consulta\",\"\",\"\",\"\",\"Data da cirurgia\",\"\",\"\",\"\",\"Prontuário\"],\"tds\":12,\"h\":true}"
+    },
+    {
+      "name": "v19.11 (D4): triagem em duas linhas de quatro, valores em linha com unidade, sem \"Responsável pela triagem\"",
+      "ok": true,
+      "detail": "{\"f\":true,\"pa\":\"180/80 mmHg\",\"r\":true}"
+    },
+    {
+      "name": "v19.11 (D5): bloco \"Consulta pré-anestésica\" desfeito; TCLE na conduta; dor no exame físico",
+      "ok": true,
+      "detail": "{\"c\":true,\"t\":\"Pendente\",\"d\":\"3\"}"
+    },
+    {
+      "name": "v19.11 (D2): seções sempre impressas com texto padrão (medicações, cirurgias, hábitos, antecedentes principais, Mallampati)",
+      "ok": true,
+      "detail": "{\"m\":\"NENHUMA MEDICAÇÃO EM USO\",\"c\":\"Nega cirurgias ou procedimentos prévios\",\"h\":\"Nega tabagismo, etilismo e uso de outras drogas\",\"a\":\"PACIENTE HÍGIDO\",\"mp\":\"Mallampati ______\"}"
+    },
+    {
+      "name": "v19.11 (D7/D9): exames e via aérea em linha; escores sem a capacidade; linha fixa Capacidade/ASA/Risco/Estratificação com ASA sempre impresso",
+      "ok": true,
+      "detail": "{\"dtm\":\"inline\",\"e\":[\"RCRI (Índice de Lee)\",\"STOP-Bang\",\"Caprini\"],\"o\":[\"Capacidade funcional\",\"ASA\",\"Risco do procedimento cirúrgico\",\"Estratificação global do risco do paciente\"],\"asa\":\"ASA II\"}"
+    },
+    {
+      "name": "v19.11 (tela e folha): sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: \"</script>\" no parâmetro caso não executa código",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

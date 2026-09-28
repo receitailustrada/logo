@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CLAV · Ficha de anestesia e registro intraoperatório</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0f8a7e; --teal-d:#0b6b62; --teal-l:#e3f3f1;
+    --ink:#1f2a2e; --muted:#5b6b70; --line:#d6e2e0; --bg:#f2f6f5; --card:#ffffff;
+    --warn:#c2410c; --warn-bg:#fff1e8; --ok:#15803d;
+    --sbw:300px; --rpw:340px; --hdr:60px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; background:var(--bg); color:var(--ink); font-family:Montserrat,system-ui,sans-serif; overscroll-behavior:none; -webkit-text-size-adjust:100%}
+  button{font:inherit; font-weight:600; font-size:13px; padding:8px 13px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; touch-action:manipulation}
+  button.primary{background:var(--teal); border-color:var(--teal); color:#fff}
+  button.danger{color:#b91c1c}
+  button.icon{width:38px; height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:17px}
+  button:active{transform:scale(.98)}
+  input,select,textarea{font:inherit}
+
+  /* ---------- cabeçalho ---------- */
+  header{height:var(--hdr); background:linear-gradient(90deg,var(--teal-d),var(--teal)); color:#fff; padding:0 12px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:30; box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header .icon{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.35); color:#fff}
+  .logo{font-weight:700; font-size:22px; letter-spacing:1px}
+  header .tit{font-size:11px; font-weight:700; text-align:right; line-height:1.25; text-transform:uppercase; letter-spacing:.3px; opacity:.95}
+  header .esp{flex:1}
+  header .msg{font-size:12px; font-weight:600; opacity:.9; max-width:40vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+  /* ---------- layout ---------- */
+  .app{display:flex; min-height:calc(100vh - var(--hdr))}
+  aside{background:#fff; position:relative; overflow:hidden; transition:width .2s, flex-basis .2s}
+  aside.esq{width:var(--sbw); flex:0 0 var(--sbw); border-right:1px solid var(--line)}
+  aside.dir{width:var(--rpw); flex:0 0 var(--rpw); border-left:1px solid var(--line)}
+  aside .in{padding:12px; overflow-y:auto; height:calc(100vh - var(--hdr)); position:sticky; top:var(--hdr)}
+  aside.esq .in{width:var(--sbw)} aside.dir .in{width:var(--rpw)}
+  .handle{position:absolute; top:0; width:9px; height:100%; cursor:col-resize; z-index:3; touch-action:none}
+  .handle.e{right:-4px} .handle.d{left:-4px}
+  .handle::after{content:''; position:absolute; left:3px; top:0; width:3px; height:100%; background:transparent; transition:.15s}
+  .handle:hover::after,.handle.ativo::after{background:var(--teal)}
+  body.sb-fechada aside.esq{width:0; flex-basis:0; border:0}
+  body.rp-fechado aside.dir{width:0; flex-basis:0; border:0}
+  body.sb-fechada .handle.e,body.rp-fechado .handle.d{display:none}
+  main{flex:1; min-width:0; padding:10px}
+
+  details.sec{border:1px solid var(--line); border-radius:12px; margin-bottom:8px; background:#fff}
+  details.sec summary{list-style:none; cursor:pointer; padding:9px 12px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px}
+  details.sec summary::-webkit-details-marker{display:none}
+  details.sec summary::before{content:'▸'; color:var(--teal); font-size:12px; transition:.15s}
+  details.sec[open] summary::before{transform:rotate(90deg)}
+  details.sec .corpo{padding:0 12px 12px; display:flex; flex-direction:column; gap:8px}
+  label.f{display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:600; color:var(--muted)}
+  label.f input,label.f select,label.f textarea{font-size:13.5px; font-weight:500; padding:7px 9px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%}
+  label.f textarea{min-height:60px; resize:vertical}
+  .toggle{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500}
+  .toggle input{width:18px; height:18px; accent-color:var(--teal)}
+  .chips{display:flex; flex-wrap:wrap; gap:6px}
+  .chips label{display:inline-flex; align-items:center; gap:6px; padding:6px 11px 6px 8px; border-radius:999px; border:1px solid var(--line); background:#fff; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; position:relative}
+  .chips label input{position:absolute; opacity:0; width:0; height:0}
+  .chips label b{display:inline-flex; width:20px; height:20px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; background:#b8c4c7}
+  .chips label.on{color:var(--ink); border-color:transparent; box-shadow:0 0 0 2px var(--cor,var(--teal)) inset}
+  .chips label.on b{background:var(--cor,var(--teal))}
+  .sub{font-size:11px; font-weight:700; color:var(--muted); margin:4px 0 0; text-transform:uppercase; letter-spacing:.3px}
+  .contador{display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:600}
+  .contador div{display:inline-flex; align-items:center; gap:6px}
+  .contador button{padding:3px 10px}
+  .grade2{display:grid; grid-template-columns:1fr auto; gap:6px 8px; align-items:center; font-size:12.5px; font-weight:500}
+  .grade2 input{width:86px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; text-align:right; font-size:13px}
+  .grade2 .tot{font-weight:700; border-top:1px solid var(--line); padding-top:4px}
+  .lab-col{border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:6px}
+  .lab-col .lg{display:grid; grid-template-columns:repeat(2,1fr); gap:4px 8px}
+  .lab-col .lg label{font-size:10.5px; font-weight:600; color:var(--muted); display:flex; flex-direction:column}
+  .lab-col .lg input{padding:4px 6px; border:1px solid var(--line); border-radius:6px; font-size:12.5px; width:100%}
+
+  /* ---------- ficha ---------- */
+  .ficha{background:#fff; border:1px solid var(--line); border-radius:14px; margin-bottom:10px}
+  .ficha-topo{display:flex; justify-content:space-between; align-items:center; padding:10px 14px 6px; border-bottom:2px solid var(--ink)}
+  .ficha-topo .lg{font-weight:700; font-size:22px; letter-spacing:1px}
+  .ficha-topo .tt{font-size:10.5px; font-weight:700; text-align:right; text-transform:uppercase; line-height:1.3; color:var(--muted)}
+  .cab{padding:8px 12px; display:grid; gap:6px}
+  .cab .r{display:grid; gap:6px}
+  .cab .b{border:1.5px solid var(--ink); border-radius:9px; padding:3px 8px 2px; min-width:0; background:#fff}
+  .cab .b small{display:block; font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.3px}
+  .cab .b input{border:0; width:100%; font-size:13.5px; font-weight:600; padding:1px 0; background:transparent; color:var(--ink); outline:none}
+  .cab .b input[type=time]{font-size:13px}
+  .cab .b .ro{font-size:13.5px; font-weight:600; padding:1px 0; min-height:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cab .b.calc{background:#f5f9f8}
+  .cab .b.btn{border-style:dashed; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--teal-d); font-weight:700; font-size:12.5px}
+  /* v19.9.2: destaque de Paciente, Cirurgia realizada e estado do caso — só na tela (.cab-tela); a folha impressa não muda */
+  .cab.cab-tela .r2 > .b:first-child, .cab.cab-tela .r3 > .b:first-child{border:2px solid var(--teal); background:#f2faf8; box-shadow:0 0 0 3px rgba(15,138,126,.08)}
+  .cab.cab-tela .r2 > .b:first-child small, .cab.cab-tela .r3 > .b:first-child small{color:var(--teal-d)}
+  .cab.cab-tela .r2 > .b:first-child input, .cab.cab-tela .r2 > .b:first-child .ro, .cab.cab-tela .r3 > .b:first-child input, .cab.cab-tela .r3 > .b:first-child .ro{font-size:16px; font-weight:800}
+  .cab.cab-tela .b.btn{border-width:2px; font-size:13px; letter-spacing:.2px}
+  .cab.cab-tela .b.btn.estado-iniciar{border-style:solid; background:var(--teal); border-color:var(--teal); color:#fff}
+  .cab.cab-tela .b.btn.estado-encerrar{border-style:solid; background:var(--warn-bg); border-color:var(--warn); color:var(--warn)}
+  .cab.cab-tela .b.btn.estado-encerrado{border-style:dashed; background:#eef2f7; border-color:#94a3b8; color:#334155; cursor:default}
+  .chip.estado-iniciado{background:#e7f6ec; border-color:#9ad4ae; color:var(--ok); font-weight:700}
+  .chip.estado-encerrado{background:#eef2f7; border-color:#b6c2d1; color:#334155; font-weight:700}
+  .chip.estado-nao-iniciado{background:var(--warn-bg); border-color:#f3c9b3; color:var(--warn); font-weight:700}
+  .r1{grid-template-columns:3fr 1fr}
+  .r2{grid-template-columns:3fr 1fr 1fr 1fr 1fr}
+  .r3{grid-template-columns:3fr 1.5fr 1.5fr}
+  .r4{grid-template-columns:2fr 2fr 2fr 1.2fr}
+  .r5{grid-template-columns:repeat(6,1fr)}
+
+  /* controles junto do gráfico */
+  .ctl{display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 12px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:#fafdfc; position:sticky; top:var(--hdr); z-index:5}
+  .chip{font-size:12px; font-weight:600; padding:5px 10px; border-radius:999px; background:var(--teal-l); color:var(--teal-d); border:1px solid #c5e5e0; white-space:nowrap}
+  .chip.pend{background:var(--warn-bg); color:var(--warn); border-color:#f6cdb5}
+  .chip.next{background:#e8eefc; color:#1e3a8a; border-color:#c7d5f7}
+  .ctl .stamp{font-size:11.5px; color:var(--muted); font-weight:500; margin-left:auto}
+  .ctl button{padding:6px 11px; font-size:12.5px}
+
+  .scroll{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
+  .bloco{border-bottom:1px solid var(--line)}
+  .linha{display:grid; align-items:stretch; min-height:27px}
+  .linha > div{border-right:1px solid #eef3f2; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:600; min-width:0}
+  .linha > div:last-child{border-right:0}
+  .linha .rot{justify-content:flex-start; padding:0 8px; font-size:11.5px; font-weight:700; position:sticky; left:0; background:#fff; z-index:2; border-right:1px solid var(--line); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .linha .rot .ed{display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%}
+  .linha .rot .ed{cursor:pointer; border-bottom:1px dashed var(--line)}
+  .linha.hora > div{background:var(--teal-l); color:var(--teal-d); font-size:11.5px; min-height:24px}
+  .linha.hora .rot{background:var(--teal-l)}
+  .linha.tit > div{background:#f7faf9; justify-content:flex-start; padding:0 8px; font-size:11px; font-weight:700; color:var(--muted); min-height:22px}
+  .linha.tit .rot{background:#f7faf9}
+  .linha.tit .rot button.mais{margin-left:auto; width:20px; height:20px; padding:0; font-size:14px; line-height:1; display:inline-flex; align-items:center; justify-content:center}
+  .cel{cursor:pointer; padding:2px; text-align:center; line-height:1.15; font-weight:500; font-size:11.5px; white-space:normal}
+  .cel.livre::after{content:'·'; color:#c8d3d1}
+  .cel:active{background:var(--teal-l)}
+  .gtit{display:flex; justify-content:space-between; align-items:baseline; padding:6px 12px 0; font-size:12px; font-weight:700}
+  .gtit span{font-weight:500; color:var(--muted); font-size:11px}
+
+  svg{display:block; touch-action:pan-x pan-y; user-select:none; -webkit-user-select:none; font-family:Montserrat,sans-serif}
+  .pt{touch-action:none}
+  /* navegação flutuante (topo / seções / fim) */
+  .navf{position:fixed; right:14px; bottom:14px; display:flex; flex-direction:column; gap:6px; z-index:28}
+  .navf button{width:44px; height:44px; padding:0; border-radius:50%; font-size:17px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.18); background:#fff}
+  .navf button.g{font-size:12px; font-weight:700}
+  .navf button.primary{background:var(--teal); color:#fff}
+  .atalhos{position:fixed; right:66px; bottom:14px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.6; box-shadow:0 4px 16px rgba(0,0,0,.15); z-index:28; display:none; max-width:280px}
+  .atalhos.open{display:block}
+  .atalhos b{display:inline-block; min-width:74px; font-family:monospace; font-weight:700; color:var(--teal-d)}
+  body:not(.rp-fechado) .navf,body:not(.rp-fechado) .atalhos{right:calc(var(--rpw) + 14px)}
+  @media print{.navf,.atalhos{display:none !important}}
+  .grid line{stroke:#e3ecea; stroke-width:1} .grid line.major{stroke:#cfdedb}
+  .axis text{fill:var(--muted); font-size:11px; font-weight:600} .axis text.dir{fill:#dc2626}
+  .series path{fill:none; stroke-width:1.4; stroke-dasharray:4 3}
+  .pt{cursor:grab} .pt.locked{cursor:default}
+  .pt circle{}
+  .pt text.sym{font-weight:700; text-anchor:middle; dominant-baseline:central; pointer-events:none}
+  .pt text.val{font-weight:600; text-anchor:middle; pointer-events:none}
+  .pt.drag circle{stroke-width:2.2 !important}
+  .now line{stroke:var(--teal); stroke-width:2; stroke-dasharray:3 4}
+  .now text{fill:var(--teal); font-size:11px; font-weight:700; text-anchor:middle}
+  .bubble rect{fill:var(--ink); rx:8}
+  .bubble text{fill:#fff; font-size:14px; font-weight:700; text-anchor:middle; dominant-baseline:central}
+  .legenda{display:flex; flex-wrap:wrap; gap:10px; padding:6px 12px 8px; font-size:12px; font-weight:600}
+  .legenda span{display:inline-flex; align-items:center; gap:5px}
+  .legenda b{display:inline-flex; width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:10px}
+  .vazio{padding:16px; text-align:center; font-size:12.5px; color:var(--muted)}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px}
+  .card h2{font-size:14px; font-weight:700; margin:0 0 8px}
+  .card .g3{display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px}
+  .acoes{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+
+  /* seletor de horário em roda */
+  .relogio .relValor{font-size:34px; font-weight:700; text-align:center; letter-spacing:2px; margin:2px 0 8px; font-variant-numeric:tabular-nums}
+  .rodas{display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:14px; position:relative}
+  .rodas::before{content:''; position:absolute; left:20%; right:20%; top:calc(50% - 20px); height:40px; border-top:2px solid var(--teal); border-bottom:2px solid var(--teal); pointer-events:none; border-radius:6px}
+  .roda{height:200px; width:86px; overflow-y:auto; scroll-snap-type:y mandatory; padding:80px 0; -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior:contain; touch-action:pan-y}
+  .roda::-webkit-scrollbar{display:none}
+  .roda .item{height:40px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; scroll-snap-align:center; color:var(--muted); font-variant-numeric:tabular-nums; cursor:pointer}
+  .rodas .sep{font-size:26px; font-weight:700}
+  /* editor */
+  .veil{position:fixed; inset:0; background:rgba(20,35,38,.45); display:none; align-items:center; justify-content:center; z-index:40; padding:16px}
+  .veil.open{display:flex}
+  .editor{background:#fff; border-radius:16px; padding:18px; width:min(380px,100%); box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .editor h3{margin:0 0 4px; font-size:16px; font-weight:700}
+  .editor p{margin:0 0 12px; font-size:13px; color:var(--muted)}
+  .editor .num{display:flex; gap:8px; align-items:center; margin-bottom:14px}
+  .editor .num input{font-size:26px; font-weight:700; text-align:center; width:130px; padding:8px; border:2px solid var(--teal); border-radius:12px}
+  .editor .num button{padding:10px 16px; font-size:18px}
+  .editor .txt{margin-bottom:14px}
+  .editor .txt input{width:100%; font-size:16px; font-weight:600; padding:10px; border:2px solid var(--teal); border-radius:12px}
+  .editor .btns{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap}
+
+  /* ---------- impressão ---------- */
+  #impressao{display:none}
+  @media print{
+    @page{size:A4 landscape; margin:7mm}
+    body{background:#fff}
+    header,aside,.veil,#tela{display:none !important}
+    main{padding:0}
+    #impressao{display:block; font-family:Arial,Helvetica,sans-serif; color:#000}
+    .pagina{page-break-after:always; break-after:page}
+    .pagina:last-child{page-break-after:auto; break-after:auto}
+    .pagina .ficha{border-radius:0; border-color:#000; margin:0}
+    .pagina .ficha-topo{padding:4px 10px 3px}
+    .pagina .ficha-topo .lg{font-size:18px} .pagina .ficha-topo .tt{font-size:8.5px; color:#333}
+    .pagina .cab{padding:5px 8px; gap:4px} .pagina .cab .r{gap:4px}
+    .pagina .cab .b{border-width:1px; border-radius:5px; padding:1px 5px}
+    .pagina .cab .b small{font-size:7px} .pagina .cab .b .ro{font-size:10px; min-height:14px}
+    .pagina .faixa{font-size:9.5px; padding:3px 10px; border-bottom:1px solid #000; display:flex; justify-content:space-between; gap:10px}
+    .pagina .linha > div{font-family:Arial,sans-serif; font-size:8.5px; min-height:17px; border-right-color:#ddd}
+    .pagina .linha .rot{position:static; font-size:8.5px}
+    .pagina .linha.hora > div{min-height:15px} .pagina .linha.tit > div{min-height:13px; font-size:7.5px}
+    .pagina .cel.livre::after{color:#bbb}
+    .pagina svg{font-family:Arial,sans-serif}
+    .pagina .series path{stroke-dasharray:none; stroke-width:1.1}
+    .pagina .grid line{stroke:#ccc} .pagina .grid line.major{stroke:#999}
+    .pagina .gtit{font-size:9px; padding:3px 8px 0} .pagina .gtit span{font-size:8px}
+    .pagina .legenda{font-size:8px; padding:2px 8px 3px}
+    .pagina .rodape{font-size:8px; color:#444; display:flex; justify-content:space-between; padding:3px 2px}
+    .pagina .final{padding:8px 12px; font-size:10.5px; line-height:1.45}
+    .pagina .final h4{margin:8px 0 3px; font-size:11px; border-bottom:1px solid #000; padding-bottom:2px}
+    .pagina .final .cols{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+    .pagina .final table{border-collapse:collapse; width:100%; font-size:9.5px}
+    .pagina .final td,.pagina .final th{border:1px solid #999; padding:2px 4px; text-align:center}
+    .pagina .final th{background:#eee}
+    .pagina .final .kv{display:flex; justify-content:space-between; border-bottom:1px dotted #bbb; padding:1px 0}
+    .pagina .final .kv.t{font-weight:700; border-bottom:1px solid #000}
+    .pagina .ass{margin-top:26px; width:280px; text-align:center; font-size:10px}
+    .pagina .ass .l{border-top:1px solid #000; padding-top:3px; font-weight:700}
+    .pagina .resumo{white-space:pre-wrap}
+  }
+  @media (max-width:1000px){
+    aside.dir{position:fixed; top:var(--hdr); right:0; bottom:0; z-index:25; box-shadow:-4px 0 16px rgba(0,0,0,.15)}
+    aside.dir .in{height:100%}
+  }
+  @media (max-width:900px){
+    aside.esq{position:fixed; top:var(--hdr); left:0; bottom:0; z-index:25; box-shadow:4px 0 16px rgba(0,0,0,.15)}
+    aside.esq .in{height:100%}
+    main{padding:6px}
+    .r2,.r4,.r5{grid-template-columns:repeat(3,1fr)} .r3{grid-template-columns:1fr 1fr}
+    .card .g3{grid-template-columns:1fr}
+    header .tit{display:none}
+  }
+
+  /* ===== integração com o sistema principal (ponte) ===== */
+  header .ponte{font-size:11px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); white-space:nowrap; max-width:34vw; overflow:hidden; text-overflow:ellipsis}
+  header .ponte.ok{background:rgba(255,255,255,.22)}
+  header .ponte.warn{background:#f9a825; color:#1b1b1b; border-color:#f9a825}
+  header .ponte.err{background:#c62828; border-color:#c62828}
+  header .icon.txt{width:auto; padding:0 10px; font-size:12px; font-weight:700; gap:6px}
+  .ro-banner{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:#fff8e1; border:1px solid #f5c542; border-radius:12px; padding:10px 14px; margin:10px 12px 0; font-size:13px; line-height:1.35}
+  .ro-banner[hidden]{display:none}
+  .ro-banner button.primary{white-space:nowrap}
+  .ro-banner .lk{font-size:11.5px; color:#6b5d1f; font-weight:500}
+  body.somente-leitura #sbEsq .corpo, body.somente-leitura #sbDir .corpo, body.somente-leitura #secRec, body.somente-leitura #txtObs, body.somente-leitura #txtAnot{opacity:.72}
+  body.somente-leitura #fichaTela .pt{cursor:default}
+  body.somente-leitura #fichaTela .cel, body.somente-leitura #fichaTela .cab .b{cursor:default}
+  body.somente-leitura #btnSalvar, body.somente-leitura #btnReiniciar, body.somente-leitura #btnJson, body.somente-leitura #btnGerarResumo, body.somente-leitura #btnLabMais, body.somente-leitura #btnLabMenos{display:none}
+  body.somente-leitura #chipPend, body.somente-leitura .cab .b.btn{display:none}
+  #secContexto .ctx{font-size:12px; line-height:1.4; display:grid; gap:5px}
+  #secContexto .ctx b{color:var(--teal-d)}
+  #secContexto .ctx .al{background:#fdecea; border:1px solid #f5b5ad; color:#8a1f11; border-radius:8px; padding:5px 8px; font-weight:600}
+  #secContexto .ctx .ok{background:var(--teal-l); border-radius:8px; padding:5px 8px}
+  #secContexto .ctx .wa{background:#fff8e1; border:1px solid #f5c542; color:#6b5d1f; border-radius:8px; padding:5px 8px; font-weight:600}
+  #secContexto .ctx .nt{background:#f4f6f7; border-radius:8px; padding:5px 8px}
+  #secContexto .ctx details{margin:0} #secContexto .ctx details summary{cursor:pointer; list-style:none; font-weight:600}
+  #secContexto .ctx details summary::after{content:' ▸'; font-weight:400} #secContexto .ctx details[open] summary::after{content:' ▾'}
+  #secContexto .ctx details p{margin:4px 0 0; font-weight:400}
+  #secContexto .ctx .mt{color:var(--muted); font-size:11px}
+  .ponteToast{position:fixed; left:50%; bottom:78px; transform:translateX(-50%); background:#1b1b1b; color:#fff; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:600; z-index:60; box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:min(92vw,560px); opacity:0; pointer-events:none; transition:opacity .2s}
+  .ponteToast.on{opacity:1}
+  .ponteToast.err{background:#c62828}
+  .ponteToast.ok{background:var(--teal-d)}
+  /* ===== v19.9: login na ficha, fila do dia, biblioteca de fármacos, impressão ===== */
+  .editor .loginErro{margin:-6px 0 12px; color:#b91c1c; font-size:12.5px; font-weight:600}
+  .editor.fila{width:min(600px,100%); max-height:88vh; display:flex; flex-direction:column}
+  .filaLista{overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:14px; min-height:80px; max-height:56vh}
+  .filaItem{text-align:left; border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:3px; font-weight:500; line-height:1.3; width:100%}
+  .filaItem b{font-size:14px} .filaItem small{color:var(--muted); font-weight:600} .filaItem span{font-size:12px; color:var(--muted)}
+  .filaItem .filaAl{color:#b91c1c; font-weight:700}
+  .filaItem:hover{border-color:var(--teal)}
+  .filaVazia{font-size:13px; color:var(--muted); padding:10px 4px}
+  body.somente-leitura #btnFila{display:none}
+  .farmBusca{display:flex; flex-direction:column; gap:6px}
+  .farmLista{display:flex; flex-direction:column; gap:6px; max-height:46vh; overflow-y:auto}
+  .farmItem{border:1px solid var(--line); border-radius:10px; padding:7px 9px; font-size:12px; line-height:1.35; background:#fff}
+  .farmItem b{font-size:13px} .farmItem .cat{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px}
+  .farmItem .dose{display:flex; justify-content:space-between; gap:8px; border-top:1px dotted var(--line); padding:3px 0}
+  .farmItem .dose .tot{font-weight:700; color:var(--teal-d); white-space:nowrap}
+  .farmItem .obs{color:var(--muted); font-size:11px}
+  .farmItem .al{color:#b91c1c; font-weight:600; font-size:11px}
+  .farmItem .acoes{display:flex; gap:6px; margin-top:5px} .farmItem .acoes button{padding:4px 10px; font-size:12px}
+  .pagina .logo-img{height:22px; display:block}
+  @media print{ .pagina svg, .pagina .bloco, .pagina .final table{break-inside:avoid; page-break-inside:avoid} }
+  @media print{ .ro-banner, .ponteToast, header .ponte{display:none !important} }
+</style>
+</head>
+<body>
+<header>
+  <button class="icon" id="btnMenu" type="button" title="Menu de configuração" aria-label="Menu">☰</button>
+  <div class="logo">CLAV</div>
+  <span class="msg" id="msg"></span>
+  <div class="esp"></div>
+  <span class="ponte" id="ponteChip" title="Vínculo com o atendimento">Ficha local</span>
+  <div class="tit">Ficha de anestesia<br>e registro intraoperatório</div>
+  <button class="icon txt" id="btnSistema" type="button" title="Abrir o sistema principal CLAV em outra aba" aria-label="Sistema principal">⌂ Sistema</button>
+  <button class="icon txt" id="btnNovaAba" type="button" title="Abrir um espelho desta ficha em outra aba, mantendo o vínculo com o atendimento" aria-label="Abrir em outra aba">⧉ Aba</button>
+  <button class="icon txt" id="btnFila" type="button" title="Fila do dia: abrir a ficha de outro paciente" aria-label="Fila do dia">☷ Fila</button>
+  <button class="icon" id="btnImprimir" type="button" title="Imprimir / PDF" aria-label="Imprimir">🖨</button>
+  <button class="icon" id="btnPainel" type="button" title="Balanço hídrico e laboratório" aria-label="Painel direito">⚖</button>
+</header>
+
+<div class="app">
+  <!-- ======= MENU ESQUERDO ======= -->
+  <aside class="esq" id="sbEsq">
+    <div class="in">
+      <details class="sec" id="secContexto" open>
+        <summary>Paciente e avaliação pré-anestésica</summary>
+        <div class="corpo"><div class="ctx" id="ctxCorpo"><span class="mt">Sem vínculo com atendimento. Abra a ficha pelo sistema principal para carregar identificação, peso, alergias, ASA, via aérea e sinais basais.</span></div></div>
+      </details>
+      <details class="sec" open>
+        <summary>Anestesia</summary>
+        <div class="corpo">
+          <label class="f">Data<input type="date" id="inpData"></label>
+          <label class="f">Duração prevista (sem fim marcado)
+            <select id="selDuracao">
+              <option value="60">1 hora</option><option value="120">2 horas</option><option value="180">3 horas</option>
+              <option value="240" selected>4 horas</option><option value="360">6 horas</option><option value="480">8 horas</option>
+            </select>
+          </label>
+          <label class="toggle"><input type="checkbox" id="chkRapido"> Acelerar tempo para simulação (1 s = 1 min) — nunca em caso real</label>
+          <div class="acoes"><button type="button" id="btnJson">Copiar JSON</button><button type="button" class="danger" id="btnReiniciar">Reiniciar</button></div>
+        </div>
+      </details>
+      <details class="sec" open>
+        <summary>Pré-operatório</summary>
+        <div class="corpo"><div class="chips" id="cfgPre"></div></div>
+      </details>
+      <details class="sec" open>
+        <summary>Posicionamento</summary>
+        <div class="corpo"><div class="chips" id="cfgPosicao"></div></div>
+      </details>
+      <details class="sec" open>
+        <summary>Monitorização</summary>
+        <div class="corpo">
+          <p class="sub">Gráfico 1 · hemodinâmica</p><div class="chips" id="mon1"></div>
+          <details class="sec" style="margin:4px 0 0"><summary>Avançada (PAI, PVC, ΔPP…)</summary><div class="corpo"><div class="chips" id="mon1a"></div></div></details>
+          <p class="sub">Gráfico 2 · oxigenação, ventilação e profundidade</p><div class="chips" id="mon2"></div>
+        </div>
+      </details>
+      <details class="sec">
+        <summary>Técnica anestésica</summary>
+        <div class="corpo">
+          <div class="chips" id="cfgTecnica"></div>
+          <div id="detTecnica"></div>
+          <label class="f">Outros detalhes (fármacos, doses…)<input type="text" id="inpTecnicaTexto" placeholder="ex.: bupivacaína pesada 15 mg + morfina 80 mcg"></label>
+          <label class="f">Indução / sedação<input type="text" id="inpInducao" placeholder="ex.: fentanil, propofol, cetamina e rocurônio"></label>
+          <label class="f">Manutenção<input type="text" id="inpManutencao" placeholder="ex.: VCV com O₂, ar comprimido e sevoflurano"></label>
+        </div>
+      </details>
+      <details class="sec">
+        <summary>Vias aéreas</summary>
+        <div class="corpo">
+          <div class="chips" id="cfgVia"></div>
+          <div id="detVia"></div>
+          <label class="f">Outros detalhes<input type="text" id="inpViaTexto" placeholder="ex.: fixado a 22 cm na comissura"></label>
+        </div>
+      </details>
+      <details class="sec">
+        <summary>Drogas</summary>
+        <div class="corpo">
+          <div class="chips" id="cfgDrogas"></div>
+          <label class="f">Outra droga<input type="text" id="inpDrogaNova" placeholder="nome + Enter"></label>
+          <p class="hint" style="margin:0">As selecionadas viram linhas no bloco Drogas; a dose é digitada na coluna do horário.</p>
+        </div>
+      </details>
+      <details class="sec" id="secFarmacos">
+        <summary>Biblioteca de fármacos (doses por peso)</summary>
+        <div class="corpo farmBusca">
+          <label class="f">Buscar fármaco<input type="text" id="inpFarmBusca" placeholder="ex.: propofol, rocurônio, cefazolina" autocomplete="off"></label>
+          <div class="chips" id="farmKits"></div>
+          <div class="farmLista" id="farmLista"><div class="hint" style="margin:0">Digite ao menos 2 letras ou escolha um kit. Doses em /kg usam o peso do cabeçalho.</div></div>
+        </div>
+      </details>
+      <details class="sec">
+        <summary>Fluidos e hemoderivados</summary>
+        <div class="corpo">
+          <div class="chips" id="cfgFluidos"></div>
+          <label class="f">Outro fluido<input type="text" id="inpFluidoNovo" placeholder="nome + Enter"></label>
+        </div>
+      </details>
+      <details class="sec">
+        <summary>Punções</summary>
+        <div class="corpo" id="cfgPuncoes"></div>
+      </details>
+      <details class="sec">
+        <summary>Resumo para impressão</summary>
+        <div class="corpo">
+          <label class="f">Desfecho<input type="text" id="inpDesfecho" placeholder="ex.: Descurarizado com sugammadex. Acordado e extubado."></label>
+          <div class="acoes"><button type="button" id="btnGerarResumo">Gerar pelos chips</button></div>
+          <label class="f">Texto (editável; sai só na folha impressa)<textarea id="txtResumo" placeholder="Clique em “Gerar pelos chips” ou escreva…"></textarea></label>
+        </div>
+      </details>
+    </div>
+    <div class="handle e" id="hEsq" title="Arraste para redimensionar"></div>
+  </aside>
+
+  <!-- ======= ÁREA PRINCIPAL ======= -->
+  <main>
+    <div class="ro-banner" id="roBanner" hidden>
+      <div><b>Somente visualização.</b> <span id="roTexto">Esta tela acompanha a ficha sem permitir edição.</span><br><span class="lk" id="roVinculo"></span></div>
+      <button type="button" class="primary" id="btnRoAbrir">Abrir em outra aba para registrar (mantém o vínculo)</button>
+    </div>
+    <div id="tela">
+      <div class="ficha" id="fichaTela"></div>
+
+      <section class="card" id="secRec">
+        <h2>Recuperação &amp; destino</h2>
+        <div class="g3" style="grid-template-columns:1fr">
+          <label class="f">Condições de saída / Aldrete<textarea id="recAldrete"></textarea></label>
+
+        </div>
+        <p class="sub" style="margin-top:8px">Destino</p>
+        <div class="chips" id="recDestino"></div>
+      </section>
+
+      <section class="card">
+        <h2>Observações &amp; anotações</h2>
+        <div class="g3" style="grid-template-columns:1fr 1fr">
+          <label class="f">Observações / intercorrências<textarea id="txtObs"></textarea></label>
+          <label class="f">Anotações<textarea id="txtAnot"></textarea></label>
+        </div>
+      </section>
+    </div>
+    <div id="impressao"></div>
+  </main>
+
+  <!-- ======= PAINEL DIREITO ======= -->
+  <aside class="dir" id="sbDir">
+    <div class="handle d" id="hDir" title="Arraste para redimensionar"></div>
+    <div class="in">
+      <details class="sec" open>
+        <summary>Balanço hídrico (mL)</summary>
+        <div class="corpo">
+          <p class="sub">Iniciado</p><div class="grade2" id="bhIni"></div>
+          <p class="sub">Absorvido</p><div class="grade2" id="bhAbs"></div>
+          <p class="sub">Perdas</p><div class="grade2" id="bhPer"></div>
+          <p class="sub">Reposição</p><div class="grade2" id="bhRep"></div>
+          <div class="chip" id="bhBalanco" style="text-align:center">Balanço: 0 mL</div>
+        </div>
+      </details>
+      <details class="sec" open>
+        <summary>Laboratório / gasometria</summary>
+        <div class="corpo">
+          <div id="labLista"></div>
+          <div class="acoes"><button type="button" id="btnLabMais">+ Adicionar coleta</button><button type="button" id="btnLabMenos">− Remover última</button></div>
+        </div>
+      </details>
+    </div>
+  </aside>
+</div>
+
+<div class="navf" id="navf">
+  <button type="button" data-ir="topo" title="Início da ficha (Alt+↑)">⤒</button>
+  <button type="button" class="g" data-ir="graf1" title="Gráfico 1 (Alt+1)">G1</button>
+  <button type="button" class="g" data-ir="graf2" title="Gráfico 2 (Alt+2)">G2</button>
+  <button type="button" class="g" data-ir="secRec" title="Recuperação (Alt+3)">Rec</button>
+  <button type="button" data-ir="fim" title="Fim da ficha (Alt+↓)">⤓</button>
+  <button type="button" class="primary" id="btnAtalhos" title="Atalhos de teclado">?</button>
+</div>
+<div class="atalhos" id="atalhos">
+  <div><b>Alt + ↑</b> início da ficha</div>
+  <div><b>Alt + ↓</b> fim da ficha</div>
+  <div><b>Alt + 1 / 2</b> gráfico 1 / gráfico 2</div>
+  <div><b>Alt + 3</b> recuperação &amp; destino</div>
+  <div><b>Alt + A</b> ir para agora (horizontal)</div>
+  <div><b>Alt + ← / →</b> rolar o registro no tempo</div>
+  <div><b>Alt + M</b> menu esquerdo · <b>Alt + B</b> painel direito</div>
+  <div><b>Alt + S</b> salvar · <b>Alt + P</b> imprimir</div>
+  <div><b>Shift + roda</b> rola o registro na horizontal</div>
+</div>
+
+<div class="veil" id="relVeil">
+  <div class="editor relogio">
+    <h3 id="relTitulo">Horário</h3>
+    <div class="relValor" id="relValor">00:00</div>
+    <div class="rodas">
+      <div class="roda" id="rodaH"></div><div class="sep">:</div><div class="roda" id="rodaM"></div>
+    </div>
+    <div class="btns"><button type="button" id="relAgora">Agora</button><button type="button" id="relLimpar">Limpar</button><button type="button" id="relCancelar">Cancelar</button><button type="button" class="primary" id="relDefinir">Definir</button></div>
+  </div>
+</div>
+
+<div class="veil" id="veil">
+  <div class="editor">
+    <h3 id="edTitulo">Editar</h3>
+    <p id="edSub"></p>
+    <div class="num" id="edNum"><button type="button" id="edMenos">−</button><input type="number" id="edInput" inputmode="decimal"><button type="button" id="edMais">+</button></div>
+    <div class="txt" id="edTxt" style="display:none"><input type="text" id="edTexto" placeholder="Digite…"></div>
+    <div class="btns"><button type="button" id="edLimpar">Limpar</button><button type="button" id="edCancelar">Cancelar</button><button type="button" class="primary" id="edConfirmar">Confirmar</button></div>
+  </div>
+</div>
+
+<script>
+  /* Parâmetros entregues pelo servidor (doGet): caso, slot, modo, webAppUrl, logoUrl, versao.
+     v19.9: "<" escapado — um parâmetro malicioso não pode fechar esta tag e executar código na ficha. */
+  window.CLAV_BOOT = <?!= JSON.stringify(bootParams || {}).replace(/</g, '\\u003c') ?>;
+</script>
+<script>
+  /* v19.9: biblioteca farmacológica (IntraFarmacos.html, só dados). Fica em bloco próprio: se o arquivo
+     faltar ou falhar, a ficha continua funcionando e o painel apenas avisa "indisponível". */
+  window.CLAV_FARMACOS_LIB = (function(){
+    <?!= include('IntraFarmacos').replace(/<!--[\s\S]*?-->/g, '') ?>
+    return { CATEGORIAS: CATEGORIAS, FARMACOS: FARMACOS, KITS: (typeof KITS !== 'undefined' ? KITS : []) };
+  })();
+</script>
+<script>
+(function(){
+  'use strict';
+
+  /* ================= CONFIGURAÇÃO ================= */
+  var INTERVALO_MIN = 5;
+  var BOOT = window.CLAV_BOOT || {};
+  var CASO_ID = String(BOOT.caso || ''), SLOT = String(BOOT.slot || '1');
+  var SOMENTE_LEITURA = String(BOOT.modo || '').toLowerCase() === 'visualizacao';
+  /* uma chave por atendimento e por aba: duas fichas abertas nunca se sobrescrevem */
+  var STORAGE_KEY = 'clav_intra_v5_' + (CASO_ID || 'livre') + '_s' + SLOT;
+  /* v19.9: logotipo da folha impressa (mesmo arquivo dos PDFs do sistema), pré-carregado para não sair em branco */
+  var LOGO_URL = String(BOOT.logoUrl || 'https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png');
+  try{ var _pre=new Image(); _pre.src=LOGO_URL; }catch(e){}
+  /* cores no padrão do monitor (Lázaro): PA = vermelho · FC = verde · SpO₂ = amarelo · EtCO₂ = branco (cinza-escuro no papel) · Temp = azul · BIS = verde · TOF = vermelho */
+  var SERIES = [
+    { id:'pas',  nome:'PAS',   desc:'PA sistólica',           sym:'V', cor:'#c62828', ch:1, grupo:'basica',   eixo:'esq', inicial:120,  min:40, max:200, passo:1,   padrao:true,  mon:'PANI' },
+    { id:'pad',  nome:'PAD',   desc:'PA diastólica',          sym:'^', cor:'#c62828', ch:1, grupo:'basica',   eixo:'esq', inicial:80,   min:20, max:150, passo:1,   padrao:true,  mon:'PANI' },
+    { id:'fc',   nome:'FC',    desc:'frequência cardíaca',    sym:'X', cor:'#2e7d32', ch:1, grupo:'basica',   eixo:'esq', inicial:70,   min:20, max:200, passo:1,   padrao:true,  mon:'ECG' },
+    { id:'pais', nome:'PAIS',  desc:'PA invasiva sistólica',  sym:'▼', cor:'#7f0000', ch:1, grupo:'avancada', eixo:'esq', inicial:118,  min:40, max:200, passo:1,   padrao:false, mon:'PAI' },
+    { id:'paid', nome:'PAID',  desc:'PA invasiva diastólica', sym:'▲', cor:'#7f0000', ch:1, grupo:'avancada', eixo:'esq', inicial:78,   min:20, max:150, passo:1,   padrao:false, mon:'PAI' },
+    { id:'pvc',  nome:'PVC',   desc:'pressão venosa central', sym:'◇', cor:'#6a1b9a', ch:1, grupo:'avancada', eixo:'esq', inicial:8,    min:0,  max:40,  passo:1,   padrao:false, mon:'PVC' },
+    { id:'dpp',  nome:'ΔPP',   desc:'variação de pressão de pulso (%)', sym:'Δ', cor:'#ef6c00', ch:1, grupo:'avancada', eixo:'esq', inicial:10, min:0, max:60, passo:1, padrao:false, mon:'ΔPP' },
+    { id:'spo2', nome:'SpO₂',  desc:'saturação (%)',          sym:'○', cor:'#f9a825', ch:2, grupo:'basica',   eixo:'esq', inicial:98,   min:50, max:100, passo:1,   padrao:true,  mon:'SpO₂' },
+    { id:'etco2',nome:'EtCO₂', desc:'capnografia (mmHg)',     sym:'□', cor:'#37474f', ch:2, grupo:'basica',   eixo:'esq', inicial:35,   min:10, max:80,  passo:1,   padrao:false, mon:'capnografia' },
+    { id:'temp', nome:'Temp',  desc:'temperatura (°C)',       sym:'T', cor:'#1565c0', ch:2, grupo:'basica',   eixo:'dir', inicial:36.5, min:30, max:40,  passo:0.1, padrao:false, mon:'temperatura' },
+    { id:'bis',  nome:'BIS',   desc:'índice biespectral',     sym:'B', cor:'#2e7d32', ch:2, grupo:'basica',   eixo:'esq', inicial:45,   min:0,  max:100, passo:1,   padrao:false, mon:'BIS' },
+    { id:'tof',  nome:'TOF',   desc:'relação TOF (%)',        sym:'R', cor:'#c62828', ch:2, grupo:'basica',   eixo:'esq', inicial:0,    min:0,  max:100, passo:1,   padrao:false, mon:'TOF' }
+  ];
+  var CHARTS = [
+    { ch:1, titulo:'Hemodinâmica', sub:'escala 0–200 · mmHg / bpm', esq:{min:0,max:200,tick:20,minor:10}, dir:null, H:380, Hp:170 },
+    { ch:2, titulo:'Oxigenação, ventilação e profundidade', sub:'eixo esquerdo 0–100 (%, mmHg, BIS, TOF) · eixo direito 30–40 °C', esq:{min:0,max:100,tick:10,minor:5}, dir:{min:30,max:40,tick:1,label:'°C'}, H:300, Hp:110 }
+  ];
+  var LABEL_W = 132, MR = 52, ZOOMS = [44,60,84,110], PRINT_XS = 40, PRINT_COLS = 21;
+  var OPCOES = {
+    pre:['Consulta pré','Avaliação pré','Ausente'],
+    posicao:['DDH','DVH','Ginecológica','Litotomia','Trendelenburg','Proclive','Lateral D','Lateral E','Sentado'],
+    tecnica:['Geral balanceada','Geral inalatória','Venosa total','Sedação','Raquianestesia','Anestesia peridural','Bloqueio de plexo','Bloqueio de nervo periférico'],
+    via:['IOT','Máscara laríngea','Cateter nasal','Ventilação espontânea','Ventilação sob máscara facial','Traqueostomia'],
+    puncoes:['VP 1','VP 2','ART','VC'],
+    destino:['SRPA','Quarto','UTI','Centro obstétrico','Alta da sala'],
+    drogas:['Fentanil','Sufentanil','Remifentanil','Propofol','Etomidato','Cetamina','Midazolam','Rocurônio','Succinilcolina','Cisatracúrio','Sevoflurano','Desflurano','Lidocaína','Bupivacaína','Ropivacaína','Morfina','Dipirona','Cetoprofeno','Dexametasona','Ondansetrona','Efedrina','Metaraminol','Fenilefrina','Noradrenalina','Atropina','Neostigmina','Sugammadex','Cefazolina','Ocitocina','Ácido tranexâmico','Dexmedetomidina','Clonidina'],
+    fluidos:['Ringer lactato','SF 0,9%','SG 5%','Plasma-Lyte','Albumina','Concentrado de hemácias','Plasma fresco','Plaquetas','Crioprecipitado']
+  };
+  /* detalhes que aparecem ao escolher cada técnica / via aérea (chave -> grupos de chips) */
+  var DETALHES = {
+    'Raquianestesia':[ ['Agulha',['Quincke','Whitacre','Sprotte','Pencan']], ['Calibre',['22G','25G','26G','27G']], ['Nível',['L2-L3','L3-L4','L4-L5']], ['Posição',['Sentado','DLE','DLD']], ['Punção',['Mediana','Paramediana']] ],
+    'Anestesia peridural':[ ['Agulha',['Tuohy','Crawford']], ['Calibre',['16G','17G','18G']], ['Nível',['T8-T9','T10-T11','T12-L1','L1-L2','L2-L3','L3-L4']], ['Identificação',['Perda de resistência (ar)','Perda de resistência (SF)','Dogliotti']], ['Cateter',['Com cateter','Sem cateter']] ],
+    'Bloqueio de plexo':[ ['Guia',['Ultrassom','Neuroestimulador','US + NE']], ['Agulha',['Stimuplex 50 mm','Stimuplex 80 mm','Stimuplex 100 mm']], ['Abordagem',['Interescalênico','Supraclavicular','Infraclavicular','Axilar']] ],
+    'Bloqueio de nervo periférico':[ ['Guia',['Ultrassom','Neuroestimulador','US + NE']], ['Agulha',['Stimuplex 50 mm','Stimuplex 80 mm','Stimuplex 100 mm']], ['Bloqueio',['Femoral','Ciático','Adutor','TAP','PENG','Peitoral','Eretor da espinha']] ],
+    'IOT':[ ['Tubo',['6.0','6.5','7.0','7.5','8.0','8.5']], ['Laringoscopia',['Direta','Vídeo','Fibroscopia']], ['Cormack',['I','II','III','IV']], ['Balonete',['Com balonete','Sem balonete']] ],
+    'Máscara laríngea':[ ['Número',['2','2.5','3','4','5']], ['Tipo',['Clássica','ProSeal','Supreme','i-gel','Fastrach']] ],
+    'Cateter nasal':[ ['Fluxo',['1 L/min','2 L/min','3 L/min','5 L/min']] ],
+    'Ventilação sob máscara facial':[ ['Fluxo O₂',['2 L/min','4 L/min','6 L/min']] ]
+  };
+  var BH = {
+    iniciado:[['ringer','Ringer'],['glicosado','S. Glicosado'],['fisio','S. Fisiológico'],['sangue','Sangue']],
+    absorvido:[['ringer','Ringer'],['glicosado','S. Glicosado'],['fisio','S. Fisiológico'],['sangue','Sangue']],
+    perdas:[['jejum','Jejum'],['insensivel','Insensível'],['translocacao','Translocação'],['diurese','Diurese'],['sangramento','Sangramento']],
+    reposicao:[['coloides','Colóides'],['cristaloides','Cristalóides']]
+  };
+  var LAB = [['ph','pH'],['paco2','PaCO₂'],['hco3','HCO₃'],['co2t','CO₂T'],['eb','EB'],['pao2','PaO₂'],['shbo2','SHbO₂'],['ht','Ht'],['hb','Hb'],['na','Na'],['k','K'],['gli','Glicemia']];
+
+  /* ================= ESTADO ================= */
+  function estadoInicial(){
+    return {
+      inicio:null, fim:'', duracaoMin:240, rapido:false, simInicioReal:null, simInicioSim:null,
+      cab:{hospital:'Hospital Nossa Senhora da Oliveira',paciente:'',idade:'',peso:'',altura:'',asa:'',cirurgia:'',cirPrincipal:'',cirAuxiliar:'',anestesista:'',inCirurgia:'',fimCirurgia:''},
+      cfg:{pre:[],posicao:[],tecnica:[],tecnicaTexto:'',via:[],viaTexto:'',inducao:'',manutencao:'',puncoes:{},desfecho:'',resumo:'',det:{},drogasSel:[],fluidosSel:['Ringer lactato']},
+      ligadas:{}, pontos:{},
+      drogas:[], fluidos:[{nome:'Ringer lactato',cel:{}}],
+      bh:{iniciado:{},absorvido:{},perdas:{},reposicao:{}}, lab:[],
+      rec:{aldrete:'',destino:[]}, obs:'', anot:'', ultimoSalvo:null
+    };
+  }
+  var estado = estadoInicial();
+  var zoomIdx = 2, tela = null, iniciado = false;
+  var $ = function(id){ return document.getElementById(id); };
+  var NS = 'http://www.w3.org/2000/svg';
+
+  /* ================= UTILIDADES ================= */
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function hhmm(d){ return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+  function hhmmss(d){ return hhmm(d)+':'+pad2(d.getSeconds()); }
+  function isoDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+  function brDate(d){ return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(); }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function serie(id){ for(var i=0;i<SERIES.length;i++) if(SERIES[i].id===id) return SERIES[i]; return null; }
+  function chartDe(ch){ return CHARTS[ch-1]; }
+  function arredondar(v,p){ var f=1/p; return Math.round(v*f)/f; }
+  function fmt(v,p){ return p<1 ? Number(v).toFixed(1).replace('.',',') : String(v); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function horaCol(i){ return new Date(estado.inicio.getTime()+i*INTERVALO_MIN*60000); }
+  function el(tag,attrs,parent){ var e=document.createElementNS(NS,tag); for(var k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+  function div(cls,html,parent){ var d=document.createElement('div'); if(cls) d.className=cls; if(html!=null) d.innerHTML=html; if(parent) parent.appendChild(d); return d; }
+  function agora(){ if(!estado.rapido||!estado.simInicioReal) return Date.now(); return estado.simInicioSim + (Date.now()-estado.simInicioReal)*60; }
+  function colAtual(){ return (agora()-estado.inicio.getTime())/(INTERVALO_MIN*60000); }
+  function dataHora(hhmmStr, base){ var p=hhmmStr.split(':'); var d=new Date(base); d.setHours(+p[0],+p[1],0,0); if(d<base) d.setDate(d.getDate()+1); return d; }
+  function fimDate(){ return estado.fim ? dataHora(estado.fim, estado.inicio) : null; }
+  function nPontos(){
+    var f = fimDate();
+    var min = f ? Math.round((f-estado.inicio)/60000) : estado.duracaoMin;
+    return Math.max(2, Math.ceil(min/INTERVALO_MIN)+1);
+  }
+  function duracaoTxt(a,b){ if(!a||!b) return '—'; var m=Math.round((b-a)/60000); if(m<0) return '—'; return Math.floor(m/60)+'h'+pad2(m%60); }
+  /* mensagem discreta no cabeçalho — sem caixas sobre a tela */
+  var msgT;
+  function msg(t){ var m=$('msg'); m.textContent=t; clearTimeout(msgT); msgT=setTimeout(function(){ m.textContent=''; },4000); }
+
+  /* ================= PONTOS ================= */
+  function gerarPontos(){
+    var n=nPontos(), t0=estado.inicio.getTime();
+    SERIES.forEach(function(s){
+      var antigos=estado.pontos[s.id]||[], arr=[];
+      for(var i=0;i<n;i++){ var t=t0+i*INTERVALO_MIN*60000, prev=antigos[i]; if(prev&&prev.t===t) arr.push(prev); else arr.push({t:t,v:s.inicial,ativo:false,pendente:false,editadoEm:null}); }
+      estado.pontos[s.id]=arr;
+      if(estado.ligadas[s.id]===undefined) estado.ligadas[s.id]=s.padrao;
+    });
+  }
+  function ativarPorTempo(){
+    if(!iniciado||SOMENTE_LEITURA) return;
+    var now=agora(), novos=0;
+    SERIES.forEach(function(s){ var arr=estado.pontos[s.id]; for(var i=0;i<arr.length;i++){ var p=arr[i]; if(!p.ativo&&p.t<=now){ p.ativo=true; if(i>0) p.v=arr[i-1].v; p.pendente=true; p.editadoEm=null; novos++; } } });
+    if(novos){ atualizarTela(); autosave(); }
+  }
+
+  /* ================= FICHA ================= */
+  function montarCabecalho(root, inter){
+    /* v19.9: na folha impressa, logotipo oficial com alternativa textual se a imagem falhar */
+    var logoHtml = inter ? 'CLAV' : ('<img class="logo-img" src="'+esc(LOGO_URL)+'" alt="CLAV" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'inline\'"><span style="display:none">CLAV</span>');
+    var topo = div('ficha-topo', '<div class="lg">'+logoHtml+'</div><div class="tt">Ficha de anestesia<br>e registro intraoperatório</div>', root);
+    void topo;
+    var cab = div('cab' + (inter ? ' cab-tela' : ''), null, root); /* v19.9.2: destaque só na tela; a folha impressa (.pagina) não recebe */
+    function box(parent, rot, chave, tipo, extra){
+      var b = div('b'+(extra||''), '<small>'+rot+'</small>', parent);
+      if(chave===null) return b;
+      if(!inter){ div('ro', esc(tipo==='ro'?chave:(estado.cab[chave]||'')) , b); return b; }
+      if(tipo==='ro'){ div('ro', esc(chave), b); return b; }
+      var inp=document.createElement('input'); inp.type=tipo||'text'; inp.value=estado.cab[chave]||''; inp.setAttribute('data-cab',chave); b.appendChild(inp); return b;
+    }
+    var r1=div('r r1',null,cab); box(r1,'Hospital','hospital'); box(r1,'Data',brDate(estado.inicio),'ro','');
+    var r2=div('r r2',null,cab); box(r2,'Paciente','paciente'); box(r2,'Idade','idade'); box(r2,'Peso','peso'); box(r2,'Altura','altura'); box(r2,'ASA','asa');
+    var r3=div('r r3',null,cab); box(r3,'Cirurgia realizada','cirurgia'); box(r3,'Cir. principal','cirPrincipal'); box(r3,'Cir. auxiliar','cirAuxiliar');
+    var r4=div('r r4',null,cab);
+    box(r4,'Técnica anestésica', (estado.cfg.tecnica.join(', ')||'—'),'ro',' calc');
+    box(r4,'Anestesista','anestesista');
+    box(r4,'Posicionamento', (estado.cfg.posicao.join(', ')||'—'),'ro',' calc');
+    if(inter){
+      var bt=div('b btn ' + (iniciado ? (estado.fim ? 'estado-encerrado' : 'estado-encerrar') : 'estado-iniciar'), iniciado ? (estado.fim?'Caso encerrado':'Encerrar caso') : 'Iniciar caso', r4);
+      bt.addEventListener('click', function(){
+        if(!iniciado){ iniciarCaso(new Date()); }
+        else if(!estado.fim){ estado.fim=hhmm(new Date(agora())); reconstruir(); autosave(); msg('Fim da anestesia às '+estado.fim); }
+      });
+    } else box(r4,'Pré-operatório', (estado.cfg.pre.join(', ')||'—'),'ro',' calc');
+    var r5=div('r r5',null,cab);
+    var fimD=fimDate(), inC=estado.cab.inCirurgia?dataHora(estado.cab.inCirurgia,estado.inicio):null, fiC=estado.cab.fimCirurgia?dataHora(estado.cab.fimCirurgia,estado.inicio):null;
+    if(inter){
+      relogioBox(r5,'In. anest.',hhmm(estado.inicio),function(v){ var p=v.split(':'); estado.inicio.setHours(+p[0],+p[1],0,0); if(!iniciado) iniciado=true; reconstruir(); autosave(); msg('Início da anestesia ajustado para '+hhmm(estado.inicio)); });
+      relogioBox(r5,'In. cirurgia',estado.cab.inCirurgia,function(v){ estado.cab.inCirurgia=v; reconstruirTela(); autosave(); });
+      relogioBox(r5,'Fim cirurgia',estado.cab.fimCirurgia,function(v){ estado.cab.fimCirurgia=v; reconstruirTela(); autosave(); });
+      relogioBox(r5,'Fim anest.',estado.fim,function(v){ estado.fim=v; reconstruir(); autosave(); });
+    } else {
+      box(r5,'In. anest.',hhmm(estado.inicio),'ro'); box(r5,'In. cirurgia',estado.cab.inCirurgia||'—','ro'); box(r5,'Fim cirurgia',estado.cab.fimCirurgia||'—','ro'); box(r5,'Fim anest.',estado.fim||'—','ro');
+    }
+    box(r5,'T. cirúrgico',duracaoTxt(inC,fiC),'ro',' calc'); box(r5,'T. anestésico',duracaoTxt(estado.inicio,fimD),'ro',' calc');
+    if(inter){
+      cab.querySelectorAll('input[data-cab]').forEach(function(inp){ inp.addEventListener(inp.type==='time'?'change':'input', function(){ estado.cab[this.getAttribute('data-cab')]=this.value; if(this.type==='time') reconstruirTela(); autosave(); }); });
+    }
+  }
+
+  /* caixa de horário que abre o seletor de roda (sem o relógio do sistema) */
+  function relogioBox(parent, rot, valor, aoDefinir){
+    var b=div('b','<small>'+rot+'</small>',parent);
+    var ro=div('ro',esc(valor||'—'),b); ro.style.cursor='pointer'; b.style.cursor='pointer';
+    b.addEventListener('click',function(){ abrirRelogio(valor||hhmm(new Date(agora())),function(v){ aoDefinir(v); }, rot, !!valor, function(){ aoDefinir(''); }); });
+    return b;
+  }
+  var relogioCb=null, relogioLimpar=null;
+  function montarRoda(id, n, atual){
+    var col=$(id); col.innerHTML='';
+    for(var i=0;i<n;i++){ var d=div('item',pad2(i),col); d.setAttribute('data-v',i); }
+    var alt=40; col.scrollTop=atual*alt;
+  }
+  function lerRoda(id){ var col=$(id); return Math.round(col.scrollTop/40); }
+  function abrirRelogio(valor, cb, titulo, podeLimpar, cbLimpar){
+    var p=(valor||'00:00').split(':'); relogioCb=cb; relogioLimpar=cbLimpar||null;
+    $('relTitulo').textContent=titulo||'Horário';
+    montarRoda('rodaH',24,clamp(+p[0]||0,0,23)); montarRoda('rodaM',60,clamp(+p[1]||0,0,59));
+    $('relLimpar').style.display=podeLimpar?'':'none';
+    $('relVeil').classList.add('open');
+    setTimeout(function(){ $('rodaH').scrollTop=clamp(+p[0]||0,0,23)*40; $('rodaM').scrollTop=clamp(+p[1]||0,0,59)*40; atualizarRelogio(); },30);
+  }
+  function atualizarRelogio(){ $('relValor').textContent=pad2(lerRoda('rodaH'))+':'+pad2(lerRoda('rodaM')); }
+  function fecharRelogio(){ $('relVeil').classList.remove('open'); relogioCb=null; }
+
+  /* bloco de horas + drogas + fluidos + 2 gráficos, para as colunas [i0,i1) */
+  function montarRegistro(root, i0, i1, xs, inter, alturas){
+    var cols=i1-i0, W=LABEL_W+cols*xs+MR, gridCols=LABEL_W+'px repeat('+cols+','+xs+'px) '+MR+'px';
+    var refs={i0:i0,i1:i1,xs:xs,charts:{}};
+    function xDe(i){ return LABEL_W+xs/2+(i-i0)*xs; }
+    refs.xDe=xDe;
+    var scroll=div(inter?'scroll':'',null,root), wrap=div('',null,scroll); wrap.style.width=W+'px'; refs.scroll=scroll;
+    function linha(cls,rot,parent){ var l=div('linha'+(cls?' '+cls:''),null,parent); l.style.gridTemplateColumns=gridCols; div('rot',rot,l); return l; }
+    function fecha(l){ div('','',l); }
+    var lh=linha('hora','Hora',wrap); for(var i=i0;i<i1;i++) div('',hhmm(horaCol(i)),lh); fecha(lh);
+    ['drogas','fluidos'].forEach(function(lista){
+      var b=div('bloco',null,wrap);
+      var t=linha('tit',(lista==='drogas'?'Drogas':'Fluidos (mL)'),b);
+      for(var k=i0;k<i1;k++) div('','',t); fecha(t);
+      if(!estado[lista].length){ var lv=linha('','<small style="color:#9aa8ab">selecione no menu</small>',b); for(var kv=i0;kv<i1;kv++) div('','',lv); fecha(lv); }
+      estado[lista].forEach(function(it,r){
+        var l=linha('','<span class="ed">'+esc(it.nome)+'</span>',b);
+        for(var k2=i0;k2<i1;k2++){ var c=div('cel'+(it.cel[k2]?'':' livre'),esc(it.cel[k2]||''),l); c.setAttribute('data-livre',lista); c.setAttribute('data-r',r); c.setAttribute('data-i',k2); }
+        fecha(l);
+      });
+    });
+    CHARTS.forEach(function(c){
+      var H=alturas?alturas[c.ch]:c.H;
+      var gt=div('gtit','<div>Gráfico '+c.ch+' · '+c.titulo+'</div><span>'+c.sub+'</span>',wrap);
+      if(inter) gt.id='graf'+c.ch;
+      var cr={c:c,H:H,paths:{}};
+      function yDe(s,v){ var ax=s.eixo==='dir'?c.dir:c.esq; var f=(clamp(v,ax.min,ax.max)-ax.min)/(ax.max-ax.min); return 34+H-f*H; }
+      cr.yDe=yDe;
+      var svg=el('svg',{xmlns:NS}); wrap.appendChild(svg);
+      var HT=34+H+30; svg.setAttribute('viewBox','0 0 '+W+' '+HT); svg.setAttribute('width',W); svg.setAttribute('height',HT);
+      var pequeno=xs<70, r=pequeno?6.5:9.5, fs=pequeno?7:9.5, fv=pequeno?7.5:9.5, yv=pequeno?13:20, sw=pequeno?1:1.3;
+      var bg=el('g',{class:'bg'},svg); for(var k=0;k<cols-1;k++) if((i0+k)%2===1) el('rect',{x:xDe(i0+k),y:34,width:xs,height:H,fill:'#f5f9f8'},bg);
+      var grid=el('g',{class:'grid'},svg);
+      for(var v=c.esq.min;v<=c.esq.max+1e-9;v+=c.esq.minor){ var y=34+H-(v-c.esq.min)/(c.esq.max-c.esq.min)*H; el('line',{x1:xDe(i0),x2:xDe(i1-1),y1:y,y2:y,class:(Math.round(v)%c.esq.tick===0?'major':'')},grid); }
+      for(var k3=i0;k3<i1;k3++) el('line',{x1:xDe(k3),x2:xDe(k3),y1:34,y2:34+H,class:'major'},grid);
+      var ax=el('g',{class:'axis'},svg);
+      for(var v2=c.esq.min;v2<=c.esq.max+1e-9;v2+=c.esq.tick){ var y2=34+H-(v2-c.esq.min)/(c.esq.max-c.esq.min)*H; var t1=el('text',{x:xDe(i0)-8,y:y2+4,'text-anchor':'end'},ax); t1.textContent=v2; }
+      if(c.dir){ var xr=xDe(i1-1)+8; for(var v3=c.dir.min;v3<=c.dir.max+1e-9;v3+=c.dir.tick){ var y3=34+H-(v3-c.dir.min)/(c.dir.max-c.dir.min)*H; var t2=el('text',{x:xr,y:y3+4,class:'dir','text-anchor':'start'},ax); t2.textContent=v3+(v3===c.dir.max?' '+c.dir.label:''); } }
+      for(var k4=i0;k4<i1;k4++){ var t3=el('text',{x:xDe(k4),y:22,'text-anchor':'middle',style:'font-size:'+(pequeno?9:11)+'px'},ax); t3.textContent=hhmm(horaCol(k4)); }
+      var gs=el('g',{class:'series'},svg); SERIES.forEach(function(s){ if(s.ch===c.ch) cr.paths[s.id]=el('path',{stroke:s.cor},gs); });
+      cr.now=el('g',{class:'now',style:'display:none'},svg); el('line',{x1:0,x2:0,y1:30,y2:34+H},cr.now); var nt=el('text',{x:0,y:34+H+20},cr.now); nt.textContent='agora';
+      cr.pts=el('g',{class:'pts'},svg);
+      SERIES.forEach(function(s){ if(s.ch!==c.ch) return; for(var i5=i0;i5<i1;i5++){ var g=el('g',{class:'pt','data-s':s.id,'data-i':i5},cr.pts); el('circle',{r:r,cx:0,cy:0,fill:'#fff',stroke:s.cor,'stroke-width':sw},g); var st=el('text',{class:'sym',x:0,y:0,fill:s.cor,style:'font-size:'+fs+'px'},g); st.textContent=s.sym; el('text',{class:'val',x:0,y:yv,fill:s.cor,style:'font-size:'+fv+'px'},g); } });
+      cr.bubble=el('g',{class:'bubble',style:'display:none'},svg); el('rect',{x:-38,y:-44,width:76,height:30},cr.bubble); el('text',{x:0,y:-29},cr.bubble);
+      cr.svg=svg; refs.charts[c.ch]=cr;
+      var lg=div('legenda',null,wrap); SERIES.forEach(function(s){ if(s.ch===c.ch&&estado.ligadas[s.id]) lg.innerHTML+='<span><b style="background:'+s.cor+'">'+s.sym+'</b>'+s.nome+'</span>'; });
+      if(!lg.innerHTML) lg.innerHTML='<span style="color:#9aa8ab;font-weight:500">nenhuma variável ligada neste gráfico</span>';
+      if(inter) instalarArraste(cr, refs);
+    });
+    if(inter){
+      wrap.addEventListener('click', function(e){
+        var t=e.target; if(!t.closest) return;
+        var cl=t.closest('[data-livre]'); if(cl){ abrirEditorTexto('cel',cl.getAttribute('data-livre'),+cl.getAttribute('data-r'),+cl.getAttribute('data-i')); }
+      });
+    }
+    preencherRegistro(refs);
+    return refs;
+  }
+  function preencherRegistro(refs){
+    CHARTS.forEach(function(c){
+      var cr=refs.charts[c.ch], groups=cr.pts.children;
+      for(var g=0;g<groups.length;g++){
+        var grp=groups[g], sid=grp.getAttribute('data-s'), i=+grp.getAttribute('data-i'), s=serie(sid), p=estado.pontos[sid][i];
+        if(!estado.ligadas[sid]){ grp.style.display='none'; continue; }
+        grp.style.display=''; grp.setAttribute('transform','translate('+refs.xDe(i)+','+cr.yDe(s,p.v)+')');
+        var circ=grp.children[0], val=grp.children[2];
+        if(!p.ativo){ grp.setAttribute('opacity','0.18'); grp.classList.add('locked'); circ.setAttribute('stroke-dasharray',''); val.textContent=''; }
+        else { grp.setAttribute('opacity','1'); grp.classList.remove('locked'); circ.setAttribute('stroke-dasharray',p.pendente?'3 3':''); circ.setAttribute('fill',p.pendente?'#fffaf5':'#fff'); val.textContent=fmt(p.v,s.passo); }
+      }
+      SERIES.forEach(function(s){
+        if(s.ch!==c.ch) return; var path=cr.paths[s.id];
+        if(!estado.ligadas[s.id]){ path.style.display='none'; return; } path.style.display='';
+        var arr=estado.pontos[s.id], d='';
+        for(var i=refs.i0;i<refs.i1;i++){ if(!arr[i].ativo) break; d+=(i===refs.i0?'M':'L')+refs.xDe(i)+' '+cr.yDe(s,arr[i].v)+' '; }
+        path.setAttribute('d',d);
+      });
+    });
+  }
+
+  function montarControles(root){
+    var c=div('ctl',null,root);
+    c.innerHTML='<span class="chip" id="chipStatus"></span><span class="chip next" id="chipProx"></span><span class="chip pend" id="chipPend"></span>'+
+      '<button type="button" id="btnZoomMenos">−</button><span class="chip" id="chipZoom"></span><button type="button" id="btnZoomMais">+</button>'+
+      '<button type="button" id="btnAgora">Ir para agora</button><button type="button" class="primary" id="btnSalvar">Salvar</button><span class="stamp" id="stamp">Nada salvo ainda</span>';
+    $('btnZoomMenos').addEventListener('click',function(){ if(zoomIdx>0){ zoomIdx--; reconstruirTela(); irParaAgora(); } });
+    $('btnZoomMais').addEventListener('click',function(){ if(zoomIdx<ZOOMS.length-1){ zoomIdx++; reconstruirTela(); irParaAgora(); } });
+    $('btnAgora').addEventListener('click',irParaAgora);
+    $('btnSalvar').addEventListener('click',function(){ salvar(false); });
+  }
+
+  function reconstruirTela(){
+    var sl=tela&&tela.scroll?tela.scroll.scrollLeft:0, stampTxt=$('stamp')?$('stamp').textContent:'Nada salvo ainda';
+    var root=$('fichaTela'); root.innerHTML='';
+    montarCabecalho(root,true); montarControles(root);
+    tela=montarRegistro(root,0,nPontos(),ZOOMS[zoomIdx],true,null);
+    tela.scroll.scrollLeft=sl; $('stamp').textContent=stampTxt;
+    atualizarNow(); atualizarChips(); atualizarProxima();
+  }
+  function atualizarTela(){ if(tela) preencherRegistro(tela); atualizarChips(); }
+  function atualizarNow(){
+    if(!tela) return; var frac=colAtual(), n=nPontos(), vis=iniciado&&frac>=0&&frac<=n-1, x=LABEL_W+tela.xs/2+frac*tela.xs;
+    CHARTS.forEach(function(c){ var cr=tela.charts[c.ch]; cr.now.style.display=vis?'':'none'; if(vis){ cr.now.children[0].setAttribute('x1',x); cr.now.children[0].setAttribute('x2',x); cr.now.children[1].setAttribute('x',x); } });
+  }
+  function atualizarChips(){
+    if(!$('chipPend')) return;
+    var pend=0; SERIES.forEach(function(s){ if(!estado.ligadas[s.id]) return; estado.pontos[s.id].forEach(function(p){ if(p.ativo&&p.pendente) pend++; }); });
+    var cp=$('chipPend'); cp.textContent='Pendentes: '+pend; cp.style.opacity=pend?'1':'.55';
+    var arr=estado.pontos[SERIES[0].id], feitas=0; arr.forEach(function(p){ if(p.ativo) feitas++; });
+    var cs=$('chipStatus'); cs.className='chip '+(!iniciado?'estado-nao-iniciado':(estado.fim?'estado-encerrado':'estado-iniciado')); /* v19.9.2 */
+    cs.textContent = !iniciado ? 'Caso não iniciado' : (estado.fim ? 'Encerrado · '+hhmm(estado.inicio)+'–'+estado.fim : 'Anestesia desde '+hhmm(estado.inicio))+' · '+feitas+' de '+arr.length+' marcações';
+    $('chipZoom').textContent='Zoom '+(zoomIdx+1)+'/'+ZOOMS.length;
+  }
+  function atualizarProxima(){
+    if(!$('chipProx')) return;
+    var c=$('chipProx'); if(!iniciado){ c.textContent='Toque em “Iniciar caso” para começar'; return; }
+    var now=agora(), arr=estado.pontos[SERIES[0].id], prox=null;
+    for(var i=0;i<arr.length;i++){ if(arr[i].t>now){ prox=arr[i].t; break; } }
+    if(prox===null){ c.textContent='Todas as marcações atingidas'; return; }
+    var s=Math.max(0,Math.floor((prox-now)/1000)); c.textContent='Próxima '+hhmm(new Date(prox))+' · '+pad2(Math.floor(s/60))+':'+pad2(s%60);
+  }
+  function irParaAgora(){ if(!tela) return; var frac=clamp(colAtual(),0,nPontos()-1), x=LABEL_W+tela.xs/2+frac*tela.xs, w=tela.scroll; w.scrollTo({left:Math.max(0,x-w.clientWidth*0.35),behavior:'smooth'}); }
+
+  /* ================= ARRASTE ================= */
+  var drag=null;
+  function ptoSvg(svg,evt){ var pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+  function instalarArraste(cr, refs){
+    var svg=cr.svg;
+    function bubble(s,i,v,show){ cr.bubble.style.display=show?'':'none'; cr.bubble.setAttribute('transform','translate('+refs.xDe(i)+','+cr.yDe(s,v)+')'); cr.bubble.children[1].textContent=s.sym+' '+fmt(v,s.passo); }
+    svg.addEventListener('pointerdown',function(e){
+      var grp=e.target.closest?e.target.closest('.pt'):null; if(!grp) return;
+      var sid=grp.getAttribute('data-s'), i=+grp.getAttribute('data-i'), p=estado.pontos[sid][i], s=serie(sid);
+      if(!p.ativo){ msg('Marcação de '+hhmm(new Date(p.t))+' ainda não chegou'); return; }
+      e.preventDefault(); svg.setPointerCapture(e.pointerId);
+      drag={cr:cr,s:s,i:i,grp:grp,y0:ptoSvg(svg,e).y,v0:p.v,moved:false,pid:e.pointerId}; grp.classList.add('drag'); bubble(s,i,p.v,true);
+    });
+    svg.addEventListener('pointermove',function(e){
+      if(!drag||e.pointerId!==drag.pid||drag.cr!==cr) return; e.preventDefault();
+      var dy=ptoSvg(svg,e).y-drag.y0; if(Math.abs(dy)>3) drag.moved=true; if(!drag.moved) return;
+      var s=drag.s, ax=s.eixo==='dir'?cr.c.dir:cr.c.esq, p=estado.pontos[s.id][drag.i];
+      p.v=clamp(arredondar(drag.v0 - dy/cr.H*(ax.max-ax.min), s.passo), s.min, s.max);
+      atualizarTela(); bubble(s,drag.i,p.v,true);
+    });
+    function fim(e){
+      if(!drag||(e&&e.pointerId!==drag.pid)||drag.cr!==cr) return;
+      var d=drag; drag=null; d.grp.classList.remove('drag'); cr.bubble.style.display='none';
+      try{ svg.releasePointerCapture(d.pid); }catch(err){}
+      var p=estado.pontos[d.s.id][d.i];
+      if(d.moved){ p.pendente=false; p.editadoEm=Date.now(); atualizarTela(); autosave(); }
+      else abrirEditorNum(d.s.id,d.i);
+    }
+    svg.addEventListener('pointerup',fim); svg.addEventListener('pointercancel',fim);
+    svg.addEventListener('lostpointercapture',function(e){ if(drag&&e.pointerId===drag.pid) fim(e); });
+    svg.addEventListener('contextmenu',function(e){ e.preventDefault(); });
+  }
+
+  /* ================= EDITOR ================= */
+  var ed=null;
+  function mostrarEditor(modo){ $('edNum').style.display=modo==='num'?'':'none'; $('edTxt').style.display=modo==='txt'?'':'none'; $('veil').classList.add('open'); }
+  function abrirEditorNum(sid,i){
+    var s=serie(sid), p=estado.pontos[sid][i]; ed={modo:'num',sid:sid,i:i};
+    $('edTitulo').textContent=s.nome+' · '+hhmm(new Date(p.t));
+    $('edSub').textContent=(p.pendente?'Valor herdado da marcação anterior. Confirme ou corrija.':'Valor já revisado.')+' Faixa: '+fmt(s.min,s.passo)+' a '+fmt(s.max,s.passo)+'.';
+    var inp=$('edInput'); inp.min=s.min; inp.max=s.max; inp.step=s.passo; inp.value=p.v; $('edLimpar').style.display='none';
+    mostrarEditor('num'); setTimeout(function(){ inp.focus(); inp.select(); },50);
+  }
+  function abrirEditorTexto(alvo,lista,r,i){
+    var item=estado[lista][r]; ed={modo:'txt',alvo:alvo,lista:lista,r:r,i:i};
+    if(alvo==='nome'){ $('edTitulo').textContent=lista==='drogas'?'Nome da droga':'Nome do fluido'; $('edSub').textContent='Linha '+(r+1)+'.'; $('edTexto').value=item.nome||''; }
+    else { $('edTitulo').textContent=(item.nome||(lista==='drogas'?'Droga':'Fluido'))+' · '+hhmm(horaCol(i)); $('edSub').textContent=lista==='drogas'?'Dose ou anotação nesta coluna.':'Volume em mL nesta coluna.'; $('edTexto').value=item.cel[i]||''; }
+    $('edLimpar').style.display=''; mostrarEditor('txt'); setTimeout(function(){ $('edTexto').focus(); $('edTexto').select(); },50);
+  }
+  function fecharEditor(){ $('veil').classList.remove('open'); ed=null; }
+  function passoEditor(dir){ if(!ed||ed.modo!=='num') return; var s=serie(ed.sid), i=$('edInput'); i.value=clamp(arredondar((+String(i.value).replace(',','.')||0)+dir*s.passo,s.passo),s.min,s.max); }
+  $('edMenos').addEventListener('click',function(){ passoEditor(-1); }); $('edMais').addEventListener('click',function(){ passoEditor(1); });
+  $('edCancelar').addEventListener('click',fecharEditor); $('veil').addEventListener('click',function(e){ if(e.target===$('veil')) fecharEditor(); });
+  $('edLimpar').addEventListener('click',function(){ if(!ed||ed.modo!=='txt') return; $('edTexto').value=''; $('edConfirmar').click(); });
+  $('edConfirmar').addEventListener('click',function(){
+    if(!ed) return;
+    if(ed.modo==='num'){ var s=serie(ed.sid), p=estado.pontos[ed.sid][ed.i], v=+String($('edInput').value).replace(',','.'); if(isNaN(v)) return; p.v=clamp(arredondar(v,s.passo),s.min,s.max); p.pendente=false; p.editadoEm=Date.now(); fecharEditor(); atualizarTela(); autosave(); }
+    else { var item=estado[ed.lista][ed.r], txt=$('edTexto').value.trim(); if(ed.alvo==='nome') item.nome=txt; else { if(txt) item.cel[ed.i]=txt; else delete item.cel[ed.i]; } fecharEditor(); reconstruirTela(); autosave(); }
+  });
+  $('relCancelar').addEventListener('click',fecharRelogio);
+  $('relVeil').addEventListener('click',function(e){ if(e.target===$('relVeil')) fecharRelogio(); });
+  $('relDefinir').addEventListener('click',function(){ var v=pad2(lerRoda('rodaH'))+':'+pad2(lerRoda('rodaM')); var cb=relogioCb; fecharRelogio(); if(cb) cb(v); });
+  $('relAgora').addEventListener('click',function(){ var d=new Date(agora()); $('rodaH').scrollTop=d.getHours()*40; $('rodaM').scrollTop=d.getMinutes()*40; atualizarRelogio(); });
+  $('relLimpar').addEventListener('click',function(){ var f=relogioLimpar; fecharRelogio(); if(f) f(); });
+  ['rodaH','rodaM'].forEach(function(id){ $(id).addEventListener('scroll',atualizarRelogio); $(id).addEventListener('click',function(e){ var it=e.target.closest('.item'); if(it){ this.scrollTo({top:(+it.getAttribute('data-v'))*40,behavior:'smooth'}); } }); });
+  ['edInput','edTexto'].forEach(function(id){ $(id).addEventListener('keydown',function(e){ if(e.key==='Enter') $('edConfirmar').click(); if(e.key==='Escape') fecharEditor(); }); });
+
+  /* ================= MENUS ================= */
+  function chipsGrupo(container,opcoes,arr,unico,aoMudar){
+    container.innerHTML='';
+    opcoes.forEach(function(op){
+      var lab=document.createElement('label'); lab.className=arr.indexOf(op)>=0?'on':'';
+      lab.innerHTML='<input type="checkbox" '+(arr.indexOf(op)>=0?'checked':'')+'>'+esc(op);
+      lab.querySelector('input').addEventListener('change',function(){
+        if(unico){ arr.length=0; if(this.checked) arr.push(op); } else { var k=arr.indexOf(op); if(this.checked&&k<0) arr.push(op); if(!this.checked&&k>=0) arr.splice(k,1); }
+        chipsGrupo(container,opcoes,arr,unico,aoMudar); aoMudar();
+      });
+      container.appendChild(lab);
+    });
+  }
+  function montarMenus(){
+    [['mon1',1,'basica'],['mon1a',1,'avancada'],['mon2',2,'basica']].forEach(function(cfgm){
+      var box=$(cfgm[0]), ch=cfgm[1], grupo=cfgm[2]; box.innerHTML='';
+      SERIES.forEach(function(s){ if(s.ch!==ch||s.grupo!==grupo) return;
+        var lab=document.createElement('label'); lab.style.setProperty('--cor',s.cor); lab.className=estado.ligadas[s.id]?'on':'';
+        lab.innerHTML='<input type="checkbox" '+(estado.ligadas[s.id]?'checked':'')+'><b>'+s.sym+'</b>'+s.nome+' <small style="font-weight:400">'+esc(s.desc)+'</small>';
+        lab.querySelector('input').addEventListener('change',function(){ estado.ligadas[s.id]=this.checked; lab.className=this.checked?'on':''; reconstruirTela(); autosave(); });
+        box.appendChild(lab);
+      });
+    });
+    var mudou=function(){ reconstruirTela(); autosave(); };
+    chipsGrupo($('cfgPre'),OPCOES.pre,estado.cfg.pre,true,mudou);
+    chipsGrupo($('cfgPosicao'),OPCOES.posicao,estado.cfg.posicao,false,mudou);
+    chipsGrupo($('cfgTecnica'),OPCOES.tecnica,estado.cfg.tecnica,false,function(){ montarDetalhes(); mudou(); });
+    chipsGrupo($('cfgVia'),OPCOES.via,estado.cfg.via,false,function(){ montarDetalhes(); mudou(); });
+    montarDetalhes();
+    montarListaSel('cfgDrogas','drogas',OPCOES.drogas,estado.cfg.drogasSel);
+    montarListaSel('cfgFluidos','fluidos',OPCOES.fluidos,estado.cfg.fluidosSel);
+    chipsGrupo($('recDestino'),OPCOES.destino,estado.rec.destino,true,function(){ autosave(); });
+    $('inpTecnicaTexto').value=estado.cfg.tecnicaTexto||''; $('inpInducao').value=estado.cfg.inducao||''; $('inpManutencao').value=estado.cfg.manutencao||''; $('inpViaTexto').value=estado.cfg.viaTexto||'';
+    $('inpDesfecho').value=estado.cfg.desfecho||''; $('txtResumo').value=estado.cfg.resumo||'';
+    $('recAldrete').value=estado.rec.aldrete||''; $('txtObs').value=estado.obs||''; $('txtAnot').value=estado.anot||'';
+    $('inpData').value=isoDate(estado.inicio); $('selDuracao').value=String(estado.duracaoMin); $('chkRapido').checked=estado.rapido;
+    var pc=$('cfgPuncoes'); pc.innerHTML='';
+    OPCOES.puncoes.forEach(function(p){
+      var n=estado.cfg.puncoes[p]||0;
+      var row=div('contador','<span>'+p+'</span><div><button type="button" data-d="-1">−</button><span data-n>'+n+'</span><button type="button" data-d="1">+</button></div>',pc);
+      row.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ estado.cfg.puncoes[p]=clamp((estado.cfg.puncoes[p]||0)+(+this.getAttribute('data-d')),0,9); row.querySelector('[data-n]').textContent=estado.cfg.puncoes[p]; autosave(); }); });
+    });
+    montarBalanco(); montarLab();
+  }
+  /* detalhes dependentes da técnica / via aérea */
+  function montarDetalhes(){
+    [['detTecnica',estado.cfg.tecnica],['detVia',estado.cfg.via]].forEach(function(par){
+      var box=$(par[0]); box.innerHTML='';
+      par[1].forEach(function(op){
+        var grupos=DETALHES[op]; if(!grupos) return;
+        var h=div('sub',esc(op),box); void h;
+        grupos.forEach(function(g){
+          var chave=op+'|'+g[0]; if(!estado.cfg.det[chave]) estado.cfg.det[chave]=[];
+          var lab=div('sub',esc(g[0]),box); lab.style.fontWeight='500'; lab.style.textTransform='none';
+          var c=div('chips',null,box);
+          chipsGrupo(c,g[1],estado.cfg.det[chave],true,function(){ autosave(); });
+        });
+      });
+    });
+  }
+  /* listas de drogas / fluidos: selecionadas viram linhas do bloco */
+  function sincronizarLinhas(lista, sel){
+    var atual=estado[lista], novo=[];
+    sel.forEach(function(nome){ var ex=null; atual.forEach(function(it){ if(it.nome===nome) ex=it; }); novo.push(ex||{nome:nome,cel:{}}); });
+    estado[lista]=novo;
+  }
+  function montarListaSel(boxId, lista, opcoes, sel){
+    var box=$(boxId), todas=opcoes.slice(); sel.forEach(function(n){ if(todas.indexOf(n)<0) todas.push(n); });
+    chipsGrupo(box,todas,sel,false,function(){ sincronizarLinhas(lista,sel); reconstruirTela(); autosave(); });
+    sincronizarLinhas(lista,sel);
+  }
+  $('inpDrogaNova').addEventListener('keydown',function(e){ if(e.key!=='Enter') return; var n=this.value.trim(); if(!n) return; if(estado.cfg.drogasSel.indexOf(n)<0) estado.cfg.drogasSel.push(n); this.value=''; montarListaSel('cfgDrogas','drogas',OPCOES.drogas,estado.cfg.drogasSel); reconstruirTela(); autosave(); });
+  $('inpFluidoNovo').addEventListener('keydown',function(e){ if(e.key!=='Enter') return; var n=this.value.trim(); if(!n) return; if(estado.cfg.fluidosSel.indexOf(n)<0) estado.cfg.fluidosSel.push(n); this.value=''; montarListaSel('cfgFluidos','fluidos',OPCOES.fluidos,estado.cfg.fluidosSel); reconstruirTela(); autosave(); });
+  function ligarCampo(id, fn, evt){ $(id).addEventListener(evt||'input', function(){ fn(this.value); autosave(); }); }
+  ligarCampo('inpTecnicaTexto',function(v){ estado.cfg.tecnicaTexto=v; });
+  ligarCampo('inpInducao',function(v){ estado.cfg.inducao=v; });
+  ligarCampo('inpManutencao',function(v){ estado.cfg.manutencao=v; });
+  ligarCampo('inpViaTexto',function(v){ estado.cfg.viaTexto=v; });
+  ligarCampo('inpDesfecho',function(v){ estado.cfg.desfecho=v; });
+  ligarCampo('txtResumo',function(v){ estado.cfg.resumo=v; });
+  ligarCampo('recAldrete',function(v){ estado.rec.aldrete=v; });
+  ligarCampo('txtObs',function(v){ estado.obs=v; });
+  ligarCampo('txtAnot',function(v){ estado.anot=v; });
+  $('btnGerarResumo').addEventListener('click',function(){ estado.cfg.resumo=gerarResumo(); $('txtResumo').value=estado.cfg.resumo; autosave(); msg('Resumo gerado a partir dos chips'); });
+
+  /* ---- v19.9: biblioteca de fármacos (IntraFarmacos.html) com dose total pelo peso do cabeçalho ---- */
+  (function montarBiblioteca(){
+    var lib=window.CLAV_FARMACOS_LIB, lista=$('farmLista'), busca=$('inpFarmBusca'), kitsBox=$('farmKits');
+    if(!lista||!busca) return;
+    if(!lib||!Array.isArray(lib.FARMACOS)||!lib.FARMACOS.length){ lista.innerHTML='<div class="hint" style="margin:0">Biblioteca de fármacos indisponível nesta implantação (arquivo IntraFarmacos ausente).</div>'; return; }
+    var cats={}; (lib.CATEGORIAS||[]).forEach(function(c){ cats[c.id]=c; });
+    function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+    function pesoKg(){ var n=Number(String(estado.cab.peso||'').replace(',','.').replace(/[^0-9.]/g,'')); return (isFinite(n)&&n>0&&n<400)?n:0; }
+    function fmtN(v){ if(v==null||v==='') return ''; var n=Number(v); if(!isFinite(n)) return String(v); return (Math.round(n*100)/100).toString().replace('.',','); }
+    function faixaDose(d){ return (d.min!=null?fmtN(d.min):'')+(d.max!=null&&d.max!==d.min?'–'+fmtN(d.max):'')+' '+esc(d.unid||'')+(d.via?' · '+esc(d.via):''); }
+    function doseTotal(d){
+      var kg=pesoKg(), u=String(d.unid||''); if(!kg||!/\/kg/.test(u)) return '';
+      var un=u.replace(/\/kg/,''); var a=d.min!=null?fmtN(d.min*kg):'', b=d.max!=null?fmtN(d.max*kg):'';
+      return (a&&b&&a!==b?a+'–'+b:(a||b))+' '+un+' ('+fmtN(kg)+' kg)';
+    }
+    function item(f, momento){
+      var c=cats[f.cat]||{}; var h='<div class="farmItem" style="border-left:4px solid '+(c.cor||'#0f8a7e')+'">';
+      h+='<div class="cat" style="color:'+(c.cor||'#0f8a7e')+'">'+esc(c.nome||f.cat||'')+(momento?' · '+esc(momento):'')+'</div><b>'+esc(f.nome)+'</b>';
+      if(f.apresentacao) h+='<div class="obs">'+esc(f.apresentacao)+'</div>';
+      if(f.diluicao) h+='<div class="obs">Diluição: '+esc(f.diluicao)+'</div>';
+      (f.doses||[]).forEach(function(d){
+        var tot=doseTotal(d);
+        h+='<div class="dose"><span>'+esc(d.uso||'')+': '+faixaDose(d)+(d.obs?'<br><span class="obs">'+esc(d.obs)+'</span>':'')+'</span>'+(tot?'<span class="tot">'+esc(tot)+'</span>':'')+'</div>';
+      });
+      if(f.contraindicacoes) h+='<div class="al">Contraindicações: '+esc(f.contraindicacoes)+'</div>';
+      if(f.alertas) h+='<div class="al">'+esc(f.alertas)+'</div>';
+      h+='<div class="acoes"><button type="button" data-add="'+esc(f.nome)+'">+ Linha em Drogas</button></div></div>';
+      return h;
+    }
+    function render(termo){
+      var t=norm(termo).trim(), out=[];
+      if(t.length>=2){ out=lib.FARMACOS.filter(function(f){ return norm(f.nome+' '+(f.id||'')+' '+((cats[f.cat]||{}).nome||'')+' '+(f.indicacoes||'')).indexOf(t)>=0; }).slice(0,12); }
+      lista.innerHTML=out.length?out.map(function(f){ return item(f,''); }).join(''):'<div class="hint" style="margin:0">'+(t.length>=2?'Nenhum fármaco encontrado.':'Digite ao menos 2 letras ou escolha um kit. Doses em /kg usam o peso do cabeçalho.')+'</div>';
+    }
+    var buscaT; busca.addEventListener('input',function(){ clearTimeout(buscaT); var v=this.value; buscaT=setTimeout(function(){ render(v); },150); });
+    lista.addEventListener('click',function(e){
+      var b=e.target.closest('button[data-add]'); if(!b||SOMENTE_LEITURA) return;
+      var n=b.getAttribute('data-add'); if(estado.cfg.drogasSel.indexOf(n)<0) estado.cfg.drogasSel.push(n);
+      montarListaSel('cfgDrogas','drogas',OPCOES.drogas,estado.cfg.drogasSel); reconstruirTela(); autosave(); msg(n+' acrescentado às drogas');
+    });
+    if(kitsBox&&Array.isArray(lib.KITS)){
+      lib.KITS.forEach(function(k){
+        var lab=document.createElement('label'); lab.innerHTML='<b>K</b>'+esc(k.nome); lab.title='Mostrar os fármacos deste kit';
+        lab.addEventListener('click',function(){
+          var itens=(k.itens||[]).map(function(it){ var f=null; lib.FARMACOS.forEach(function(x){ if(x.id===it.ref) f=x; }); return f?{f:f,it:it}:null; }).filter(Boolean);
+          lista.innerHTML=itens.length?itens.map(function(par){ var d=(par.f.doses||[])[par.it.doseIdx||0]||{}; var tot=doseTotal(d); return '<div class="farmItem"><b>'+esc(par.f.nome)+'</b> <span class="obs">'+esc(par.it.momento||'')+(par.it.obs?' · '+esc(par.it.obs):'')+'</span><div class="dose"><span>'+esc(d.uso||'')+': '+faixaDose(d)+'</span>'+(tot?'<span class="tot">'+esc(tot)+'</span>':'')+'</div><div class="acoes"><button type="button" data-add="'+esc(par.f.nome)+'">+ Linha em Drogas</button></div></div>'; }).join(''):'<div class="hint" style="margin:0">Kit vazio.</div>';
+          busca.value='';
+        });
+        kitsBox.appendChild(lab);
+      });
+    }
+  })();
+
+  /* ---- balanço hídrico ---- */
+  function montarBalanco(){
+    [['iniciado','bhIni'],['absorvido','bhAbs'],['perdas','bhPer'],['reposicao','bhRep']].forEach(function(par){
+      var grupo=par[0], box=$(par[1]); box.innerHTML='';
+      BH[grupo].forEach(function(it){
+        var sp=document.createElement('span'); sp.textContent=it[1]; box.appendChild(sp);
+        var inp=document.createElement('input'); inp.type='number'; inp.inputMode='numeric'; inp.value=estado.bh[grupo][it[0]]||''; inp.placeholder='0';
+        inp.addEventListener('input',function(){ estado.bh[grupo][it[0]]=this.value===''?'':+this.value; atualizarBalanco(); autosave(); });
+        box.appendChild(inp);
+      });
+      if(grupo!=='reposicao'){ var t=document.createElement('span'); t.className='tot'; t.textContent='Total'; box.appendChild(t); var tv=document.createElement('span'); tv.className='tot'; tv.style.textAlign='right'; tv.id='bhTot_'+grupo; box.appendChild(tv); }
+    });
+    atualizarBalanco();
+  }
+  function soma(grupo){ var s=0; BH[grupo].forEach(function(it){ s+=(+estado.bh[grupo][it[0]]||0); }); return s; }
+  function atualizarBalanco(){
+    ['iniciado','absorvido','perdas'].forEach(function(g){ var e=$('bhTot_'+g); if(e) e.textContent=soma(g); });
+    var bal=soma('absorvido')+soma('reposicao')-soma('perdas');
+    $('bhBalanco').textContent='Balanço: '+(bal>0?'+':'')+bal+' mL';
+  }
+  /* ---- laboratório ---- */
+  function montarLab(){
+    var box=$('labLista'); box.innerHTML='';
+    if(!estado.lab.length){ div('vazio','Nenhuma coleta registrada.',box); return; }
+    estado.lab.forEach(function(c,idx){
+      var col=div('lab-col','<div class="sub" style="margin:0 0 6px">Coleta '+(idx+1)+'</div>',box);
+      var g=div('lg',null,col);
+      var lh=document.createElement('label'); lh.textContent='Hora'; var ih=document.createElement('input'); ih.type='text'; ih.readOnly=true; ih.value=c.hora||''; ih.style.cursor='pointer'; ih.addEventListener('click',function(){ abrirRelogio(c.hora||hhmm(new Date(agora())),function(v){ c.hora=v; ih.value=v; autosave(); },'Hora da coleta'); }); lh.appendChild(ih); g.appendChild(lh);
+      LAB.forEach(function(it){ var l=document.createElement('label'); l.textContent=it[1]; var i=document.createElement('input'); i.type='text'; i.inputMode='decimal'; i.value=c[it[0]]||''; i.addEventListener('input',function(){ c[it[0]]=this.value; autosave(); }); l.appendChild(i); g.appendChild(l); });
+    });
+  }
+  $('btnLabMais').addEventListener('click',function(){ if(estado.lab.length>=4) return; estado.lab.push({hora:hhmm(new Date(agora()))}); montarLab(); autosave(); });
+  $('btnLabMenos').addEventListener('click',function(){ estado.lab.pop(); montarLab(); autosave(); });
+
+  /* ---- painéis: recolher / redimensionar ---- */
+  $('btnMenu').addEventListener('click',function(){ document.body.classList.toggle('sb-fechada'); lembrar('_sb',document.body.classList.contains('sb-fechada')?'1':'0'); });
+  $('btnPainel').addEventListener('click',function(){ document.body.classList.toggle('rp-fechado'); lembrar('_rp',document.body.classList.contains('rp-fechado')?'1':'0'); });
+  function lembrar(k,v){ try{ localStorage.setItem(STORAGE_KEY+k,v); }catch(e){} }
+  function redim(handleId, varName, lado, min, max){
+    var h=$(handleId), x0=0, w0=0, ativo=false;
+    h.addEventListener('pointerdown',function(e){ ativo=true; x0=e.clientX; w0=parseFloat(getComputedStyle(document.documentElement).getPropertyValue(varName)); h.classList.add('ativo'); h.setPointerCapture(e.pointerId); e.preventDefault(); });
+    h.addEventListener('pointermove',function(e){ if(!ativo) return; var w=clamp(w0+(e.clientX-x0)*lado,min,max); document.documentElement.style.setProperty(varName,w+'px'); });
+    function fim(){ if(!ativo) return; ativo=false; h.classList.remove('ativo'); lembrar(varName, getComputedStyle(document.documentElement).getPropertyValue(varName).trim()); }
+    h.addEventListener('pointerup',fim); h.addEventListener('pointercancel',fim);
+    try{ var w=localStorage.getItem(STORAGE_KEY+varName); if(w) document.documentElement.style.setProperty(varName,w); }catch(e){}
+  }
+  redim('hEsq','--sbw',1,220,520); redim('hDir','--rpw',-1,260,560);
+  try{
+    /* v19.9.2: menu esquerdo recolhido por padrão, como o painel direito; quem abrir e o navegador lembrar continua aberto */
+    if(localStorage.getItem(STORAGE_KEY+'_sb')!=='0'||window.innerWidth<900) document.body.classList.add('sb-fechada');
+    if(localStorage.getItem(STORAGE_KEY+'_rp')!=='0'||window.innerWidth<1000) document.body.classList.add('rp-fechado');
+  }catch(e){}
+
+  /* ================= RESUMO AUTOMÁTICO ================= */
+  function gerarResumo(){
+    var c=estado.cfg, L=[];
+    L.push(c.pre[0]==='Ausente' ? 'Sem avaliação pré-anestésica prévia; anamnese e verificação do pré-operatório realizadas em sala.' : 'Anamnese + verificação do pré-operatório.');
+    var mon=[]; SERIES.forEach(function(s){ if(estado.ligadas[s.id]&&mon.indexOf(s.mon)<0) mon.push(s.mon); });
+    if(mon.length) L.push('Monitorização com '+mon.join(', ')+'.');
+    if(c.posicao.length) L.push('Posicionamento: '+c.posicao.join(', ')+'.');
+    var reg = c.tecnica.some(function(t){ return /Raqui|peridural|Bloqueio/.test(t); });
+    var geral = c.tecnica.some(function(t){ return /Geral|Venosa/.test(t); });
+    function det(op){ var gs=DETALHES[op]||[], out=[]; gs.forEach(function(g){ var v=(c.det[op+'|'+g[0]]||[])[0]; if(v) out.push(g[0].toLowerCase()+' '+v); }); return out.length?' ('+out.join(', ')+')':''; }
+    if(c.via.length){
+      var v=c.via.map(function(o){ return o+det(o); }).join(' + ');
+      if(/IOT/.test(v)) L.push('Intubação orotraqueal'+det('IOT')+(c.viaTexto?' '+c.viaTexto:'')+'.');
+      else if(/Cateter/.test(v)) L.push('Cateter de oxigênio'+(c.viaTexto?' a '+c.viaTexto:'')+'.');
+      else L.push(v+(c.viaTexto?' ('+c.viaTexto+')':'')+'.');
+    }
+    if(c.inducao) L.push((geral?'Indução com ':'Sedação com ')+c.inducao+'.');
+    if(reg){ var tr=c.tecnica.filter(function(t){ return /Raqui|peridural|Bloqueio/.test(t); }).map(function(t){ return t+det(t); }).join(' + '); L.push(tr+(c.tecnicaTexto?' — '+c.tecnicaTexto:'')+', com assepsia e antissepsia.'); }
+    else if(c.tecnica.length) L.push('Técnica: '+c.tecnica.join(', ')+(c.tecnicaTexto?' — '+c.tecnicaTexto:'')+'.');
+    if(c.manutencao) L.push('Mantido em '+c.manutencao+'.');
+    var punc=Object.keys(c.puncoes).filter(function(k){ return c.puncoes[k]>0; }).map(function(k){ return k+' ×'+c.puncoes[k]; });
+    if(punc.length) L.push('Punções: '+punc.join(', ')+'.');
+    if(c.drogasSel.length) L.push('Drogas utilizadas: '+c.drogasSel.join(', ')+'.');
+    L.push('');
+    L.push(c.desfecho || (geral ? 'Descurarizado com sugammadex. Acordado e extubado.' : 'Estável, sem intercorrências durante o procedimento.'));
+    L.push('Encaminhado'+(estado.rec.destino[0]?' para '+estado.rec.destino[0]:' para SRPA')+' sem intercorrências.');
+    return L.join('\n');
+  }
+
+  /* ================= IMPRESSÃO ================= */
+  function montarImpressao(){
+    var box=$('impressao'); box.innerHTML='';
+    var n=nPontos(), paginas=Math.max(1,Math.ceil((n-1)/PRINT_COLS)), emitido=hhmmss(new Date())+' de '+brDate(new Date());
+    /* v19.9: identificação médico-legal na primeira página (prontuário, nascimento, atendimento), quando vinculada */
+    var ident=''; try{ var ctxI=window.CLAV_PONTE&&window.CLAV_PONTE.estado().contexto; if(ctxI){ var pI=ctxI.paciente||{}, nasc=String(pI.nascimento||'').match(/^(\d{4})-(\d{2})-(\d{2})/); ident=[pI.prontuario?'Pront. '+esc(pI.prontuario):'', nasc?'Nasc. '+nasc[3]+'/'+nasc[2]+'/'+nasc[1]:'', ctxI.atendimento_id?'Atend. '+esc(ctxI.atendimento_id):''].filter(Boolean).join(' · '); } }catch(e){ ident=''; }
+    var alt={1:CHARTS[0].Hp,2:CHARTS[1].Hp};
+    for(var pg=0;pg<paginas;pg++){
+      var i0=pg*PRINT_COLS, i1=Math.min(n,i0+PRINT_COLS+1);
+      var pagina=div('pagina',null,box), ficha=div('ficha',null,pagina);
+      if(pg===0) montarCabecalho(ficha,false);
+      else div('faixa','<span><b>'+esc(estado.cab.paciente||'Paciente não identificado')+'</b> · '+esc(estado.cab.cirurgia||'')+'</span><span>'+brDate(estado.inicio)+' · anestesista: '+esc(estado.cab.anestesista||'—')+'</span>',ficha);
+      div('faixa','<span>'+(pg===0&&ident?ident+' · ':'')+'Registro intraoperatório · '+hhmm(horaCol(i0))+' a '+hhmm(horaCol(i1-1))+'</span><span>página '+(pg+1)+' de '+(paginas+1)+'</span>',ficha);
+      montarRegistro(ficha,i0,i1,PRINT_XS,false,alt);
+      div('rodape','<span>CLAV · Ficha de anestesia e registro intraoperatório · ficha v5</span><span>Emitido em '+emitido+'</span>',pagina);
+    }
+    /* página final: resumo, balanço, laboratório, recuperação, observações, assinatura */
+    var pf=div('pagina',null,box), ff=div('ficha',null,pf);
+    div('faixa','<span><b>'+esc(estado.cab.paciente||'Paciente não identificado')+'</b> · '+esc(estado.cab.cirurgia||'')+'</span><span>'+brDate(estado.inicio)+' · página '+(paginas+1)+' de '+(paginas+1)+'</span>',ff);
+    var fin=div('final',null,ff);
+    var resumo=estado.cfg.resumo||gerarResumo();
+    fin.innerHTML+='<h4>Descrição do ato anestésico</h4><div class="resumo">'+esc(resumo)+'</div>';
+    var cols=div('cols',null,fin);
+    function kvs(tit,grupo){ var h='<h4>'+tit+'</h4>'; BH[grupo].forEach(function(it){ h+='<div class="kv"><span>'+it[1]+'</span><span>'+(estado.bh[grupo][it[0]]===''||estado.bh[grupo][it[0]]==null?'—':estado.bh[grupo][it[0]])+'</span></div>'; }); if(grupo!=='reposicao') h+='<div class="kv t"><span>Total</span><span>'+soma(grupo)+'</span></div>'; return h; }
+    var bal=soma('absorvido')+soma('reposicao')-soma('perdas');
+    div('',kvs('Balanço hídrico — iniciado (mL)','iniciado'),cols);
+    div('',kvs('Absorvido (mL)','absorvido'),cols);
+    div('',kvs('Perdas (mL)','perdas')+kvs('Reposição (mL)','reposicao')+'<div class="kv t"><span>Balanço</span><span>'+(bal>0?'+':'')+bal+' mL</span></div>',cols);
+    var lab='<h4>Laboratório / gasometria</h4>';
+    if(estado.lab.length){ lab+='<table><tr><th>Hora</th>'; LAB.forEach(function(it){ lab+='<th>'+it[1]+'</th>'; }); lab+='</tr>'; estado.lab.forEach(function(c){ lab+='<tr><td>'+esc(c.hora||'—')+'</td>'; LAB.forEach(function(it){ lab+='<td>'+esc(c[it[0]]||'—')+'</td>'; }); lab+='</tr>'; }); lab+='</table>'; }
+    else lab+='<div>Nenhuma coleta registrada.</div>';
+    fin.innerHTML+=lab;
+    fin.innerHTML+='<h4>Recuperação e destino</h4><div>'+esc(estado.rec.aldrete||'—')+'</div><div>Destino: <b>'+esc(estado.rec.destino[0]||'—')+'</b>'+'</div>';
+    fin.innerHTML+='<h4>Observações e anotações</h4><div class="resumo">'+esc(estado.obs||'—')+(estado.anot?'\n\n'+esc(estado.anot):'')+'</div>';
+    /* v19.9: CRM no carimbo quando o responsável impresso é o profissional logado (dado do servidor) */
+    var crmAss=''; try{ var ctxP=window.CLAV_PONTE&&window.CLAV_PONTE.estado().contexto; var rsP=ctxP&&ctxP.responsavelSala; if(rsP&&rsP.crm&&(!estado.cab.anestesista||String(estado.cab.anestesista).trim().toLowerCase()===String(rsP.nome||'').trim().toLowerCase())) crmAss=String(rsP.crm).trim(); }catch(e){}
+    fin.innerHTML+='<div class="ass"><div class="l">'+esc(estado.cab.anestesista||'Anestesista')+'</div><div>Médico anestesiologista</div>'+(crmAss?'<div>'+(/^crm/i.test(crmAss)?esc(crmAss):'CRM '+esc(crmAss))+'</div>':'')+'</div>';
+    div('rodape','<span>CLAV · Ficha de anestesia e registro intraoperatório · ficha v5</span><span>Emitido em '+emitido+'</span>',pf);
+  }
+  window.addEventListener('beforeprint',montarImpressao);
+  $('btnImprimir').addEventListener('click',function(){ montarImpressao(); window.print(); });
+
+  /* ================= SALVAMENTO ================= */
+  function serializar(){
+    return { versao:'clav-ficha-v5', inicio:estado.inicio.toISOString(), iniciado:iniciado, fim:estado.fim, intervaloMin:INTERVALO_MIN, duracaoMin:estado.duracaoMin,
+      rapido:estado.rapido, simInicioReal:estado.simInicioReal, simInicioSim:estado.simInicioSim,
+      cab:estado.cab, cfg:estado.cfg, ligadas:estado.ligadas, drogas:estado.drogas, fluidos:estado.fluidos, bh:estado.bh, lab:estado.lab, rec:estado.rec, obs:estado.obs, anot:estado.anot,
+      salvoEm:new Date().toISOString(),
+      series:SERIES.map(function(s){ return { id:s.id, nome:s.nome, grafico:s.ch, ligada:!!estado.ligadas[s.id], pontos:estado.pontos[s.id].map(function(p){ return {hora:hhmm(new Date(p.t)),t:p.t,valor:p.v,ativo:p.ativo,pendente:p.pendente,editadoEm:p.editadoEm}; }) }; }) };
+  }
+  var autoT;
+  function autosave(){ if(SOMENTE_LEITURA) return; clearTimeout(autoT); autoT=setTimeout(function(){ salvar(true); },400); }
+  function salvar(silencioso){
+    if(SOMENTE_LEITURA) return;
+    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(serializar())); estado.ultimoSalvo=new Date(); if($('stamp')) $('stamp').textContent='Salvo às '+hhmmss(estado.ultimoSalvo)+(silencioso?' (auto)':''); if(!silencioso&&!CASO_ID) msg('Registros salvos às '+hhmmss(estado.ultimoSalvo)); }
+    catch(err){ if($('stamp')) $('stamp').textContent='Falha ao salvar neste dispositivo: '+err.message; }
+    /* espelha no prontuário (planilha) quando a ficha está vinculada a um atendimento */
+    try{ if(window.CLAV_PONTE&&CASO_ID) window.CLAV_PONTE.agendar(!!silencioso); }catch(e){}
+  }
+  function restaurar(){
+    try{ var raw=localStorage.getItem(STORAGE_KEY); if(!raw) return false; return restaurarDe(JSON.parse(raw)); }
+    catch(err){ return false; }
+  }
+  /* aplica um objeto serializado (localStorage ou prontuário). Aceita o formato
+     completo (series[].pontos) e o compacto do servidor (series[].p = [t,v,pendente,editadoEm]). */
+  function restaurarDe(d){
+    try{
+      if(!d||!d.inicio) return false; var base=estadoInicial();
+      estado=base; estado.inicio=new Date(d.inicio); iniciado=!!d.iniciado; estado.fim=d.fim||''; estado.duracaoMin=d.duracaoMin||240;
+      estado.rapido=!!d.rapido; estado.simInicioReal=d.simInicioReal||null; estado.simInicioSim=d.simInicioSim||null;
+      ['cab','cfg','bh','rec'].forEach(function(k){ if(d[k]) for(var x in d[k]) estado[k][x]=d[k][x]; });
+      estado.cfg.det=estado.cfg.det||{}; estado.cfg.drogasSel=estado.cfg.drogasSel||[]; estado.cfg.fluidosSel=estado.cfg.fluidosSel||[]; estado.rec.destino=estado.rec.destino||[];
+      estado.ligadas=d.ligadas||{}; estado.drogas=d.drogas||estado.drogas; estado.fluidos=d.fluidos||estado.fluidos; estado.lab=d.lab||[]; estado.obs=d.obs||''; estado.anot=d.anot||'';
+      estado.pontos={};
+      (d.series||[]).forEach(function(s){
+        if(Array.isArray(s.pontos)){ estado.pontos[s.id]=s.pontos.map(function(p){ return {t:p.t,v:p.valor,ativo:p.ativo,pendente:p.pendente,editadoEm:p.editadoEm}; }); }
+        else if(Array.isArray(s.p)){
+          var t0=estado.inicio.getTime(), arr=[];
+          s.p.forEach(function(q){ var i=Math.round((q[0]-t0)/(INTERVALO_MIN*60000)); if(i<0) return; arr[i]={t:q[0],v:q[1],ativo:true,pendente:!!q[2],editadoEm:q[3]||null}; });
+          estado.pontos[s.id]=arr;
+        }
+        if(s.ligada!==undefined&&estado.ligadas[s.id]===undefined) estado.ligadas[s.id]=!!s.ligada;
+      });
+      /* gerarPontos() completa as marcações inativas e mantém as ativas pelo horário */
+      SERIES.forEach(function(s){ var arr=estado.pontos[s.id]||[]; var cheio=[]; for(var i=0;i<arr.length;i++) if(arr[i]) cheio[i]=arr[i]; estado.pontos[s.id]=cheio; });
+      return true;
+    }catch(err){ return false; }
+  }
+  /* formato compacto para o prontuário: só marcações ativas, [t, valor, pendente, editadoEm] */
+  function serializarCompacto(){
+    var d=serializar();
+    d.series=SERIES.map(function(s){ return { id:s.id, ligada:!!estado.ligadas[s.id], p:(estado.pontos[s.id]||[]).filter(function(p){ return p&&p.ativo; }).map(function(p){ return [p.t,p.v,p.pendente?1:0,p.editadoEm||0]; }) }; });
+    return d;
+  }
+  /* linhas para o PDF/prontuário (mesmo formato já lido por 21_PDF_Secoes.gs) */
+  function linhasSinais(){
+    var out=[], n=(estado.pontos.pas||[]).length;
+    for(var i=0;i<n;i++){
+      var ativo=false;
+      var get=function(id){ var p=(estado.pontos[id]||[])[i]; if(p&&p.ativo&&estado.ligadas[id]){ ativo=true; return fmt(p.v,serie(id).passo); } return ''; };
+      var pas=get('pas'), pad=get('pad'), pais=get('pais'), paid=get('paid'), pvc=get('pvc'), dpp=get('dpp'), tof=get('tof');
+      var pa=(pas&&pad)?(pas+'/'+pad):(pas||pad);
+      if(pais||paid) pa=(pa?pa+' · ':'')+'PAI '+(pais||'—')+'/'+(paid||'—');
+      var row={ horario:hhmm(horaCol(i)), col:i*INTERVALO_MIN, pa:pa, fc:get('fc'), spo2:get('spo2'), etco2:get('etco2'), temp:get('temp'), bis:get('bis'), pvc:pvc, delta_pp:dpp, outros:(tof?('TOF '+tof+'%'):'') };
+      if(ativo) out.push(row);
+    }
+    return out;
+  }
+  function linhasMedicacoes(){
+    var out=[];
+    (estado.drogas||[]).forEach(function(d){ if(!d||!d.nome) return; Object.keys(d.cel||{}).forEach(function(k){ var i=+k; if(!d.cel[k]) return; out.push({ horario:hhmm(horaCol(i)), col:i*INTERVALO_MIN, item:d.nome, dose:String(d.cel[k]), via:'', obs:'' }); }); });
+    (estado.fluidos||[]).forEach(function(f){ if(!f||!f.nome) return; Object.keys(f.cel||{}).forEach(function(k){ var i=+k; if(!f.cel[k]) return; out.push({ horario:hhmm(horaCol(i)), col:i*INTERVALO_MIN, item:f.nome, dose:String(f.cel[k])+' mL', via:'EV', obs:'Fluido / hemoderivado' }); }); });
+    out.sort(function(a,b){ return a.col-b.col; });
+    return out;
+  }
+  function dataHoraLocal(hhmmStr){ if(!hhmmStr) return ''; var d=dataHora(hhmmStr,estado.inicio); return isoDate(d)+'T'+hhmm(d); }
+  /* bloco enviado a intraopSalvar: a ficha inteira como texto (atômico) + campos legíveis pelo PDF e pelo sistema principal */
+  function blocoProntuario(){
+    var c=serializarCompacto();
+    var mon=SERIES.filter(function(s){ return estado.ligadas[s.id]; }).map(function(s){ return s.mon; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+    return {
+      ficha_v5_json: JSON.stringify(c),
+      ficha_v5_salvo_em: c.salvoEm,
+      sinais: linhasSinais(),
+      medicacoes: linhasMedicacoes(),
+      inicio_anestesia: iniciado ? (isoDate(estado.inicio)+'T'+hhmm(estado.inicio)) : '',
+      fim_anestesia: dataHoraLocal(estado.fim),
+      inicio_cirurgia: dataHoraLocal(estado.cab.inCirurgia),
+      fim_cirurgia: dataHoraLocal(estado.cab.fimCirurgia),
+      tecnica: (estado.cfg.tecnica||[]).concat(estado.cfg.tecnicaTexto?[estado.cfg.tecnicaTexto]:[]).join(', '),
+      via_aerea: (estado.cfg.via||[]).concat(estado.cfg.viaTexto?[estado.cfg.viaTexto]:[]).join(', '),
+      posicionamento: (estado.cfg.posicao||[]).join(', '),
+      destino: (estado.rec.destino||[]).join(', '),
+      monitorizacao_itens: mon,
+      monitorizacao: mon.join(', '),
+      acesso: Object.keys(estado.cfg.puncoes||{}).filter(function(k){ return estado.cfg.puncoes[k]>0; }).map(function(k){ return k+' ×'+estado.cfg.puncoes[k]; }).join(', '),
+      anestesiologistas_responsaveis: estado.cab.anestesista||'',
+      intercorrencias: estado.obs||'',
+      aldrete_saida: estado.rec.aldrete||'',
+      resumo_anestesico: estado.cfg.resumo||''
+    };
+  }
+  /* preenche a ficha com o que o sistema principal já sabe do paciente; nunca sobrescreve o que foi digitado */
+  function aplicarContexto(ctx){
+    if(!ctx) return;
+    var p=ctx.paciente||{}, m=ctx.medidas||{}, pr=ctx.procedimento||{}, pre=ctx.preAnestesico||{}, ba=ctx.basal||{}, rs=ctx.responsavelSala||{};
+    var padrao=estadoInicial().cab.hospital;
+    function set(k,v){ if(v===undefined||v===null||v==='') return; if(!estado.cab[k]||(k==='hospital'&&estado.cab[k]===padrao)) estado.cab[k]=String(v); }
+    set('hospital', ctx.instituicao); set('paciente', p.nome_preferido||p.nome); set('idade', p.idade_formatada||p.idade); set('peso', m.peso?(m.peso+' kg'):''); set('altura', m.altura?(m.altura+' cm'):'');
+    /* v19.8: lado do procedimento junto do nome (cabeçalho e painel), como na checagem de sítio cirúrgico */
+    var ladoProc=String(pr.lateralidade||'').trim(); if(/^(n[aã]o se aplica|na)$/i.test(ladoProc)) ladoProc='';
+    set('asa', String(pre.asa||'').replace(/^\s*ASA\s*/i,'')); set('cirurgia', pr.nome?(pr.nome+(ladoProc?' · '+ladoProc:'')):''); set('cirPrincipal', (pr.equipe&&pr.equipe[0])||pr.cirurgiao); set('cirAuxiliar', (pr.equipe&&pr.equipe[1])||''); set('anestesista', pre.anestesiologista||rs.nome);
+    if(!estado.cfg.pre.length) estado.cfg.pre=[pre.data_avaliacao?'Avaliação pré':'Ausente'];
+    var tp=String(pre.tecnica_proposta||'');
+    if(tp&&!estado.cfg.tecnica.length){ OPCOES.tecnica.forEach(function(t){ if(tp.toLowerCase().indexOf(t.toLowerCase())>=0&&estado.cfg.tecnica.indexOf(t)<0) estado.cfg.tecnica.push(t); }); }
+    /* v19.8: a consulta usa outro vocabulário (Anestesia geral, Raquianestesia, Peridural, Bloqueio periférico,
+       Sedação, Combinada). Só pré-marca o que é inequívoco; "Anestesia geral", "Bloqueio periférico" e
+       "Combinada" ficam apenas no painel, porque a variante (balanceada/venosa, plexo/nervo) é decisão de sala. */
+    if(tp&&!estado.cfg.tecnica.length){ var tpl=tp.toLowerCase(); [['peridural','Anestesia peridural'],['raqui','Raquianestesia'],['seda','Sedação']].forEach(function(par){ if(tpl.indexOf(par[0])>=0&&OPCOES.tecnica.indexOf(par[1])>=0&&estado.cfg.tecnica.indexOf(par[1])<0) estado.cfg.tecnica.push(par[1]); }); }
+    /* sinais basais da triagem viram o valor inicial de cada série (só afeta marcações ainda não lançadas) */
+    var pa=String(ba.pa||'').match(/(\d{2,3})\s*[\/xX×]\s*(\d{2,3})/);
+    function ini(id,v){ var s=serie(id); var n=Number(String(v==null?'':v).replace(',','.')); if(s&&isFinite(n)&&n>=s.min&&n<=s.max) s.inicial=arredondar(n,s.passo); }
+    if(pa){ ini('pas',pa[1]); ini('pad',pa[2]); ini('pais',pa[1]); ini('paid',pa[2]); }
+    ini('fc',ba.fc); ini('spo2',ba.spo2); ini('temp',ba.temperatura);
+    /* painel de contexto no menu esquerdo */
+    var h=[];
+    h.push('<div><b>'+esc(p.nome_preferido||p.nome||'—')+'</b> · '+esc(p.idade_formatada||p.idade||'')+' · '+esc(p.sexo||'')+(p.prontuario?' · Pront. '+esc(p.prontuario):'')+'</div>');
+    h.push('<div>Peso '+esc(m.peso||'—')+' kg · Altura '+esc(m.altura||'—')+' cm · IMC '+esc(m.imc||'—')+(m.superficie_corporal?' · SC '+esc(m.superficie_corporal)+' m²':'')+'</div>');
+    h.push('<div><b>'+esc(pr.nome||'Procedimento não informado')+'</b>'+(ladoProc?' · <b>'+esc(ladoProc)+'</b>':'')+(pr.carater?' · '+esc(pr.carater):'')+(pr.porte?' · porte '+esc(pr.porte):'')+(pr.cirurgiao?'<br>Equipe: '+esc(pr.cirurgiao):'')+'</div>');
+    var asaTxt=String(pre.asa||'').trim(), metsTxt=String(pre.mets||'').trim();
+    h.push('<div>'+(asaTxt?(/^ASA/i.test(asaTxt)?esc(asaTxt):'ASA '+esc(asaTxt)):'ASA —')+(metsTxt?' · '+(/MET/i.test(metsTxt)?esc(metsTxt):'METs '+esc(metsTxt)):'')+(pre.estratificacao?' · risco '+esc(pre.estratificacao):'')+'</div>');
+    var alg=String(pre.alergias||(pre.alergias_itens||[]).join(', ')||'').trim();
+    var negaAlg=!alg||/^(nega|sem|nenhum|não|nao)/i.test(alg);
+    h.push(negaAlg?'<div class="ok">Alergias: '+esc(alg||'sem registro')+'</div>':'<div class="al">⚠ Alergias: '+esc(alg)+'</div>');
+    var va=ctx.viaAerea||{}, motivos=Array.isArray(va.dificil_previsto)?va.dificil_previsto:(va.dificil_previsto?[String(va.dificil_previsto)]:[]);
+    if(motivos.length) h.push('<div class="al">⚠ Via aérea difícil prevista: '+esc(motivos.join(' · '))+'</div>');
+    else if(va.mallampati) h.push('<div>Via aérea: Mallampati '+esc(va.mallampati)+(va.abertura_oral?' · AO '+esc(va.abertura_oral):'')+(va.distancia_tireomentoniana?' · DTM '+esc(va.distancia_tireomentoniana):'')+'</div>');
+    if(pre.jejum) h.push('<div>Jejum: '+esc(pre.jejum)+'</div>');
+    var com=pre.comorbidades;
+    if(Array.isArray(com)) com=com.map(function(c){ if(!c) return ''; if(typeof c!=='object') return String(c); return (c.sistema?c.sistema+': ':'')+(Array.isArray(c.itens)?c.itens.join(', '):String(c.itens||'')); }).filter(Boolean).join(' · ');
+    if(com) h.push('<div>Comorbidades: '+esc(com)+'</div>');
+    if(pre.medicacoes_uso) h.push('<div>Medicações em uso: '+esc(pre.medicacoes_uso)+'</div>');
+    if(pre.glp1) h.push('<div class="'+(/nega|não|nao|sem uso/i.test(String(pre.glp1))?'nt':'al')+'">'+esc(pre.glp1)+'</div>');
+    if(pre.tecnica_proposta) h.push('<div>Técnica proposta: '+esc(pre.tecnica_proposta)+'</div>');
+    if(ba.pa||ba.fc||ba.spo2) h.push('<div>Sinais basais: PA '+esc(ba.pa||'—')+' · FC '+esc(ba.fc||'—')+' · SpO₂ '+esc(ba.spo2||'—')+(ba.temperatura?' · T '+esc(ba.temperatura)+' °C':'')+'</div>');
+    /* alertas da avaliação: os que falam da própria ficha intraoperatória (INTRA_*) não entram aqui */
+    (ctx.alertas||[]).forEach(function(a){
+      if(!a) return; var id=String((typeof a==='object'&&(a.id||a.code))||''); if(/^INTRA_/i.test(id)) return;
+      var t=String((typeof a==='string')?a:(a.texto||a.mensagem||a.titulo||'')).trim(); if(!t) return;
+      var tipo=String((typeof a==='object'&&(a.tipo||a.nivel||a.level))||'').toLowerCase();
+      var cls=(tipo==='danger'||tipo==='erro'||tipo==='critico')?'al':(tipo==='warn'||tipo==='warning'||tipo==='aviso')?'wa':'nt';
+      var corte=t.indexOf('. ');
+      if(t.length>140&&corte>20&&corte<140) h.push('<div class="'+cls+'"><details><summary>'+esc(t.slice(0,corte+1))+'</summary><p>'+esc(t.slice(corte+2))+'</p></details></div>');
+      else h.push('<div class="'+cls+'">'+esc(t)+'</div>');
+    });
+    if(ctx.seguranca&&ctx.seguranca.beta_hcg_status) h.push('<div>β-hCG: '+esc(ctx.seguranca.beta_hcg_status)+'</div>');
+    h.push('<div class="mt">Atendimento '+esc(ctx.atendimento_id||'')+' · dados da avaliação pré-anestésica</div>');
+    if($('ctxCorpo')) $('ctxCorpo').innerHTML=h.join('');
+  }
+  /* desabilita os controles quando a ficha está em modo de visualização */
+  function aplicarSomenteLeitura(){
+    if(!SOMENTE_LEITURA) return;
+    document.body.classList.add('somente-leitura');
+    document.querySelectorAll('#sbEsq .corpo input, #sbEsq .corpo select, #sbEsq .corpo textarea, #sbEsq .corpo button, #sbDir .corpo input, #sbDir .corpo select, #sbDir .corpo textarea, #sbDir .corpo button, #fichaTela .cab input, #secRec textarea, #secRec button, #txtObs, #txtAnot').forEach(function(x){ x.disabled=true; });
+    document.querySelectorAll('#sbEsq .chips button, #secRec .chips button').forEach(function(x){ x.disabled=true; });
+  }
+
+  /* ================= CONTROLES ================= */
+  function reconstruir(){ gerarPontos(); reconstruirTela(); ativarPorTempo(); atualizarTela(); atualizarNow(); atualizarProxima(); }
+  function iniciarCaso(d){
+    d=d||new Date(agora()); estado.inicio=new Date(d); estado.inicio.setSeconds(0,0); iniciado=true;
+    if(estado.rapido){ estado.simInicioReal=Date.now(); estado.simInicioSim=estado.inicio.getTime(); }
+    estado.pontos={}; reconstruir(); autosave(); irParaAgora(); msg('Caso iniciado às '+hhmm(estado.inicio));
+  }
+  $('inpData').addEventListener('change',function(){ var p=this.value.split('-'); if(p.length<3) return; estado.inicio.setFullYear(+p[0],+p[1]-1,+p[2]); reconstruir(); autosave(); });
+  $('selDuracao').addEventListener('change',function(){ estado.duracaoMin=+this.value; reconstruir(); autosave(); });
+  $('chkRapido').addEventListener('change',function(){
+    if(this.checked){ estado.rapido=true; estado.simInicioReal=Date.now(); estado.simInicioSim=Date.now(); msg('Tempo acelerado: 1 s = 1 min'); }
+    else { estado.rapido=false; estado.simInicioReal=null; estado.simInicioSim=null; msg('Tempo real'); }
+    atualizarNow(); atualizarProxima(); autosave();
+  });
+  $('btnJson').addEventListener('click',function(){ var txt=JSON.stringify(serializar(),null,2); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ msg('JSON copiado'); },function(){ window.prompt('Copie o JSON:',txt); }); } else window.prompt('Copie o JSON:',txt); });
+  $('btnReiniciar').addEventListener('click',function(){
+    if(!window.confirm(CASO_ID?'Apagar todos os registros desta ficha? O prontuário deste atendimento será atualizado com a ficha em branco no próximo salvamento.':'Apagar todos os registros deste teste e começar de novo?')) return;
+    localStorage.removeItem(STORAGE_KEY); estado=estadoInicial(); iniciado=false; estado.inicio=new Date(); estado.inicio.setSeconds(0,0);
+    montarMenus(); reconstruir(); msg('Ficha reiniciada');
+  });
+
+  /* ================= INICIALIZAÇÃO ================= */
+  (function init(){
+    if(!restaurar()){ estado.inicio=new Date(); estado.inicio.setSeconds(0,0); }
+    montarMenus(); reconstruir(); if(iniciado) irParaAgora();
+    setInterval(function(){ ativarPorTempo(); atualizarNow(); atualizarProxima(); },1000);
+  })();
+  /* ===== modo de visualização: nenhum gesto altera a ficha ===== */
+  if(SOMENTE_LEITURA){
+    var bloqueado=function(t){ return !!(t&&t.closest&&t.closest('#fichaTela .pt, #fichaTela [data-livre], #fichaTela .cab .b, #sbEsq .corpo, #sbDir .corpo, #secRec, #txtObs, #txtAnot, #btnSalvar')); };
+    document.addEventListener('pointerdown',function(e){ if(bloqueado(e.target)){ e.stopPropagation(); if(e.target.closest('.pt')) e.preventDefault(); } },true);
+    document.addEventListener('click',function(e){ if(bloqueado(e.target)&&!(e.target.closest&&e.target.closest('summary'))){ e.stopPropagation(); e.preventDefault(); } },true);
+    document.addEventListener('focusin',function(e){ if(bloqueado(e.target)){ try{ e.target.blur(); }catch(x){} } },true);
+    document.body.classList.add('somente-leitura');
+  }
+  /* ===== API para a ponte com o sistema principal ===== */
+  window.CLAV_FICHA = {
+    casoId: CASO_ID, slot: SLOT, somenteLeitura: SOMENTE_LEITURA, storageKey: STORAGE_KEY,
+    estado: function(){ return estado; }, iniciado: function(){ return iniciado; },
+    serializar: serializar, serializarCompacto: serializarCompacto, blocoProntuario: blocoProntuario,
+    restaurarDe: function(d){ var ok=restaurarDe(d); if(ok){ montarMenus(); reconstruir(); aplicarSomenteLeitura(); if(iniciado) irParaAgora(); } return ok; },
+    aplicarContexto: function(ctx){ aplicarContexto(ctx); montarMenus(); reconstruir(); aplicarSomenteLeitura(); },
+    aplicarSomenteLeitura: aplicarSomenteLeitura, msg: msg, salvarLocal: function(){ salvar(true); },
+    stamp: function(t){ if($('stamp')) $('stamp').textContent=t; }
+  };
+  aplicarSomenteLeitura();
+  /* bloqueia o gesto de rolagem só enquanto um ponto está sendo arrastado */
+  document.addEventListener('touchmove',function(e){ if(drag) e.preventDefault(); },{passive:false});
+  document.addEventListener('gesturestart',function(e){ e.preventDefault(); });
+
+  /* ================= NAVEGAÇÃO: setas, atalhos ================= */
+  function irPara(alvo){
+    if(alvo==='topo'){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+    if(alvo==='fim'){ window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}); return; }
+    var e=$(alvo); if(!e) return;
+    var y=e.getBoundingClientRect().top+window.scrollY-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))-56;
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+  }
+  $('navf').addEventListener('click',function(e){ var b=e.target.closest('button[data-ir]'); if(b) irPara(b.getAttribute('data-ir')); });
+  $('btnAtalhos').addEventListener('click',function(){ $('atalhos').classList.toggle('open'); });
+  document.addEventListener('click',function(e){ if(!e.target.closest('#atalhos')&&!e.target.closest('#btnAtalhos')) $('atalhos').classList.remove('open'); });
+  function rolarTempo(dir){ if(!tela) return; var w=tela.scroll; w.scrollBy({left:dir*tela.xs*3,behavior:'smooth'}); }
+  document.addEventListener('keydown',function(e){
+    if(!e.altKey) return;
+    var tag=(e.target.tagName||'').toLowerCase(); if(tag==='textarea') return;
+    var k=e.key.toLowerCase(), feito=true;
+    if(e.key==='ArrowUp') irPara('topo');
+    else if(e.key==='ArrowDown') irPara('fim');
+    else if(e.key==='ArrowLeft') rolarTempo(-1);
+    else if(e.key==='ArrowRight') rolarTempo(1);
+    else if(k==='1') irPara('graf1');
+    else if(k==='2') irPara('graf2');
+    else if(k==='3') irPara('secRec');
+    else if(k==='a') irParaAgora();
+    else if(k==='m') $('btnMenu').click();
+    else if(k==='b') $('btnPainel').click();
+    else if(k==='s') salvar(false);
+    else if(k==='p') $('btnImprimir').click();
+    else feito=false;
+    if(feito) e.preventDefault();
+  });
+  /* Shift + roda do mouse rola o registro na horizontal; roda simples segue rolando a página */
+  document.addEventListener('wheel',function(e){
+    if(!tela||!e.shiftKey) return; var w=e.target.closest?e.target.closest('.scroll'):null; if(!w) return;
+    w.scrollLeft+=(e.deltaY||e.deltaX); e.preventDefault();
+  },{passive:false});
+})();
+</script>
+
+<!-- v19.9: login na própria ficha e fila do dia -->
+<div class="veil" id="loginVeil" role="dialog" aria-modal="true" aria-labelledby="loginTitulo">
+  <div class="editor">
+    <h3 id="loginTitulo">Entrar no CLAV</h3>
+    <p id="loginSub">Use o mesmo usuário e senha do sistema principal para vincular esta ficha ao prontuário.</p>
+    <div class="txt"><input type="text" id="loginUsuario" placeholder="Telefone, e-mail ou usuário" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+    <div class="txt"><input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password"></div>
+    <p class="loginErro" id="loginErro" hidden></p>
+    <div class="btns"><button type="button" id="loginCancelar">Continuar sem vínculo</button><button type="button" class="primary" id="loginEntrar">Entrar</button></div>
+  </div>
+</div>
+<div class="veil" id="filaVeil" role="dialog" aria-modal="true" aria-labelledby="filaTitulo">
+  <div class="editor fila">
+    <h3 id="filaTitulo">Fila do dia</h3>
+    <p>Procedimentos com data de cirurgia no dia escolhido. Toque no paciente para abrir a ficha já vinculada ao prontuário.</p>
+    <div class="txt"><input type="date" id="filaData" aria-label="Data da cirurgia"></div>
+    <div class="filaLista" id="filaLista"></div>
+    <div class="btns"><button type="button" id="filaFechar">Fechar</button><button type="button" id="filaAtualizar">Atualizar</button></div>
+  </div>
+</div>
+
+<div class="ponteToast" id="ponteToast" role="status" aria-live="polite"></div>
+<script>
+/* =====================================================================
+   PONTE CLAV — integração da ficha (clav_ficha_teste_v5, módulo oficial)
+   com o sistema principal via google.script.run.
+   - Abre o atendimento (intraopAbrirCaso) e preenche o contexto do paciente.
+   - Espelha cada salvamento no prontuário (intraopSalvar) com requestId,
+     revisão base e contexto de vínculo, exatamente como o núcleo exige.
+   - Modo visualizacao: nunca grava; atualiza a partir do servidor a cada 45 s.
+   - URLs sempre a partir de BOOT.webAppUrl (dentro do Apps Script,
+     window.location aponta para o iframe userCodeAppPanel, não para /exec).
+
+   v19.9 (28/09/2026)
+   - SESSÃO: além do localStorage, a ficha aceita o token entregue pelo sistema
+     principal no fragmento da URL (#clavtk=…), lido por google.script.url e
+     apagado em seguida por google.script.history.replace. Resolve a ficha
+     "Sem sessão" quando o CLAV está embutido no Google Sites ou em tablets,
+     onde o navegador separa o armazenamento da aba nova.
+   - LOGIN NA FICHA (validarLogin) quando não há sessão ou ela expirou: o
+     tablet da sala abre a ficha direto, sem passar pelo sistema principal.
+   - FILA DO DIA (intraopFilaDoDia) quando a ficha é aberta sem atendimento:
+     o anestesista toca no paciente e a ficha vinculada abre em outra aba.
+   - CÓDIGO DE ERRO do servidor lido de res.error.code (antes res.code, que
+     não existe): o conflito de revisão volta a ser reconhecido e a ficha relê
+     a revisão e reenvia, em vez de falhar até o F5.
+   - RASCUNHO LOCAL comparado pelo carimbo GRAVADO no dispositivo (antes
+     serializar() carimbava "agora" e a cópia local sempre vencia, podendo
+     sobrescrever um prontuário mais novo lançado em outro aparelho).
+   - Registro de abas expira em 5 min sem batimento (era 6 h): tablet que
+     morre não trava a segunda vaga o resto do plantão.
+   - Espelho no prontuário a cada 15 s de edição (era 2,5 s) e sem toasts
+     repetidos durante a edição; o botão Salvar continua imediato.
+   ===================================================================== */
+(function(){
+  var F = window.CLAV_FICHA; if(!F) return;
+  var BOOT = window.CLAV_BOOT || {};
+  var CASO_ID = F.casoId, SLOT = F.slot, RO = F.somenteLeitura;
+  var WEB_URL = String(BOOT.webAppUrl || '').replace(/[?#].*$/, '');
+  var TAB_ID = 'aba-' + SLOT + '-' + Math.random().toString(36).slice(2, 10);
+  var REG_KEY = 'clav.intra.abas';
+  var TOKEN_KEY = 'clav.session.token';
+  var ABA_TTL = 5 * 60 * 1000;          /* v19.9: 5 min sem batimento = aba morta (batimento a cada 60 s) */
+  var ESPELHO_MS = 15000;               /* v19.9: intervalo do espelho silencioso no prontuário */
+  var $ = function(id){ return document.getElementById(id); };
+  var st = { online: !!(window.google && google.script && google.script.run), token: null, revision: 0, identity: null,
+             contexto: null, servidorSalvoEm: '', pendente: false, salvando: false, podeSalvar: true, locked: false, timer: null, tentativa: null, falhas: 0, usuario: null };
+
+  /* ---------- utilidades ---------- */
+  var toastT;
+  function toast(txt, tipo, ms){ var t=$('ponteToast'); if(!t) return; t.textContent=txt; t.className='ponteToast on'+(tipo?' '+tipo:''); clearTimeout(toastT); toastT=setTimeout(function(){ t.className='ponteToast'; }, ms||3600); }
+  function chip(txt, cls, title){ var c=$('ponteChip'); if(!c) return; c.textContent=txt; c.className='ponte'+(cls?' '+cls:''); if(title) c.title=title; }
+  function hhmmss(d){ function p(n){ return (n<10?'0':'')+n; } return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
+  function uuid(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){ var r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8); return v.toString(16); }); }
+  function nowIso(){ return new Date().toISOString(); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function server(fn, args){
+    return new Promise(function(resolve, reject){
+      if(!st.online){ reject(new Error('Sem conexão com o servidor do sistema.')); return; }
+      var runner = google.script.run.withSuccessHandler(function(res){
+        if(res && typeof res==='object' && res.ok===false){
+          var e=new Error(res.message||res.erro||'Falha no servidor.');
+          /* v19.9: o envelope do servidor traz o código em error.code */
+          e.code=(res.error&&res.error.code)||res.code||res.codigo||''; e.traceId=(res.error&&res.error.traceId)||'';
+          reject(e); return;
+        }
+        resolve(res && typeof res==='object' && res.ok===true && res.data!==undefined ? res.data : res);
+      }).withFailureHandler(function(err){ reject(err instanceof Error ? err : new Error(String(err && err.message || err || 'Falha na chamada ao servidor.'))); });
+      if(typeof runner[fn] !== 'function'){ reject(new Error('Função "'+fn+'" indisponível no servidor. Peça ao suporte para publicar a versão atual do sistema.')); return; }
+      try{ runner[fn].apply(runner, args||[]); }catch(err){ reject(new Error(err && err.message ? err.message : ('Falha ao chamar '+fn+'.'))); }
+    });
+  }
+  function ehErroDeSessao(err){ var code=String(err&&err.code||''), m=String(err&&err.message||err||''); return /^SESSION_/i.test(code)||/sess[aã]o (ausente|inv[aá]lida|expirada)/i.test(m); }
+
+  /* ---------- sessão ---------- */
+  function lerToken(){
+    var chaves=[TOKEN_KEY,'clav.token','CLAV_TOKEN'];
+    for(var i=0;i<chaves.length;i++){
+      try{
+        var v=localStorage.getItem(chaves[i])||sessionStorage.getItem(chaves[i]); if(!v) continue;
+        try{ var o=JSON.parse(v); if(o&&o.token) return String(o.token); if(o&&o.value&&o.value.token) return String(o.value.token); if(typeof o==='string'&&o.length>12) return o; }catch(e){}
+        if(String(v).length>12) return String(v);
+      }catch(e){}
+    }
+    return null;
+  }
+  function guardarToken(t){ if(!t) return; try{ localStorage.setItem(TOKEN_KEY, String(t)); }catch(e){} try{ sessionStorage.setItem(TOKEN_KEY, String(t)); }catch(e2){} }
+  function apagarToken(){ [TOKEN_KEY,'clav.token','CLAV_TOKEN'].forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} try{ sessionStorage.removeItem(k); }catch(e2){} }); }
+  function paramsAtuais(){ var p={ page:'intra' }; if(CASO_ID) p.caso=CASO_ID; p.slot=String(SLOT||'1'); if(BOOT.modo) p.modo=String(BOOT.modo); return p; }
+  /* Token entregue pelo sistema principal no fragmento (#clavtk=…). Só a API google.script.url enxerga o
+     endereço público; o fragmento nunca chega ao servidor e é apagado assim que lido. */
+  function tokenDoFragmento(cb){
+    var feito=false; function fim(v){ if(feito) return; feito=true; cb(v||null); }
+    try{
+      var api=window.google&&google.script&&google.script.url;
+      if(!api||typeof api.getLocation!=='function'){ fim(null); return; }
+      api.getLocation(function(loc){
+        var tk=null;
+        try{ var h=String((loc&&loc.hash)||''); var m=h.match(/(?:^|[#&])clavtk=([^&]+)/); if(m) tk=decodeURIComponent(m[1]); }catch(e){}
+        if(tk){ guardarToken(tk); try{ google.script.history.replace(null, paramsAtuais(), ''); }catch(e2){} }
+        fim(tk);
+      });
+      setTimeout(function(){ fim(null); }, 4000);
+    }catch(e){ fim(null); }
+  }
+  function fragmentoSessao(){ return st.token ? ('#clavtk='+encodeURIComponent(st.token)) : ''; }
+
+  /* ---------- registro de abas (até 2 fichas abertas, cada uma no seu slot) ---------- */
+  function lerRegistro(){ try{ var r=JSON.parse(localStorage.getItem(REG_KEY)||'{}'); return (r&&typeof r==='object')?r:{}; }catch(e){ return {}; } }
+  function gravarRegistro(r){ try{ localStorage.setItem(REG_KEY, JSON.stringify(r)); }catch(e){} }
+  function limparRegistroVencido(r){ var agora=Date.now(); ['s1','s2'].forEach(function(k){ if(r[k]&&(agora-(r[k].ts||0))>ABA_TTL) delete r[k]; }); return r; }
+  function registrarAba(){
+    if(!CASO_ID||RO) return;
+    var r=limparRegistroVencido(lerRegistro()); r['s'+SLOT]={ caso:CASO_ID, tab:TAB_ID, ts:Date.now(), nome:(st.contexto&&st.contexto.paciente&&(st.contexto.paciente.nome_preferido||st.contexto.paciente.nome))||'' }; gravarRegistro(r);
+  }
+  function liberarAba(){ var r=lerRegistro(); if(r['s'+SLOT]&&r['s'+SLOT].tab===TAB_ID){ delete r['s'+SLOT]; gravarRegistro(r); } }
+  window.addEventListener('beforeunload', liberarAba);
+  window.addEventListener('pagehide', liberarAba);
+  setInterval(function(){ if(!RO) registrarAba(); }, 60000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'&&!RO) registrarAba(); });
+  window.addEventListener('focus', function(){ if(!RO) registrarAba(); });
+
+  /* ---------- URLs (sempre a partir do webAppUrl entregue pelo servidor) ---------- */
+  function urlBase(){ return WEB_URL; }
+  function urlFichaCaso(caso, slot, modo){ var u=urlBase(); if(!u) return ''; u+='?page=intra'; if(caso) u+='&caso='+encodeURIComponent(caso); u+='&slot='+encodeURIComponent(slot||'1'); if(modo) u+='&modo='+encodeURIComponent(modo); return u+fragmentoSessao(); }
+  function urlFicha(slot, modo){ return urlFichaCaso(CASO_ID, slot, modo); }
+  function abrir(url, nome){ if(!url){ toast('Endereço do sistema indisponível. Recarregue a página; se persistir, avise o suporte.', 'err', 5000); return; } var w=window.open(url, nome||'_blank'); if(!w) toast('Autorize pop-ups para abrir a nova aba.', 'err', 5000); }
+  function slotLivrePara(caso){
+    var r=limparRegistroVencido(lerRegistro());
+    if(r.s1&&r.s1.caso===caso&&r.s1.tab!==TAB_ID) return '1';
+    if(r.s2&&r.s2.caso===caso&&r.s2.tab!==TAB_ID) return '2';
+    if(!r.s1||r.s1.tab===TAB_ID) return '1';
+    if(!r.s2||r.s2.tab===TAB_ID) return '2';
+    return null;
+  }
+  function abrirFichaEmOutraAba(){
+    if(RO){
+      /* visualização → abre a ficha DE REGISTRO num slot livre (recusa o terceiro paciente) */
+      var slot=slotLivrePara(CASO_ID);
+      if(!slot){ var r=lerRegistro(); toast('Já existem duas fichas abertas ('+[r.s1&&(r.s1.nome||r.s1.caso), r.s2&&(r.s2.nome||r.s2.caso)].filter(Boolean).join(' e ')+'). Feche uma antes de abrir outro paciente.', 'err', 7000); return; }
+      abrir(urlFicha(slot, ''), 'clav-intra-'+slot);
+      return;
+    }
+    /* v19.9: da ficha de registro, a segunda aba é um ESPELHO somente leitura — duas abas gravando a
+       mesma ficha disputavam a revisão e a última sobrescrevia a outra. */
+    abrir(urlFicha('v', 'visualizacao'), 'clav-intra-v-'+CASO_ID);
+  }
+  if($('btnSistema')) $('btnSistema').addEventListener('click', function(){ abrir(urlBase()?(urlBase()+fragmentoSessao()):'', 'clav-principal'); });
+  if($('btnNovaAba')) $('btnNovaAba').addEventListener('click', abrirFichaEmOutraAba);
+  if($('btnRoAbrir')) $('btnRoAbrir').addEventListener('click', abrirFichaEmOutraAba);
+
+  /* ---------- login na própria ficha (v19.9) ---------- */
+  var aposLogin = null;
+  function mostrarLogin(motivo, depois){
+    aposLogin = depois || null;
+    var v=$('loginVeil'); if(!v){ if(depois) depois(false); return; }
+    if($('loginSub')&&motivo) $('loginSub').textContent = motivo;
+    loginErro('');
+    v.classList.add('open');
+    setTimeout(function(){ try{ $('loginUsuario').focus(); }catch(e){} }, 60);
+  }
+  function fecharLogin(){ var v=$('loginVeil'); if(v) v.classList.remove('open'); }
+  function loginErro(txt){ var e=$('loginErro'); if(!e) return; e.textContent=txt||''; e.hidden=!txt; }
+  function entrar(){
+    var u=String(($('loginUsuario')||{}).value||'').trim(), s=String(($('loginSenha')||{}).value||'');
+    if(!u||!s){ loginErro('Informe telefone, e-mail ou usuário e a senha.'); return; }
+    var btn=$('loginEntrar'); if(btn){ btn.disabled=true; btn.textContent='Entrando…'; }
+    loginErro('');
+    server('validarLogin', [u, s, navigator.userAgent]).then(function(data){
+      if(!data||!data.token) throw new Error('O servidor não devolveu a sessão. Tente novamente.');
+      st.token=String(data.token); st.usuario=data.usuario||null; guardarToken(st.token);
+      if($('loginSenha')) $('loginSenha').value='';
+      fecharLogin();
+      toast('Sessão iniciada'+(data.usuario&&data.usuario.nome?(' · '+data.usuario.nome):'')+'.', 'ok');
+      var d=aposLogin; aposLogin=null; if(d) d(true);
+    }).catch(function(err){
+      loginErro(String(err&&err.message||err||'Não foi possível entrar.'));
+    }).then(function(){ if(btn){ btn.disabled=false; btn.textContent='Entrar'; } });
+  }
+  if($('loginEntrar')) $('loginEntrar').addEventListener('click', entrar);
+  if($('loginSenha')) $('loginSenha').addEventListener('keydown', function(e){ if(e.key==='Enter') entrar(); });
+  if($('loginUsuario')) $('loginUsuario').addEventListener('keydown', function(e){ if(e.key==='Enter'){ try{ $('loginSenha').focus(); }catch(x){} } });
+  if($('loginCancelar')) $('loginCancelar').addEventListener('click', function(){ fecharLogin(); var d=aposLogin; aposLogin=null; if(d) d(false); });
+
+  /* ---------- fila do dia (v19.9): ficha aberta sem atendimento ---------- */
+  function hojeIso(){ var d=new Date(); function p(n){ return (n<10?'0':'')+n; } return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  function mostrarFila(){
+    var v=$('filaVeil'); if(!v) return;
+    if($('filaData')&&!$('filaData').value) $('filaData').value=hojeIso();
+    v.classList.add('open'); carregarFila();
+  }
+  function carregarFila(){
+    var box=$('filaLista'); if(!box) return;
+    var dia=($('filaData')&&$('filaData').value)||hojeIso();
+    box.innerHTML='<div class="filaVazia">Carregando a fila…</div>';
+    server('intraopFilaDoDia', [dia, st.token]).then(function(data){
+      var fila=(data&&data.fila)||[];
+      if(!fila.length){ box.innerHTML='<div class="filaVazia">Nenhum procedimento com data de cirurgia em '+esc(dia.split('-').reverse().join('/'))+'. Confira a data ou abra a ficha pelo sistema principal.</div>'; return; }
+      box.innerHTML=fila.map(function(c){
+        var meta=[c.procedimento, c.lateralidade, c.carater, c.local, c.anestesiologista?('Anest.: '+c.anestesiologista):''].filter(Boolean).join(' · ');
+        var al=Number(c.alertas_danger||0)>0?'<span class="filaAl">⚠ '+Number(c.alertas_danger)+' alerta(s) grave(s) na avaliação</span>':'';
+        var enc=(String(c.status||'').toUpperCase()==='ENCERRADO'||String(c.locked||'').toUpperCase()==='SIM')?'<span class="filaAl">registro encerrado no sistema principal</span>':'';
+        return '<button type="button" class="filaItem" data-caso="'+esc(c.atendimento_id)+'" data-nome="'+esc(c.paciente_nome||'')+'"><b>'+esc(c.paciente_nome||c.atendimento_id)+'</b>'+(c.prontuario?'<small>Pront. '+esc(c.prontuario)+'</small>':'')+'<span>'+esc(meta)+'</span>'+al+enc+'</button>';
+      }).join('');
+    }).catch(function(err){
+      if(ehErroDeSessao(err)){ apagarToken(); st.token=null; $('filaVeil').classList.remove('open'); mostrarLogin('Sua sessão expirou. Entre novamente para ver a fila do dia.', function(ok){ if(ok) mostrarFila(); }); return; }
+      box.innerHTML='<div class="filaVazia">Não foi possível carregar a fila: '+esc(err&&err.message||err)+'</div>';
+    });
+  }
+  function abrirCasoDaFila(caso, nome){
+    if(!caso) return;
+    var slot=slotLivrePara(caso);
+    if(!slot){ var r=lerRegistro(); toast('Já existem duas fichas abertas ('+[r.s1&&(r.s1.nome||r.s1.caso), r.s2&&(r.s2.nome||r.s2.caso)].filter(Boolean).join(' e ')+'). Feche uma antes de abrir outro paciente.', 'err', 7000); return; }
+    var u=urlFichaCaso(caso, slot, '');
+    if(!u){ toast('Endereço do sistema indisponível. Recarregue a página; se persistir, avise o suporte.', 'err', 5000); return; }
+    abrir(u, 'clav-intra-'+slot);
+    toast('Ficha de '+(nome||caso)+' aberta em outra aba.', 'ok', 4000);
+  }
+  if($('filaLista')) $('filaLista').addEventListener('click', function(e){ var b=e.target.closest('button[data-caso]'); if(b) abrirCasoDaFila(b.getAttribute('data-caso'), b.getAttribute('data-nome')); });
+  if($('filaAtualizar')) $('filaAtualizar').addEventListener('click', carregarFila);
+  if($('filaData')) $('filaData').addEventListener('change', carregarFila);
+  if($('filaFechar')) $('filaFechar').addEventListener('click', function(){ $('filaVeil').classList.remove('open'); });
+  if($('btnFila')) $('btnFila').addEventListener('click', function(){
+    if(!st.online){ toast('Sem conexão com o servidor do sistema.', 'err', 5000); return; }
+    if(!st.token){ mostrarLogin('Entre para ver a fila do dia e abrir a ficha do paciente.', function(ok){ if(ok) mostrarFila(); }); } else mostrarFila();
+  });
+
+  /* ---------- salvamento no prontuário ---------- */
+  function montarTentativa(){
+    var requestId='INTRA5-'+TAB_ID+'-'+Date.now()+'-'+uuid();
+    return { bloco: F.blocoProntuario(), meta: { requestId: requestId, baseRevision: st.revision, clientSavedAt: nowIso(),
+             clientContext: { installationId: st.identity.installationId, userId: st.identity.userId, atendimentoId: st.identity.atendimentoId, pacienteId: st.identity.pacienteId, operationId: requestId } } };
+  }
+  function agendar(silencioso){
+    if(RO||!CASO_ID) return;
+    st.pendente=true; clearTimeout(st.timer);
+    st.timer=setTimeout(function(){ salvarServidor(silencioso); }, silencioso?ESPELHO_MS:50);
+    F.stamp('Salvo neste dispositivo · enviando ao prontuário…');
+  }
+  function salvarServidor(silencioso){
+    if(RO||!CASO_ID||!st.identity) return Promise.resolve(false);
+    if(!st.podeSalvar){ F.stamp('Seu perfil não grava a ficha anestésica.'); return Promise.resolve(false); }
+    if(st.salvando){ st.pendente=true; return Promise.resolve(false); }
+    st.salvando=true; st.pendente=false; clearTimeout(st.timer);
+    var tent=montarTentativa(); st.tentativa=tent;
+    return server('intraopSalvar', [CASO_ID, tent.bloco, st.token, tent.meta, navigator.userAgent]).then(function(res){
+      st.salvando=false;
+      if(!res||res.verified!==true||res.requestId!==tent.meta.requestId) throw new Error('O servidor não confirmou esta tentativa de salvamento.');
+      var saved=res.atendimento||{};
+      if(String(saved.atendimento&&saved.atendimento.atendimento_id)!==CASO_ID) throw new Error('O servidor confirmou outro atendimento. Reabra a ficha.');
+      st.revision=Number(res.revision||st.revision); st.servidorSalvoEm=tent.bloco.ficha_v5_salvo_em; st.falhas=0;
+      var d=new Date(); F.stamp('Salvo no prontuário às '+hhmmss(d)+' · rev. '+st.revision);
+      chip('Vinculado · salvo '+hhmmss(d).slice(0,5), 'ok');
+      if(!silencioso) toast('Ficha salva no prontuário do paciente.', 'ok');
+      if(st.pendente){ st.pendente=false; setTimeout(function(){ salvarServidor(true); }, 300); }
+      return true;
+    }).catch(function(err){
+      st.salvando=false; st.pendente=true; st.falhas++;
+      var code=String(err&&err.code||''), m=String(err&&err.message||err);
+      /* v19.9: atendimento encerrado no sistema principal ou ficha grande demais: não adianta insistir.
+         Para as retentativas, mantém o rascunho aqui e avisa de forma permanente no chip e no carimbo. */
+      if(/ATENDIMENTO_BLOQUEADO|INTRA_LIMITE_EXCEDIDO|PAYLOAD_TOO_LARGE|PERMISSAO/i.test(code)){
+        st.pendente=false; clearTimeout(st.timer);
+        chip(/BLOQUEADO/i.test(code)?'Atendimento encerrado':'Não grava no prontuário', 'err', m);
+        F.stamp('Não salvo no prontuário: '+m+' (rascunho preservado neste aparelho)');
+        toast(m+(/BLOQUEADO/i.test(code)?' Peça a reabertura no sistema principal e clique em Salvar.':''), 'err', 9000);
+        return false;
+      }
+      if(/REVIS|CONFLI|DIVERG/i.test(code+' '+m) || /alterado em outra aba/i.test(m)){
+        if(st.falhas<=3){
+          /* outra aba ou o sistema principal gravou antes: relê a revisão e reenvia */
+          return recarregarServidor(true).then(function(){ return salvarServidor(silencioso); });
+        }
+      }
+      if(ehErroDeSessao(err)){
+        var novo=lerToken();
+        if(novo&&novo!==st.token&&st.falhas<=3){ st.token=novo; return recarregarServidor(true).then(function(){ return salvarServidor(silencioso); }); }
+        apagarToken(); st.token=null;
+        chip('Sessão expirada', 'err', m);
+        F.stamp('Sessão expirada: entre novamente para gravar no prontuário (rascunho preservado aqui)');
+        mostrarLogin('Sua sessão expirou. Entre novamente para continuar gravando no prontuário.', function(ok){
+          if(ok){ recarregarServidor(true).then(function(){ return salvarServidor(true); }).catch(function(){}); }
+        });
+        return false;
+      }
+      F.stamp('Não salvo no prontuário: '+m+' (rascunho preservado aqui)');
+      chip('Vinculado · pendente', 'warn', m);
+      /* v19.9: sem toasts repetidos durante a edição — avisa na 1ª falha e no Salvar manual */
+      if(!silencioso||st.falhas===1) toast('Não foi possível salvar no prontuário: '+m, 'err', 7000);
+      if(st.falhas<6) setTimeout(function(){ if(st.pendente) salvarServidor(true); }, Math.min(60000, 5000*st.falhas));
+      return false;
+    });
+  }
+  window.addEventListener('online', function(){ if(st.pendente&&!RO) salvarServidor(true); });
+  /* v19.9: ao sair da aba (trocar de app no tablet, minimizar), envia o que estiver pendente sem esperar o intervalo */
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden'&&st.pendente&&!RO&&!st.salvando) salvarServidor(true); });
+
+  /* ---------- carregamento ---------- */
+  function localTemDados(d){ try{ return !!(d&&(d.iniciado||(d.drogas||[]).length||(d.series||[]).some(function(s){ return (s.pontos||[]).some(function(p){ return p.ativo; }); }))); }catch(e){ return false; } }
+  function carimboLocal(){
+    /* v19.9: usa o carimbo GRAVADO no dispositivo. serializar() carimba a hora da chamada, o que fazia a
+       cópia local sempre "vencer" e um rascunho antigo sobrescrever um prontuário mais novo. */
+    try{ var raw=localStorage.getItem(F.storageKey); if(!raw) return ''; var d=JSON.parse(raw); if(!d||!(d.iniciado||localTemDados(d))) return ''; return String(d.salvoEm||''); }catch(e){ return ''; }
+  }
+  function aplicarServidor(data, primeira){
+    var intra=data.intraop||{}, raw=intra.ficha_v5_json, srv=null;
+    if(raw){ try{ srv=(typeof raw==='string')?JSON.parse(raw):raw; }catch(e){ srv=null; } }
+    st.revision=Number(data.revision||0); st.locked=!!data.locked; st.podeSalvar=data.podeSalvar!==false;
+    st.identity={ installationId:String(data.installationId||''), userId:String(data.usuario&&(data.usuario.usuario_id||data.usuario.usuario)||''), atendimentoId:CASO_ID, pacienteId:String(data.contexto.paciente.paciente_id||'') };
+    st.contexto=data.contexto; st.usuario=data.usuario||st.usuario;
+    var localSalvo=carimboLocal();
+    var srvSalvo=srv?String(srv.salvoEm||intra.ficha_v5_salvo_em||''):'';
+    var usarServidor = !!srv && (RO || !localSalvo || srvSalvo>=localSalvo);
+    if(usarServidor){ F.restaurarDe(srv); st.servidorSalvoEm=srvSalvo; }
+    F.aplicarContexto(data.contexto);
+    if(!usarServidor && localSalvo && !RO){ /* rascunho local mais novo que o prontuário: envia */ agendar(true); }
+    if(RO){ F.stamp(srv?('Prontuário · '+(srvSalvo?new Date(srvSalvo).toLocaleString('pt-BR'):'sem data')):'Prontuário sem ficha gravada ainda'); }
+    else if(srv&&usarServidor){ F.stamp('Ficha recuperada do prontuário · rev. '+st.revision+(primeira&&localSalvo&&srvSalvo>localSalvo?' (mais recente que o rascunho deste aparelho)':'')); }
+    else if(srv&&!usarServidor&&primeira){ F.stamp('Rascunho deste aparelho é mais recente que o prontuário · enviando…'); }
+    var nome=(data.contexto.paciente.nome_preferido||data.contexto.paciente.nome||CASO_ID);
+    chip((RO?'Visualização · ':'Vinculado · ')+nome, RO?'':'ok', 'Atendimento '+CASO_ID);
+    if(RO){ var rv=$('roVinculo'); if(rv) rv.textContent='Atendimento '+CASO_ID+' · '+nome+(st.locked?' · registro travado':''); }
+    if(!st.podeSalvar&&!RO){ toast('Seu perfil pode consultar, mas não registra a ficha anestésica.', 'err', 6000); }
+    if(st.locked&&!RO){ toast('Este atendimento está encerrado no sistema principal; o salvamento pode ser recusado.', 'err', 6000); }
+    if(!RO) registrarAba();
+  }
+  function validarResposta(data){
+    return !!(data&&data.contexto&&String(data.contexto.atendimento_id)===CASO_ID&&data.contexto.paciente&&data.contexto.paciente.paciente_id&&data.usuario&&data.installationId);
+  }
+  function recarregarServidor(silencioso){
+    return server('intraopAbrirCaso', [CASO_ID, st.token]).then(function(data){
+      if(!validarResposta(data)) throw new Error('O servidor não confirmou o vínculo desta ficha. Recarregue a página; se persistir, avise o suporte.');
+      aplicarServidor(data, false); return data;
+    }).catch(function(err){ if(!silencioso) toast('Falha ao atualizar: '+(err&&err.message||err), 'err', 6000); throw err; });
+  }
+  function iniciar(){
+    if(RO){ $('roBanner').hidden=false; }
+    if(!st.online){
+      chip(CASO_ID?'Sem servidor':'Ficha local', CASO_ID?'err':'warn', 'google.script.run indisponível');
+      if(CASO_ID) toast('Ficha aberta fora do Apps Script: os dados ficam apenas neste dispositivo.', 'err', 6000);
+      if(RO){ $('roTexto').textContent='Sem conexão com o servidor do sistema.'; }
+      return;
+    }
+    chip(CASO_ID?'Carregando atendimento…':'Ficha sem vínculo', CASO_ID?'':'warn');
+    st.token=lerToken();
+    tokenDoFragmento(function(tk){
+      /* o token entregue pelo sistema principal tem prioridade: é a sessão de quem acabou de clicar */
+      if(tk) st.token=tk;
+      continuar();
+    });
+  }
+  function continuar(){
+    if(!st.token){
+      chip('Sem sessão', 'err', 'Entre com seu usuário e senha do CLAV');
+      if(RO){ $('roTexto').textContent='Sessão não encontrada. Entre no sistema principal e reabra a visualização.'; }
+      mostrarLogin(CASO_ID?'Entre com o mesmo usuário e senha do sistema principal para vincular esta ficha ao prontuário.':'Entre para ver a fila do dia e abrir a ficha do paciente.', function(ok){
+        if(ok){ continuar(); return; }
+        chip(CASO_ID?'Sem sessão':'Ficha sem vínculo', 'warn', CASO_ID?'Ficha sem vínculo com o prontuário: os dados ficam apenas neste dispositivo':'Abra pelo sistema principal ou pela fila do dia para vincular a um atendimento');
+        if(CASO_ID&&!RO) toast('Sem sessão, a ficha funciona apenas neste dispositivo e não grava no prontuário. Use "☷ Fila" ou recarregue para entrar.', 'err', 8000);
+      });
+      return;
+    }
+    if(!CASO_ID){
+      chip('Ficha sem vínculo', 'warn', 'Escolha o paciente na fila do dia ou abra pelo sistema principal');
+      if(RO){ $('roTexto').textContent='Nenhum atendimento vinculado.'; return; }
+      mostrarFila();
+      return;
+    }
+    carregarCaso();
+  }
+  function carregarCaso(){
+    chip('Carregando atendimento…', '');
+    var vigia=setTimeout(function(){ chip('Servidor demorando…', 'warn'); toast('O servidor ainda não respondeu. Aguardando mais um pouco…', '', 5000); }, 15000);
+    function abrirComTentativas(tentativa){
+      return server('intraopAbrirCaso', [CASO_ID, st.token]).catch(function(err){
+        if(tentativa<2 && !ehErroDeSessao(err) && !/permiss|não encontrado|nao encontrado/i.test(String(err&&err.message||''))){ return new Promise(function(r){ setTimeout(r, 2500); }).then(function(){ return abrirComTentativas(tentativa+1); }); }
+        throw err;
+      });
+    }
+    abrirComTentativas(0).then(function(data){
+      clearTimeout(vigia);
+      if(!validarResposta(data)) throw new Error('O servidor não confirmou o vínculo desta ficha. Recarregue a página; se persistir, avise o suporte.');
+      if(!WEB_URL&&data.installationId) WEB_URL=String(data.installationId).replace(/[?#].*$/,'');
+      aplicarServidor(data, true);
+      /* v19.8: a visualização embutida no sistema principal não ocupa vaga nem gera aviso (antes registrava a
+         mesma ficha como "outra aba" e a mensagem confundia a equipe). Só a ficha de registro se inscreve, e o
+         aviso vermelho aparece apenas quando a outra aba é de OUTRO paciente, dizendo o nome. */
+      if(!RO){ try{ var nomeAba=(data.contexto&&data.contexto.paciente&&(data.contexto.paciente.nome_preferido||data.contexto.paciente.nome))||''; server('intraopRegistrarAba', [CASO_ID, TAB_ID, st.token, nomeAba]).then(function(r){
+        if(!r||!r.outrasAbas||!r.outrasAbas.length) return;
+        var outros=r.outrasAbas.filter(function(a){ return a&&a.atendimento_id&&String(a.atendimento_id)!==String(CASO_ID); });
+        if(outros.length){ toast('Atenção: outra ficha aberta com OUTRO paciente — '+outros.map(function(a){ return a.paciente?(a.paciente+' ('+a.atendimento_id+')'):a.atendimento_id; }).join(', ')+'. Confira o nome no topo desta ficha antes de lançar.', 'err', 9000); }
+        else { toast('Esta mesma ficha consta aberta em outra aba (ou foi recarregada há pouco). Lance por uma aba só para não gerar conflito de revisão.', '', 6000); }
+      }).catch(function(){}); }catch(e){} }
+      if(RO) setInterval(function(){ recarregarServidor(true).catch(function(){}); }, 45000);
+    }).catch(function(err){
+      clearTimeout(vigia);
+      var m=String(err&&err.message||err);
+      if(ehErroDeSessao(err)){
+        /* v19.9: sessão inválida ou expirada → login na própria ficha, em vez de um beco sem saída */
+        apagarToken(); st.token=null;
+        chip('Sessão expirada', 'err', m);
+        if(RO){ $('roTexto').textContent='Sessão expirada. Entre novamente para acompanhar a ficha.'; }
+        mostrarLogin('Sua sessão expirou ou não é válida. Entre novamente para vincular a ficha ao prontuário.', function(ok){ if(ok) carregarCaso(); });
+        return;
+      }
+      chip('Falha ao vincular', 'err', m);
+      toast('Não foi possível abrir o atendimento: '+m, 'err', 8000);
+      if(RO){ $('roTexto').textContent='Não foi possível carregar: '+m; }
+    });
+  }
+  window.CLAV_PONTE = { agendar: agendar, salvarAgora: function(){ return salvarServidor(false); }, recarregar: function(){ return recarregarServidor(false); }, estado: function(){ return st; }, urlFicha: urlFicha, urlBase: urlBase, abrirFichaEmOutraAba: abrirFichaEmOutraAba, mostrarFila: mostrarFila, mostrarLogin: mostrarLogin };
+  window.addEventListener('beforeunload', function(){ try{ if(st.online&&st.token) google.script.run.intraopLiberarAba(TAB_ID, st.token); }catch(e){} });
+  iniciar();
+})();
+</script>
+</body>
+</html>
