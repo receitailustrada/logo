@@ -1,0 +1,1044 @@
+/*
+  CLAV | Ficha Anestésica Intraoperatória
+  IntraFarmacos.html — biblioteca farmacológica do anestesiologista.
+
+  Este arquivo contém APENAS dados (sem tags <script>): ele é injetado dentro de
+  um <script> do Intra.html pelo scriptlet include('IntraFarmacos') (v19.9).
+
+  v19.9: este cabeçalho é um comentário de bloco JavaScript. Antes era um comentário
+  HTML, que dentro de <script> quebrava a sintaxe do bloco da biblioteca.
+  Foi separado para que a ficha não vire um monólito e para que a biblioteca
+  possa ser revisada e atualizada isoladamente, sem tocar na lógica da ficha.
+
+  Estrutura de cada fármaco:
+    { id, cat, nome, apresentacao, diluicao,
+      doses: [{ uso, min, max, unid, via, obs }],
+      indicacoes, contraindicacoes, alertas }
+
+  Doses em "/kg" são convertidas automaticamente para dose total quando o peso
+  do paciente está preenchido (vem do pré-anestésico ou é digitado na tela).
+*/
+
+    const CATEGORIAS = [
+      { id: 'inducao',      nome: 'Indutores e hipnóticos',            cor: '#67578B', rgb: '103,87,139' },
+      { id: 'opioides',     nome: 'Opioides',                          cor: '#A3654E', rgb: '163,101,78' },
+      { id: 'bnm',          nome: 'Bloqueadores neuromusculares',      cor: '#48689A', rgb: '72,104,154' },
+      { id: 'reversores',   nome: 'Reversores e antídotos',            cor: '#0E7490', rgb: '14,116,144' },
+      { id: 'locais',       nome: 'Anestésicos locais',                cor: '#2A7B88', rgb: '42,123,136' },
+      { id: 'vasoativos',   nome: 'Vasopressores e inotrópicos',       cor: '#B42318', rgb: '180,35,24' },
+      { id: 'cardio',       nome: 'Cardiovascular e antiarrítmicos',   cor: '#9A3412', rgb: '154,52,18' },
+      { id: 'antiemeticos', nome: 'Antieméticos (NVPO)',               cor: '#4B8059', rgb: '75,128,89' },
+      { id: 'analgesia',    nome: 'Analgesia multimodal',              cor: '#3D6C64', rgb: '61,108,100' },
+      { id: 'atb',          nome: 'Antibioticoprofilaxia',             cor: '#1D4ED8', rgb: '29,78,216' },
+      { id: 'inalatorios',  nome: 'Agentes inalatórios',               cor: '#6D28D9', rgb: '109,40,217' },
+      { id: 'obstetricia',  nome: 'Obstetrícia e uterotônicos',        cor: '#BE185D', rgb: '190,24,93' },
+      { id: 'emergencia',   nome: 'Emergência e suporte',              cor: '#7F1D1D', rgb: '127,29,29' }
+    ];
+
+    const FARMACOS = [
+      /* ================== INDUTORES / HIPNÓTICOS ================== */
+      { id: 'propofol', cat: 'inducao', nome: 'Propofol 1%',
+        apresentacao: 'Amp/fr 200 mg/20 mL (10 mg/mL), emulsão lipídica',
+        diluicao: 'Uso puro; se diluir, SG 5% até no mínimo 2 mg/mL. Assepsia rigorosa e desprezar sobras (meio de cultura).',
+        doses: [
+          { uso: 'Indução', min: 1.5, max: 2.5, unid: 'mg/kg', via: 'IV', obs: 'Reduzir 30–50% em idosos, hipovolêmicos e instáveis' },
+          { uso: 'Manutenção (TIVA)', min: 4, max: 12, unid: 'mg/kg/h', via: 'IV contínuo' },
+          { uso: 'Sedação', min: 25, max: 75, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Indução e manutenção de anestesia geral; sedação para procedimentos e exames; antiemético em baixas doses.',
+        contraindicacoes: 'Alergia conhecida ao propofol/componentes da emulsão; choque descompensado e hipovolemia grave não corrigida (relativa); cautela em disfunção ventricular grave.',
+        alertas: 'Hipotensão e depressão respiratória dose-dependentes; dor à injeção (lidocaína prévia ajuda); síndrome da infusão do propofol em infusões altas e prolongadas.' },
+
+      { id: 'etomidato', cat: 'inducao', nome: 'Etomidato',
+        apresentacao: 'Amp 20 mg/10 mL (2 mg/mL)',
+        diluicao: 'Uso puro IV lento.',
+        doses: [
+          { uso: 'Indução', min: 0.2, max: 0.3, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Indução em pacientes hemodinamicamente instáveis, cardiopatas, hipovolêmicos e neurocríticos (estabilidade cardiovascular).',
+        contraindicacoes: 'Alergia; evitar infusão contínua e doses repetidas (supressão adrenal); cautela em sepse.',
+        alertas: 'Mioclonias frequentes (atenuadas por opioide/benzodiazepínico prévio); supressão da síntese de cortisol por 24–48 h após dose única; náusea pós-operatória.' },
+
+      { id: 'cetamina', cat: 'inducao', nome: 'Cetamina',
+        apresentacao: 'Fr 500 mg/10 mL (50 mg/mL); Cetamina S(+) 50 mg/mL',
+        diluicao: 'Bolus: diluir para 10 mg/mL. Analgesia: 100 mg em 100 mL SF (1 mg/mL).',
+        doses: [
+          { uso: 'Indução', min: 1, max: 2, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Indução IM', min: 4, max: 8, unid: 'mg/kg', via: 'IM' },
+          { uso: 'Analgesia (dose baixa)', min: 0.15, max: 0.5, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Infusão analgésica', min: 0.1, max: 0.3, unid: 'mg/kg/h', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Indução em instabilidade hemodinâmica, broncoespasmo/asma, tamponamento; analgesia multimodal e poupadora de opioide; sedação dissociativa; via IM sem acesso venoso.',
+        contraindicacoes: 'Coronariopatia grave descompensada, hipertensão não controlada, aneurisma/dissecção, pré-eclâmpsia grave, psicose ativa; cautela em hipertensão intracraniana com ventilação inadequada.',
+        alertas: 'Sialorreia (considerar atropina), emergência psicomimética (atenuada por benzodiazepínico), taquicardia e aumento de PA; preserva reflexos e respiração.' },
+
+      { id: 'tiopental', cat: 'inducao', nome: 'Tiopental sódico',
+        apresentacao: 'Fr-amp 1 g (pó) — reconstituir a 25 mg/mL (2,5%)',
+        diluicao: '1 g em 40 mL de água destilada/SF = 25 mg/mL.',
+        doses: [
+          { uso: 'Indução', min: 3, max: 5, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Neuroproteção (bolus)', min: 1, max: 3, unid: 'mg/kg', via: 'IV', obs: 'Titulado, com controle hemodinâmico' }
+        ],
+        indicacoes: 'Indução de anestesia geral; estado de mal epiléptico refratário; neuroproteção com PIC elevada.',
+        contraindicacoes: 'Porfiria (contraindicação absoluta), asma grave em crise (relativa), hipovolemia/choque não corrigidos; sem acesso venoso seguro (necrose por extravasamento).',
+        alertas: 'Solução alcalina — necrose se extravasar e lesão grave se intra-arterial; hipotensão e depressão miocárdica; laringoespasmo em plano superficial.' },
+
+      { id: 'midazolam', cat: 'inducao', nome: 'Midazolam',
+        apresentacao: 'Amp 15 mg/3 mL ou 5 mg/5 mL; 50 mg/10 mL',
+        diluicao: 'Titulação: diluir para 1 mg/mL com SF.',
+        doses: [
+          { uso: 'Sedação/ansiólise', min: 0.02, max: 0.05, unid: 'mg/kg', via: 'IV', maxAbs: 5, maxTxt: 'titular até efeito' },
+          { uso: 'Pré-anestésico VO (criança)', min: 0.3, max: 0.5, unid: 'mg/kg', via: 'VO', maxAbs: 15, maxTxt: 'máx 15 mg' },
+          { uso: 'Coindução', min: 0.05, max: 0.1, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Ansiólise e amnésia pré-operatória; sedação para procedimentos; coindução; tratamento de convulsão.',
+        contraindicacoes: 'Alergia a benzodiazepínicos; glaucoma agudo de ângulo fechado; cautela em miastenia gravis, DPOC grave, idosos e apneia do sono.',
+        alertas: 'Depressão respiratória sinérgica com opioides; reduzir dose no idoso (0,5–1 mg por vez); antídoto: flumazenil.' },
+
+      { id: 'dexmedetomidina', cat: 'inducao', nome: 'Dexmedetomidina',
+        apresentacao: 'Fr 200 mcg/2 mL (100 mcg/mL)',
+        diluicao: '200 mcg em 48 mL SF = 4 mcg/mL.',
+        doses: [
+          { uso: 'Ataque (10 min)', min: 0.5, max: 1, unid: 'mcg/kg', via: 'IV lento', obs: 'Omitir ataque em idosos/instáveis' },
+          { uso: 'Manutenção', min: 0.2, max: 0.7, unid: 'mcg/kg/h', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Sedação consciente (procedimentos, intubação acordada), adjuvante poupador de opioide, prevenção de delirium/agitação, sedação em ventilação espontânea.',
+        contraindicacoes: 'Bloqueio AV avançado sem marca-passo, bradicardia significativa, hipovolemia não corrigida, disfunção ventricular grave.',
+        alertas: 'Bradicardia e hipotensão (especialmente com ataque rápido); hipertensão transitória no bolus; não produz depressão respiratória relevante.' },
+
+      /* ================== OPIOIDES ================== */
+      { id: 'fentanil', cat: 'opioides', nome: 'Fentanil',
+        apresentacao: 'Fr 500 mcg/10 mL ou amp 100 mcg/2 mL (50 mcg/mL)',
+        diluicao: 'Uso puro (50 mcg/mL).',
+        doses: [
+          { uso: 'Indução', min: 1, max: 5, unid: 'mcg/kg', via: 'IV' },
+          { uso: 'Bolus intraoperatório', fixo: '25–100 mcg conforme resposta', via: 'IV' },
+          { uso: 'Neuroeixo (raqui)', fixo: '15–25 mcg', via: 'IT' }
+        ],
+        indicacoes: 'Analgesia da indução e intraoperatória; atenuação da resposta à laringoscopia; adjuvante em raqui/peridural.',
+        contraindicacoes: 'Alergia; depressão respiratória sem suporte ventilatório; cautela com IMAO e em vias aéreas não seguras.',
+        alertas: 'Rigidez torácica em bolus rápido/altas doses; bradicardia; depressão respiratória tardia com doses repetidas; antídoto: naloxona.' },
+
+      { id: 'sufentanil', cat: 'opioides', nome: 'Sufentanil',
+        apresentacao: 'Amp 50 mcg/mL (1 mL ou 5 mL)',
+        diluicao: 'Diluir para 5 mcg/mL para titulação.',
+        doses: [
+          { uso: 'Indução/analgesia', min: 0.1, max: 0.5, unid: 'mcg/kg', via: 'IV' },
+          { uso: 'Neuroeixo (raqui)', fixo: '2,5–5 mcg', via: 'IT' }
+        ],
+        indicacoes: 'Analgesia potente em anestesia geral (5–10× fentanil); adjuvante em raquianestesia (cesariana, ortopedia).',
+        contraindicacoes: 'Alergia; depressão respiratória sem suporte; mesmas precauções dos demais opioides potentes.',
+        alertas: 'Prurido frequente no neuroeixo; rigidez torácica em bolus rápido; depressão respiratória.' },
+
+      { id: 'remifentanil', cat: 'opioides', nome: 'Remifentanil',
+        apresentacao: 'Fr-amp 2 mg ou 5 mg (pó)',
+        diluicao: '2 mg em 40 mL SF = 50 mcg/mL (bomba de infusão).',
+        doses: [
+          { uso: 'Infusão (TIVA)', min: 0.05, max: 0.5, unid: 'mcg/kg/min', via: 'IV contínuo' },
+          { uso: 'Sedação analgésica', min: 0.025, max: 0.1, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Analgesia titulável de ação ultracurta (TIVA, neurocirurgia, cirurgia com despertar rápido); controle pressórico fino.',
+        contraindicacoes: 'NUNCA por via peridural/raquidiana (glicina na formulação); evitar bolus em ventilação espontânea; alergia.',
+        alertas: 'Sem analgesia residual — prescrever analgesia de transição antes de desligar; bradicardia/hipotensão; hiperalgesia com doses altas.' },
+
+      { id: 'alfentanil', cat: 'opioides', nome: 'Alfentanil',
+        apresentacao: 'Amp 2,5 mg/5 mL (500 mcg/mL)',
+        diluicao: 'Uso puro ou diluído a 100 mcg/mL.',
+        doses: [
+          { uso: 'Bolus (procedimento curto)', min: 10, max: 20, unid: 'mcg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Procedimentos curtos e dolorosos (redução de fraturas, laringoscopia); início ultrarrápido (1–2 min).',
+        contraindicacoes: 'Alergia; depressão respiratória sem suporte; cautela nos mesmos cenários dos demais opioides.',
+        alertas: 'Rigidez torácica em bolus rápido; apneia transitória frequente.' },
+
+      { id: 'morfina', cat: 'opioides', nome: 'Morfina',
+        apresentacao: 'Amp 10 mg/1 mL; 2 mg/2 mL (dimorf)',
+        diluicao: 'Titulação IV: 10 mg em 10 mL SF (1 mg/mL). Raqui: usar apresentação sem conservante.',
+        doses: [
+          { uso: 'Analgesia IV titulada', min: 0.05, max: 0.1, unid: 'mg/kg', via: 'IV', obs: 'Titular 2 mg por vez no adulto' },
+          { uso: 'Raqui (sem conservante)', fixo: '50–100 mcg', via: 'IT' },
+          { uso: 'Peridural', fixo: '2–3 mg', via: 'PD' }
+        ],
+        indicacoes: 'Analgesia pós-operatória de cirurgias de médio/grande porte; analgesia prolongada pelo neuroeixo (12–24 h).',
+        contraindicacoes: 'Alergia verdadeira; depressão respiratória sem monitorização; insuficiência renal grave (acúmulo de metabólito ativo); íleo obstrutivo.',
+        alertas: 'Depressão respiratória tardia no neuroeixo (monitorar 12–24 h); prurido, náusea, retenção urinária; liberação de histamina.' },
+
+      { id: 'metadona', cat: 'opioides', nome: 'Metadona',
+        apresentacao: 'Amp 10 mg/mL',
+        diluicao: 'Diluir para 1 mg/mL para titulação.',
+        doses: [
+          { uso: 'Analgesia intraoperatória', min: 0.1, max: 0.2, unid: 'mg/kg', via: 'IV', maxAbs: 20, maxTxt: 'máx 20 mg' }
+        ],
+        indicacoes: 'Analgesia prolongada em dose única na indução (coluna, torácica, abdominal maior); dor crônica/tolerância a opioides; ação anti-NMDA.',
+        contraindicacoes: 'QT longo, uso de outros prolongadores de QT (relativa); depressão respiratória sem suporte; alergia.',
+        alertas: 'Meia-vida longa e imprevisível — evitar repiques precoces; prolonga QT; depressão respiratória tardia.' },
+
+      { id: 'meperidina', cat: 'opioides', nome: 'Meperidina (petidina)',
+        apresentacao: 'Amp 100 mg/2 mL (50 mg/mL)',
+        diluicao: 'Diluir para 10 mg/mL.',
+        doses: [
+          { uso: 'Tremor pós-anestésico', fixo: '20–25 mg IV lento', via: 'IV' },
+          { uso: 'Analgesia', min: 0.5, max: 1, unid: 'mg/kg', via: 'IV/IM' }
+        ],
+        indicacoes: 'Tratamento do tremor (shivering) pós-anestésico e pós-raqui; analgesia de curta duração.',
+        contraindicacoes: 'Uso de IMAO (síndrome serotoninérgica grave — absoluta), insuficiência renal (normeperidina neurotóxica), epilepsia.',
+        alertas: 'Metabólito convulsivante em doses repetidas; taquicardia; evitar uso analgésico prolongado.' },
+
+      { id: 'tramadol', cat: 'opioides', nome: 'Tramadol',
+        apresentacao: 'Amp 100 mg/2 mL',
+        diluicao: 'Diluir em 100 mL SF e infundir em 15–20 min (reduz náusea).',
+        doses: [
+          { uso: 'Analgesia', min: 1, max: 2, unid: 'mg/kg', via: 'IV', maxAbs: 100, maxTxt: 'máx 100 mg/dose (400 mg/dia)' }
+        ],
+        indicacoes: 'Dor moderada; componente da analgesia multimodal; útil quando se quer poupar opioides fortes.',
+        contraindicacoes: 'Epilepsia não controlada, uso de IMAO, intoxicação aguda por álcool/psicotrópicos; cautela com serotoninérgicos (ISRS).',
+        alertas: 'Náusea/vômito frequentes em bolus rápido; reduz limiar convulsivo; síndrome serotoninérgica em associações.' },
+
+      { id: 'nalbufina', cat: 'opioides', nome: 'Nalbufina',
+        apresentacao: 'Amp 10 mg/mL',
+        diluicao: 'Uso puro ou diluído a 1 mg/mL.',
+        doses: [
+          { uso: 'Analgesia', min: 0.1, max: 0.2, unid: 'mg/kg', via: 'IV', maxAbs: 10, maxTxt: 'máx 10 mg' },
+          { uso: 'Prurido por opioide neuroeixo', fixo: '2,5–5 mg', via: 'IV' }
+        ],
+        indicacoes: 'Analgesia com teto de depressão respiratória (agonista-antagonista); tratamento de prurido induzido por opioide de neuroeixo.',
+        contraindicacoes: 'Dependência de opioides agonistas plenos (precipita abstinência); alergia.',
+        alertas: 'Pode reverter parcialmente a analgesia de agonistas plenos; sedação.' },
+
+      /* ================== BLOQUEADORES NEUROMUSCULARES ================== */
+      { id: 'succinilcolina', cat: 'bnm', nome: 'Succinilcolina',
+        apresentacao: 'Fr-amp 100 mg (pó)',
+        diluicao: '100 mg em 10 mL SF = 10 mg/mL.',
+        doses: [
+          { uso: 'Sequência rápida', min: 1, max: 1.5, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Laringoespasmo', min: 0.1, max: 0.5, unid: 'mg/kg', via: 'IV', obs: 'IM 4 mg/kg se sem acesso' }
+        ],
+        indicacoes: 'Intubação em sequência rápida (início 45–60 s, duração 5–10 min); tratamento do laringoespasmo refratário.',
+        contraindicacoes: 'História pessoal/familiar de hipertermia maligna; hipercalemia ou risco (queimados > 24–48 h, lesão medular/denervação subaguda, imobilização prolongada, miopatias — Duchenne); deficiência de pseudocolinesterase conhecida; glaucoma de ângulo aberto com olho aberto (relativa).',
+        alertas: 'Fasciculações e mialgia; bradicardia (especialmente 2ª dose e crianças — atropina disponível); aumento transitório de K+ ~0,5 mEq/L; gatilho de hipertermia maligna.' },
+
+      { id: 'rocuronio', cat: 'bnm', nome: 'Rocurônio',
+        apresentacao: 'Fr 50 mg/5 mL (10 mg/mL)',
+        diluicao: 'Uso puro.',
+        doses: [
+          { uso: 'Intubação', min: 0.6, max: 0.6, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Sequência rápida', min: 1.2, max: 1.2, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Manutenção', min: 0.1, max: 0.15, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Relaxamento para intubação e manutenção cirúrgica; alternativa à succinilcolina em sequência rápida (com sugamadex disponível).',
+        contraindicacoes: 'Alergia (BNM são causa importante de anafilaxia perioperatória); cautela em miastenia gravis (doses mínimas monitorizadas).',
+        alertas: 'Duração prolongada em hepatopatia; monitorizar TOF; reversão com sugamadex (específica) ou neostigmina.' },
+
+      { id: 'atracurio', cat: 'bnm', nome: 'Atracúrio',
+        apresentacao: 'Amp 25 mg/2,5 mL (10 mg/mL) — refrigerado',
+        diluicao: 'Uso puro.',
+        doses: [
+          { uso: 'Intubação', min: 0.4, max: 0.5, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Manutenção', min: 0.08, max: 0.1, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Relaxamento em insuficiência renal/hepática (eliminação de Hofmann, independe de órgãos).',
+        contraindicacoes: 'Alergia; cautela em asma/atopia (libera histamina — injetar lentamente).',
+        alertas: 'Liberação de histamina com hipotensão e broncoespasmo em bolus rápido; metabólito laudanosina em infusões prolongadas.' },
+
+      { id: 'cisatracurio', cat: 'bnm', nome: 'Cisatracúrio',
+        apresentacao: 'Amp 10 mg/5 mL (2 mg/mL) — refrigerado',
+        diluicao: 'Uso puro.',
+        doses: [
+          { uso: 'Intubação', min: 0.1, max: 0.15, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Manutenção', min: 0.02, max: 0.03, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Relaxamento em insuficiência renal e hepática (Hofmann) sem liberação de histamina; infusão em UTI.',
+        contraindicacoes: 'Alergia.',
+        alertas: 'Início mais lento que rocurônio (~3–4 min); monitorizar TOF.' },
+
+      { id: 'vecuronio', cat: 'bnm', nome: 'Vecurônio',
+        apresentacao: 'Fr-amp 4 mg ou 10 mg (pó)',
+        diluicao: '4 mg em 4 mL SF = 1 mg/mL.',
+        doses: [
+          { uso: 'Intubação', min: 0.08, max: 0.1, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Manutenção', min: 0.02, max: 0.03, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Relaxamento com estabilidade hemodinâmica (sem liberação de histamina).',
+        contraindicacoes: 'Alergia; cautela em hepatopatia/colestase (duração prolongada).',
+        alertas: 'Sugamadex também reverte; monitorizar TOF.' },
+
+      { id: 'pancuronio', cat: 'bnm', nome: 'Pancurônio',
+        apresentacao: 'Amp 4 mg/2 mL (2 mg/mL)',
+        diluicao: 'Uso puro.',
+        doses: [
+          { uso: 'Intubação', min: 0.08, max: 0.1, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Relaxamento de longa duração (cirurgia cardíaca, ventilação prolongada planejada).',
+        contraindicacoes: 'Insuficiência renal (excreção renal predominante); coronariopatia com taquicardia indesejada.',
+        alertas: 'Taquicardia vagolítica; bloqueio residual frequente — reverter e monitorizar TOF.' },
+
+      /* ================== REVERSORES E ANTÍDOTOS ================== */
+      { id: 'neostigmina', cat: 'reversores', nome: 'Neostigmina',
+        apresentacao: 'Amp 0,5 mg/1 mL',
+        diluicao: 'Associar SEMPRE a atropina na mesma seringa (metade da dose de neostigmina).',
+        doses: [
+          { uso: 'Reversão de BNM', min: 0.03, max: 0.05, unid: 'mg/kg', via: 'IV', maxAbs: 5, maxTxt: 'máx 5 mg', obs: '+ atropina 0,015–0,02 mg/kg' }
+        ],
+        indicacoes: 'Reversão de bloqueio neuromuscular adespolarizante com TOF ≥ 2 respostas.',
+        contraindicacoes: 'Obstrução mecânica intestinal ou urinária; bloqueio profundo (não reverte — usar sugamadex); alergia.',
+        alertas: 'Bradicardia, sialorreia, broncoespasmo se sem antimuscarínico; teto de efeito — não repetir dose plena.' },
+
+      { id: 'sugammadex', cat: 'reversores', nome: 'Sugamadex',
+        apresentacao: 'Fr 200 mg/2 mL (100 mg/mL)',
+        diluicao: 'Uso puro IV em bolus.',
+        doses: [
+          { uso: 'Bloqueio moderado (TOF ≥ 2)', min: 2, max: 2, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Bloqueio profundo (PTC 1–2)', min: 4, max: 4, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Resgate imediato (CICO)', min: 16, max: 16, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Reversão específica de rocurônio e vecurônio, inclusive bloqueio profundo e resgate de via aérea difícil.',
+        contraindicacoes: 'Alergia; depuração de creatinina < 30 mL/min (evitar).',
+        alertas: 'Reduz eficácia de contraceptivos hormonais por 7 dias (orientar); raros casos de anafilaxia e bradicardia.' },
+
+      { id: 'atropina', cat: 'reversores', nome: 'Atropina',
+        apresentacao: 'Amp 0,25 mg/1 mL ou 0,5 mg/1 mL',
+        diluicao: 'Uso puro.',
+        doses: [
+          { uso: 'Bradicardia (adulto)', fixo: '0,5–1 mg, repetir até 3 mg', via: 'IV' },
+          { uso: 'Criança', min: 0.02, max: 0.02, unid: 'mg/kg', via: 'IV', obs: 'Mínimo 0,1 mg' },
+          { uso: 'Com neostigmina', min: 0.015, max: 0.02, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Bradicardia sintomática; bloqueio dos efeitos muscarínicos da neostigmina; antissialogogo (cetamina, via aérea).',
+        contraindicacoes: 'Glaucoma de ângulo fechado; taquiarritmias; obstrução do trato urinário/prostatismo grave (relativas).',
+        alertas: 'Doses < 0,5 mg no adulto podem causar bradicardia paradoxal; taquicardia, midríase, retenção urinária.' },
+
+      { id: 'naloxona', cat: 'reversores', nome: 'Naloxona',
+        apresentacao: 'Amp 0,4 mg/1 mL',
+        diluicao: '0,4 mg em 10 mL SF = 40 mcg/mL — titular.',
+        doses: [
+          { uso: 'Depressão respiratória por opioide', fixo: '40–80 mcg IV a cada 2 min, titulado', via: 'IV' },
+          { uso: 'Parada/apneia', min: 0.01, max: 0.01, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Reversão de depressão respiratória e sedação excessiva por opioides.',
+        contraindicacoes: 'Nenhuma absoluta na emergência; titular em dependentes de opioides (síndrome de abstinência) e dor pós-operatória.',
+        alertas: 'Meia-vida menor que a de muitos opioides — risco de renarcotização (observar/repetir); edema agudo de pulmão e hipertensão descritos em reversão abrupta.' },
+
+      { id: 'flumazenil', cat: 'reversores', nome: 'Flumazenil',
+        apresentacao: 'Amp 0,5 mg/5 mL (0,1 mg/mL)',
+        diluicao: 'Uso puro, titulado.',
+        doses: [
+          { uso: 'Reversão de benzodiazepínico', fixo: '0,2 mg IV; repetir 0,1–0,2 mg/min até 1 mg', via: 'IV' }
+        ],
+        indicacoes: 'Reversão de sedação excessiva por benzodiazepínicos.',
+        contraindicacoes: 'Usuário crônico de benzodiazepínico ou intoxicação mista com tricíclicos (risco de convulsão); epilepsia em uso de BZD.',
+        alertas: 'Duração curta — ressedação possível; convulsões em dependentes.' },
+
+      { id: 'protamina', cat: 'reversores', nome: 'Protamina',
+        apresentacao: 'Amp 1.000 UI/mL (10 mg/mL)',
+        diluicao: 'Infundir lentamente (≤ 5 mg/min).',
+        doses: [
+          { uso: 'Reversão de heparina', fixo: '1 mg para cada 100 UI de heparina residual', via: 'IV lento' }
+        ],
+        indicacoes: 'Reversão da heparina não fracionada (cirurgia cardíaca/vascular, sangramento).',
+        contraindicacoes: 'Alergia prévia à protamina; risco aumentado em uso de insulina NPH, alergia a peixe e vasectomia (relativas).',
+        alertas: 'Hipotensão e bradicardia em infusão rápida; reações anafilactoides e hipertensão pulmonar grave; excesso tem efeito anticoagulante.' },
+
+      { id: 'dantrolene', cat: 'reversores', nome: 'Dantroleno',
+        apresentacao: 'Fr-amp 20 mg (pó) — reconstituir com 60 mL água destilada',
+        diluicao: 'Reconstituição trabalhosa: convocar ajuda, vários frascos.',
+        doses: [
+          { uso: 'Hipertermia maligna', min: 2.5, max: 2.5, unid: 'mg/kg', via: 'IV rápido', obs: 'Repetir até resposta (até 10 mg/kg)' }
+        ],
+        indicacoes: 'Tratamento específico da crise de hipertermia maligna (suspender gatilhos, hiperventilar com O2 100%, resfriar, tratar hipercalemia).',
+        contraindicacoes: 'Nenhuma na crise (droga salvadora).',
+        alertas: 'Fraqueza muscular prolongada; flebite (acesso calibroso/central); manter vigilância 24–48 h por recrudescência.' },
+
+      { id: 'intralipid', cat: 'reversores', nome: 'Emulsão lipídica 20%',
+        apresentacao: 'Bolsa/frasco 100–500 mL a 20%',
+        diluicao: 'Uso puro em acesso exclusivo.',
+        doses: [
+          { uso: 'Intoxicação por anestésico local — bolus', min: 1.5, max: 1.5, unid: 'mL/kg', via: 'IV em 1 min', obs: 'Repetir até 2× se instável' },
+          { uso: 'Infusão após bolus', min: 0.25, max: 0.5, unid: 'mL/kg/min', via: 'IV contínuo', obs: 'Máx total ~12 mL/kg' }
+        ],
+        indicacoes: 'Toxicidade sistêmica por anestésico local (LAST) com sinais neurológicos/cardiovasculares; manter RCP prolongada se PCR.',
+        contraindicacoes: 'Nenhuma na emergência.',
+        alertas: 'Na PCR por bupivacaína: RCP prolongada + lipídio; evitar vasopressina; adrenalina em doses menores (≤ 1 mcg/kg).' },
+
+      /* ================== ANESTÉSICOS LOCAIS ================== */
+      { id: 'lidocaina', cat: 'locais', nome: 'Lidocaína 2% sem vasoconstritor',
+        apresentacao: 'Fr 20 mg/mL (fr 20 mL = 400 mg)',
+        diluicao: 'Conforme bloqueio; IV: uso puro lento.',
+        doses: [
+          { uso: 'Dose máxima infiltração', min: 4.5, max: 4.5, unid: 'mg/kg', via: 'Infiltração', maxAbs: 300, maxTxt: 'máx 300 mg' },
+          { uso: 'IV (atenuar laringoscopia/dor propofol)', min: 1, max: 1.5, unid: 'mg/kg', via: 'IV' },
+          { uso: 'Infusão analgésica', min: 1, max: 2, unid: 'mg/kg/h', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Infiltração e bloqueios; atenuação da resposta à intubação; analgesia multimodal IV; antiarrítmico classe Ib.',
+        contraindicacoes: 'Alergia a amidas (rara); bloqueio AV avançado sem marca-passo (uso IV); infecção no sítio de punção.',
+        alertas: 'Toxicidade sistêmica (LAST): perioral, zumbido, convulsão, arritmia — ter emulsão lipídica disponível; somar doses de todos os locais usados.' },
+
+      { id: 'lidovaso', cat: 'locais', nome: 'Lidocaína 2% com vasoconstritor',
+        apresentacao: 'Fr 20 mg/mL + epinefrina 1:200.000',
+        diluicao: 'Uso conforme bloqueio.',
+        doses: [
+          { uso: 'Dose máxima', min: 7, max: 7, unid: 'mg/kg', via: 'Infiltração', maxAbs: 500, maxTxt: 'máx 500 mg' }
+        ],
+        indicacoes: 'Infiltração/bloqueios com maior duração e menor sangramento de campo.',
+        contraindicacoes: 'Extremidades com circulação terminal comprometida (relativa/clássica); feocromocitoma; hipertireoidismo descompensado; coronariopatia instável.',
+        alertas: 'Injeção intravascular acidental de epinefrina: taquicardia e hipertensão; aspirar antes de injetar.' },
+
+      { id: 'bupipesada', cat: 'locais', nome: 'Bupivacaína 0,5% hiperbárica (pesada)',
+        apresentacao: 'Amp 5 mg/mL + glicose 8% (4 mL = 20 mg)',
+        diluicao: 'Uso puro via raqui.',
+        doses: [
+          { uso: 'Raquianestesia', fixo: '7,5–15 mg (1,5–3 mL) conforme bloqueio desejado', via: 'IT' },
+          { uso: 'Cesariana', fixo: '10–12,5 mg + opioide lipofílico ± morfina 80 mcg', via: 'IT' }
+        ],
+        indicacoes: 'Raquianestesia para cirurgias de abdome inferior, cesariana, membros inferiores, urologia e proctologia.',
+        contraindicacoes: 'Recusa, coagulopatia/anticoagulação plena, infecção no sítio, hipertensão intracraniana, hipovolemia grave não corrigida, estenose aórtica crítica (relativa).',
+        alertas: 'Hipotensão e bradicardia (vasopressor pronto); raqui total se dose alta/posição inadequada; NUNCA IV — cardiotoxicidade grave.' },
+
+      { id: 'bupiisobar', cat: 'locais', nome: 'Bupivacaína 0,5% isobárica',
+        apresentacao: 'Fr 5 mg/mL (fr 20 mL = 100 mg)',
+        diluicao: 'Conforme bloqueio; associável a adjuvantes.',
+        doses: [
+          { uso: 'Dose máxima (bloqueios)', min: 2, max: 2.5, unid: 'mg/kg', via: 'PD/perineural', maxAbs: 150, maxTxt: 'máx ~150 mg' },
+          { uso: 'Peridural cirúrgica', fixo: '50–100 mg (10–20 mL a 0,5%)', via: 'PD' }
+        ],
+        indicacoes: 'Peridural, bloqueios de plexo e periféricos, infiltração com analgesia prolongada (4–8 h).',
+        contraindicacoes: 'Bloqueio regional IV (Bier) — contraindicação clássica; alergia; mesmas do neuroeixo quando aplicável.',
+        alertas: 'O mais cardiotóxico dos locais em uso — aspirar, dose-teste e injeção fracionada; lipídio 20% disponível.' },
+
+      { id: 'ropivacaina', cat: 'locais', nome: 'Ropivacaína',
+        apresentacao: 'Fr 7,5 mg/mL (0,75%) ou 10 mg/mL (1%)',
+        diluicao: 'Analgesia: diluir a 0,2%; bloqueios: 0,375–0,75%.',
+        doses: [
+          { uso: 'Dose máxima', min: 3, max: 3, unid: 'mg/kg', via: 'PD/perineural', maxAbs: 225, maxTxt: 'máx ~225 mg' },
+          { uso: 'Bloqueio de plexo', fixo: '75–150 mg (20–30 mL a 0,375–0,5%)', via: 'Perineural' }
+        ],
+        indicacoes: 'Bloqueios periféricos e peridural com menor cardiotoxicidade e menor bloqueio motor; analgesia contínua em cateter.',
+        contraindicacoes: 'Alergia; mesmas contraindicações regionais gerais.',
+        alertas: 'Ainda pode causar LAST em dose excessiva/injeção intravascular; somar doses de locais associados.' },
+
+      { id: 'levobupivacaina', cat: 'locais', nome: 'Levobupivacaína',
+        apresentacao: 'Fr 5 mg/mL (0,5%); com/sem glicose',
+        diluicao: 'Conforme técnica (raqui, peridural, perineural).',
+        doses: [
+          { uso: 'Dose máxima', min: 2.5, max: 3, unid: 'mg/kg', via: 'PD/perineural', maxAbs: 150, maxTxt: 'máx ~150 mg' },
+          { uso: 'Raquianestesia', fixo: '7,5–15 mg', via: 'IT' }
+        ],
+        indicacoes: 'Alternativa à bupivacaína com menor cardiotoxicidade, mesmas aplicações (raqui, peridural, bloqueios).',
+        contraindicacoes: 'Alergia; mesmas contraindicações regionais gerais.',
+        alertas: 'Precauções idênticas às da bupivacaína quanto a injeção intravascular.' },
+
+      /* ================== VASOPRESSORES / INOTRÓPICOS ================== */
+      { id: 'efedrina', cat: 'vasoativos', nome: 'Efedrina',
+        apresentacao: 'Amp 50 mg/1 mL',
+        diluicao: '50 mg em 10 mL SF = 5 mg/mL.',
+        doses: [
+          { uso: 'Hipotensão (bolus)', fixo: '5–10 mg IV, repetir conforme resposta', via: 'IV' }
+        ],
+        indicacoes: 'Hipotensão com bradicardia relativa (pós-raqui, indução); ação mista alfa e beta.',
+        contraindicacoes: 'Cautela em coronariopatia, taquiarritmias e uso de IMAO (resposta exagerada).',
+        alertas: 'Taquifilaxia com doses repetidas; taquicardia; atravessa placenta com mínima repercussão fetal.' },
+
+      { id: 'fenilefrina', cat: 'vasoativos', nome: 'Fenilefrina',
+        apresentacao: 'Amp 10 mg/1 mL',
+        diluicao: '10 mg em 100 mL SF = 100 mcg/mL (bolus); infusão em bomba.',
+        doses: [
+          { uso: 'Hipotensão (bolus)', fixo: '50–100 mcg IV, repetir', via: 'IV' },
+          { uso: 'Infusão', min: 0.15, max: 0.75, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Hipotensão com taquicardia (alfa-1 puro); vasopressor de escolha na cesariana; hipotensão pós-raqui.',
+        contraindicacoes: 'Bradicardia significativa prévia (piora reflexa); disfunção ventricular grave (aumenta pós-carga).',
+        alertas: 'Bradicardia reflexa; necrose se extravasamento em infusões prolongadas — preferir acesso seguro.' },
+
+      { id: 'metaraminol', cat: 'vasoativos', nome: 'Metaraminol',
+        apresentacao: 'Amp 10 mg/1 mL',
+        diluicao: '10 mg em 20 mL SF = 0,5 mg/mL.',
+        doses: [
+          { uso: 'Hipotensão (bolus)', fixo: '0,5–1 mg IV, repetir', via: 'IV' }
+        ],
+        indicacoes: 'Hipotensão perioperatória (ação predominante alfa, mais duradoura que fenilefrina).',
+        contraindicacoes: 'Mesmas precauções da fenilefrina; IMAO (resposta exagerada).',
+        alertas: 'Bradicardia reflexa; taquifilaxia.' },
+
+      { id: 'noradrenalina', cat: 'vasoativos', nome: 'Noradrenalina',
+        apresentacao: 'Amp 4 mg/4 mL ou 8 mg/4 mL',
+        diluicao: '4 mg em 246 mL SG 5% = 16 mcg/mL (bomba, preferir acesso central).',
+        doses: [
+          { uso: 'Infusão', min: 0.01, max: 0.5, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Choque séptico e vasoplegia (1ª linha); hipotensão refratária a bolus; manutenção de PAM alvo.',
+        contraindicacoes: 'Hipovolemia não corrigida como causa única (corrigir volume); extravasamento em veia periférica frágil.',
+        alertas: 'Necrose por extravasamento (fentolamina como resgate); arritmias; titular por PAM invasiva quando possível.' },
+
+      { id: 'adrenalina', cat: 'vasoativos', nome: 'Adrenalina (epinefrina)',
+        apresentacao: 'Amp 1 mg/1 mL (1:1.000)',
+        diluicao: 'PCR: puro. Anafilaxia IM: puro. Infusão: 1 mg em 100 mL = 10 mcg/mL.',
+        doses: [
+          { uso: 'PCR', fixo: '1 mg IV a cada 3–5 min', via: 'IV' },
+          { uso: 'Anafilaxia', fixo: '0,3–0,5 mg IM (vasto lateral), repetir 5–15 min', via: 'IM' },
+          { uso: 'Infusão', min: 0.01, max: 0.3, unid: 'mcg/kg/min', via: 'IV contínuo' },
+          { uso: 'PCR criança', min: 0.01, max: 0.01, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Parada cardiorrespiratória; anafilaxia (1ª linha IM); broncoespasmo grave; choque com baixo débito; adjuvante em bloqueios.',
+        contraindicacoes: 'Nenhuma absoluta na emergência.',
+        alertas: 'Na anafilaxia sob anestesia, titular IV 10–50 mcg por vez; arritmias, isquemia; conferir SEMPRE a diluição antes de administrar.' },
+
+      { id: 'dobutamina', cat: 'vasoativos', nome: 'Dobutamina',
+        apresentacao: 'Amp 250 mg/20 mL',
+        diluicao: '250 mg em 230 mL SG 5% = 1 mg/mL (bomba).',
+        doses: [
+          { uso: 'Infusão inotrópica', min: 2, max: 20, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Baixo débito cardíaco (choque cardiogênico, disfunção ventricular perioperatória).',
+        contraindicacoes: 'Cardiomiopatia hipertrófica obstrutiva; estenose aórtica grave (relativa); hipovolemia não corrigida.',
+        alertas: 'Taquiarritmias; hipotensão por vasodilatação beta-2 em doses baixas; tolerância em infusões > 72 h.' },
+
+      { id: 'dopamina', cat: 'vasoativos', nome: 'Dopamina',
+        apresentacao: 'Amp 50 mg/10 mL (5 mg/mL)',
+        diluicao: '200 mg em 210 mL SG 5% ≈ 1 mg/mL (bomba).',
+        doses: [
+          { uso: 'Infusão', min: 2, max: 20, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Hipotensão/bradicardia quando noradrenalina indisponível; ponte inotrópica.',
+        contraindicacoes: 'Feocromocitoma; taquiarritmias não controladas.',
+        alertas: 'Mais arritmogênica que noradrenalina; extravasamento causa necrose (fentolamina).' },
+
+      { id: 'vasopressina', cat: 'vasoativos', nome: 'Vasopressina',
+        apresentacao: 'Amp 20 UI/1 mL',
+        diluicao: '20 UI em 100 mL SF = 0,2 UI/mL (bomba).',
+        doses: [
+          { uso: 'Infusão (vasoplegia)', fixo: '0,01–0,04 UI/min', via: 'IV contínuo' },
+          { uso: 'Bolus resgate', fixo: '0,5–1 UI IV titulado', via: 'IV' }
+        ],
+        indicacoes: 'Choque vasoplégico refratário a catecolaminas (associação com noradrenalina); hipotensão em uso de IECA/BRA.',
+        contraindicacoes: 'Cautela em coronariopatia e isquemia mesentérica.',
+        alertas: 'Vasoconstricção esplâncnica e coronariana; isquemia digital em doses altas; não titular como catecolamina.' },
+
+      /* ================== CARDIOVASCULAR / ANTIARRÍTMICOS ================== */
+      { id: 'esmolol', cat: 'cardio', nome: 'Esmolol',
+        apresentacao: 'Amp 100 mg/10 mL (10 mg/mL)',
+        diluicao: 'Bolus puro; infusão 2,5 g/250 mL = 10 mg/mL.',
+        doses: [
+          { uso: 'Bolus', min: 0.5, max: 1, unid: 'mg/kg', via: 'IV em 1 min' },
+          { uso: 'Infusão', min: 50, max: 300, unid: 'mcg/kg/min', via: 'IV contínuo' }
+        ],
+        indicacoes: 'Taquicardia e hipertensão perioperatórias; atenuar resposta à laringoscopia; controle de FC em FA; dissecção de aorta.',
+        contraindicacoes: 'Bradicardia, BAV 2º/3º graus sem marca-passo, choque cardiogênico, asma grave em crise.',
+        alertas: 'Meia-vida ~9 min (esterases) — efeito some rápido; hipotensão; flebite em veia periférica com infusão prolongada.' },
+
+      { id: 'metoprolol', cat: 'cardio', nome: 'Metoprolol',
+        apresentacao: 'Amp 5 mg/5 mL (1 mg/mL)',
+        diluicao: 'Uso puro, lento.',
+        doses: [
+          { uso: 'Controle FC/PA', fixo: '1–5 mg IV lento, repetir até 15 mg', via: 'IV' }
+        ],
+        indicacoes: 'Taquiarritmias supraventriculares; síndrome coronariana; hipertensão perioperatória com taquicardia.',
+        contraindicacoes: 'Bradicardia, BAV avançado, hipotensão, broncoespasmo grave, disfunção ventricular descompensada.',
+        alertas: 'Efeito prolongado (não titulável como esmolol); somar com efeitos de anestésicos.' },
+
+      { id: 'nitroglicerina', cat: 'cardio', nome: 'Nitroglicerina',
+        apresentacao: 'Amp 50 mg/10 mL (5 mg/mL)',
+        diluicao: '50 mg em 240 mL SG 5% = 200 mcg/mL (frasco vidro/polietileno).',
+        doses: [
+          { uso: 'Infusão', min: 0.5, max: 10, unid: 'mcg/kg/min', via: 'IV contínuo', obs: 'Iniciar 5–10 mcg/min e titular' }
+        ],
+        indicacoes: 'Isquemia miocárdica, hipertensão com congestão, edema agudo de pulmão; relaxamento uterino agudo (bolus 50–100 mcg).',
+        contraindicacoes: 'Uso de inibidores de fosfodiesterase-5 (sildenafil < 24–48 h); hipovolemia; tamponamento; hipertensão intracraniana; estenose aórtica crítica.',
+        alertas: 'Taquifilaxia; cefaleia; hipotensão — reduz pré-carga; adsorve em PVC comum.' },
+
+      { id: 'nitroprussiato', cat: 'cardio', nome: 'Nitroprussiato de sódio',
+        apresentacao: 'Amp 50 mg/2 mL',
+        diluicao: '50 mg em 248 mL SG 5% = 200 mcg/mL; PROTEGER DA LUZ.',
+        doses: [
+          { uso: 'Infusão', min: 0.3, max: 5, unid: 'mcg/kg/min', via: 'IV contínuo', obs: 'Evitar > 2 mcg/kg/min prolongado' }
+        ],
+        indicacoes: 'Emergência hipertensiva; hipotensão controlada; pós-operatório de cirurgia cardíaca/aórtica.',
+        contraindicacoes: 'Coartação/shunts dependentes, atrofia óptica de Leber, hipovolemia; cautela em insuficiência renal/hepática (tiocianato/cianeto).',
+        alertas: 'Toxicidade por cianeto em doses altas/prolongadas (acidose inexplicada); hipotensão abrupta — PAM invasiva; fotossensível.' },
+
+      { id: 'hidralazina', cat: 'cardio', nome: 'Hidralazina',
+        apresentacao: 'Amp 20 mg/1 mL',
+        diluicao: 'Diluir para 1 mg/mL.',
+        doses: [
+          { uso: 'Hipertensão (inclusive obstétrica)', fixo: '5 mg IV a cada 20 min, máx 20–30 mg', via: 'IV' }
+        ],
+        indicacoes: 'Hipertensão na gestante (pré-eclâmpsia); hipertensão perioperatória quando betabloqueio indesejado.',
+        contraindicacoes: 'Coronariopatia grave (taquicardia reflexa e roubo coronariano); dissecção de aorta isolada (sem betabloqueio).',
+        alertas: 'Início lento (10–20 min) — não reboletar precocemente; taquicardia reflexa; resposta imprevisível.' },
+
+      { id: 'clonidina', cat: 'cardio', nome: 'Clonidina',
+        apresentacao: 'Amp 150 mcg/1 mL',
+        diluicao: 'IV: diluir e infundir lento (10–15 min).',
+        doses: [
+          { uso: 'Adjuvante/simpatólise', min: 0.5, max: 2, unid: 'mcg/kg', via: 'IV lento' },
+          { uso: 'Adjuvante neuroeixo', fixo: '15–75 mcg', via: 'IT/PD' }
+        ],
+        indicacoes: 'Adjuvante analgésico e sedativo (prolonga bloqueios); controle de hipertensão e taquicardia; abstinência; tremor.',
+        contraindicacoes: 'Bradicardia/BAV significativos; hipovolemia; disfunção ventricular grave.',
+        alertas: 'Hipotensão e bradicardia prolongadas; sedação residual; hipertensão rebote na suspensão crônica.' },
+
+      { id: 'amiodarona', cat: 'cardio', nome: 'Amiodarona',
+        apresentacao: 'Amp 150 mg/3 mL',
+        diluicao: 'Ataque: 150–300 mg em 100 mL SG 5% em 10–20 min (PCR: bolus puro).',
+        doses: [
+          { uso: 'PCR (FV/TV sem pulso)', fixo: '300 mg IV bolus; 2ª dose 150 mg', via: 'IV' },
+          { uso: 'TV com pulso / FA', fixo: '150 mg em 10 min; manutenção 1 mg/min por 6 h', via: 'IV' }
+        ],
+        indicacoes: 'FV/TV refratária na PCR; taquiarritmias ventriculares e supraventriculares perioperatórias.',
+        contraindicacoes: 'BAV avançado sem marca-passo; bradicardia sinusal grave; alergia ao iodo (relativa).',
+        alertas: 'Hipotensão na infusão rápida (fora da PCR); flebite — preferir SG 5% e acesso calibroso; interação com digoxina/varfarina.' },
+
+      { id: 'adenosina', cat: 'cardio', nome: 'Adenosina',
+        apresentacao: 'Amp 6 mg/2 mL',
+        diluicao: 'Bolus rápido + flush imediato de 20 mL SF em veia proximal.',
+        doses: [
+          { uso: 'TSV (1ª dose)', fixo: '6 mg IV rápido', via: 'IV' },
+          { uso: 'TSV (2ª dose)', fixo: '12 mg IV rápido', via: 'IV' }
+        ],
+        indicacoes: 'Reversão de taquicardia supraventricular por reentrada; diagnóstico de taquicardias de QRS estreito.',
+        contraindicacoes: 'Asma grave (broncoespasmo), BAV 2º/3º graus, doença do nó sinusal; cautela em transplantado cardíaco (sensibilidade extrema).',
+        alertas: 'Pausa sinusal transitória esperada (avisar paciente acordado); flush vigoroso imediato; efeito antagonizado por metilxantinas.' },
+
+      { id: 'sulfatomg', cat: 'cardio', nome: 'Sulfato de magnésio',
+        apresentacao: 'Amp 10% (1 g/10 mL) ou 50% (5 g/10 mL)',
+        diluicao: 'Diluir para infusão em 15–30 min (exceto torsades instável).',
+        doses: [
+          { uso: 'Adjuvante analgésico', min: 30, max: 50, unid: 'mg/kg', via: 'IV lento' },
+          { uso: 'Torsades de pointes', fixo: '1–2 g IV em 5–20 min', via: 'IV' },
+          { uso: 'Pré-eclâmpsia/eclâmpsia', fixo: 'Ataque 4 g IV em 20 min + 1–2 g/h', via: 'IV' }
+        ],
+        indicacoes: 'Torsades; eclâmpsia/pré-eclâmpsia grave (neuroproteção); adjuvante analgésico e poupador de BNM; asma grave refratária.',
+        contraindicacoes: 'Miastenia gravis; BAV avançado; insuficiência renal (ajustar/monitorar).',
+        alertas: 'Potencializa BNM (monitorar TOF); toxicidade: abolição de reflexos, depressão respiratória — antídoto gluconato de cálcio.' },
+
+      { id: 'gluconato', cat: 'cardio', nome: 'Gluconato de cálcio 10%',
+        apresentacao: 'Amp 1 g/10 mL',
+        diluicao: 'IV lento (5–10 min) em acesso seguro.',
+        doses: [
+          { uso: 'Hipocalcemia / hipercalemia', fixo: '1–2 g IV lento', via: 'IV' },
+          { uso: 'Criança', min: 50, max: 100, unid: 'mg/kg', via: 'IV lento' }
+        ],
+        indicacoes: 'Hipercalemia com alteração de ECG (estabilização de membrana); hipocalcemia (politransfusão/citrato); intoxicação por magnésio ou bloqueador de canal de cálcio.',
+        contraindicacoes: 'Hipercalcemia; intoxicação digitálica (relativa — arritmias).',
+        alertas: 'Necrose se extravasar (cloreto de cálcio é pior — preferir gluconato em veia periférica); bradicardia em bolus rápido.' },
+
+      { id: 'furosemida', cat: 'cardio', nome: 'Furosemida',
+        apresentacao: 'Amp 20 mg/2 mL',
+        diluicao: 'Uso puro IV lento.',
+        doses: [
+          { uso: 'Diurese/congestão', min: 0.5, max: 1, unid: 'mg/kg', via: 'IV', obs: 'Adulto: 20–40 mg iniciais' }
+        ],
+        indicacoes: 'Congestão/edema agudo de pulmão; oligúria com sobrecarga volêmica; hipercalemia (adjuvante).',
+        contraindicacoes: 'Hipovolemia e hipotensão; anúria por obstrução; alergia a sulfonamidas (relativa).',
+        alertas: 'Hipocalemia e alcalose; ototoxicidade em bolus rápido de doses altas; monitorar débito urinário.' },
+
+      /* ================== ANTIEMÉTICOS ================== */
+      { id: 'ondansetrona', cat: 'antiemeticos', nome: 'Ondansetrona',
+        apresentacao: 'Amp 4 mg/2 mL ou 8 mg/4 mL',
+        diluicao: 'Uso puro ou em 50 mL SF, lento.',
+        doses: [
+          { uso: 'Profilaxia/tratamento NVPO', min: 0.1, max: 0.1, unid: 'mg/kg', via: 'IV', maxAbs: 8, maxTxt: 'adulto 4–8 mg' }
+        ],
+        indicacoes: 'Profilaxia e tratamento de náuseas e vômitos pós-operatórios (melhor ao final da cirurgia).',
+        contraindicacoes: 'Síndrome do QT longo congênito; uso concomitante de apomorfina; alergia.',
+        alertas: 'Prolonga QT (evitar associar múltiplos prolongadores); cefaleia; constipação.' },
+
+      { id: 'dexametasona', cat: 'antiemeticos', nome: 'Dexametasona',
+        apresentacao: 'Amp 10 mg/2,5 mL (4 mg/mL)',
+        diluicao: 'Uso puro IV lento após indução.',
+        doses: [
+          { uso: 'Profilaxia NVPO / adjuvante analgésico', min: 0.1, max: 0.2, unid: 'mg/kg', via: 'IV', maxAbs: 10, maxTxt: 'adulto 4–10 mg' }
+        ],
+        indicacoes: 'Profilaxia de NVPO (dar na indução); adjuvante analgésico e antiedema (via aérea); prolonga bloqueios periféricos.',
+        contraindicacoes: 'Infecção sistêmica não tratada (relativa); hipersensibilidade.',
+        alertas: 'Hiperglicemia transitória (atenção no diabético); prurido perineal em bolus rápido acordado; dose única é segura.' },
+
+      { id: 'metoclopramida', cat: 'antiemeticos', nome: 'Metoclopramida',
+        apresentacao: 'Amp 10 mg/2 mL',
+        diluicao: 'IV lento (2–3 min) para evitar acatisia.',
+        doses: [
+          { uso: 'NVPO / procinético', min: 0.15, max: 0.15, unid: 'mg/kg', via: 'IV', maxAbs: 10, maxTxt: 'adulto 10 mg' }
+        ],
+        indicacoes: 'NVPO (2ª linha); procinético para estase gástrica antes de indução em estômago cheio.',
+        contraindicacoes: 'Obstrução/perfuração intestinal; feocromocitoma; Parkinson e discinesias; epilepsia (relativa).',
+        alertas: 'Reações extrapiramidais/distonia (jovens); acatisia em bolus rápido; síndrome neuroléptica maligna (rara).' },
+
+      { id: 'bromoprida', cat: 'antiemeticos', nome: 'Bromoprida',
+        apresentacao: 'Amp 10 mg/2 mL',
+        diluicao: 'IV lento ou diluído.',
+        doses: [
+          { uso: 'NVPO / procinético', fixo: '10 mg IV lento', via: 'IV' }
+        ],
+        indicacoes: 'Náusea/vômito e estase gástrica (alternativa nacional à metoclopramida).',
+        contraindicacoes: 'Semelhantes à metoclopramida: obstrução intestinal, feocromocitoma, discinesias.',
+        alertas: 'Reações extrapiramidais possíveis; sonolência.' },
+
+      { id: 'droperidol', cat: 'antiemeticos', nome: 'Droperidol',
+        apresentacao: 'Amp 5 mg/2 mL (2,5 mg/mL)',
+        diluicao: 'Diluir e usar dose baixa.',
+        doses: [
+          { uso: 'Profilaxia NVPO', fixo: '0,625–1,25 mg IV', via: 'IV' }
+        ],
+        indicacoes: 'Profilaxia/resgate de NVPO em dose baixa; potencializa analgesia em PCA.',
+        contraindicacoes: 'QT longo conhecido/suspeito; Parkinson; feocromocitoma.',
+        alertas: 'Alerta clássico de QT (doses antieméticas são baixas — monitorar ECG); disforia/sedação.' },
+
+      { id: 'dimenidrinato', cat: 'antiemeticos', nome: 'Dimenidrinato + piridoxina',
+        apresentacao: 'Amp 30 mg + B6 50 mg/1 mL (IM) ou 3 mg/mL frasco IV',
+        diluicao: 'IV: diluir em 100 mL SF, lento.',
+        doses: [
+          { uso: 'NVPO / vertigem', min: 0.5, max: 1, unid: 'mg/kg', via: 'IV/IM', maxAbs: 50, maxTxt: 'adulto 30–50 mg' }
+        ],
+        indicacoes: 'NVPO com componente vestibular; náusea da gestação (com B6).',
+        contraindicacoes: 'Glaucoma de ângulo fechado; retenção urinária/prostatismo; cautela em idosos (delirium).',
+        alertas: 'Sedação significativa (soma com anestésicos); boca seca, visão turva.' },
+
+      /* ================== ANALGESIA MULTIMODAL ================== */
+      { id: 'dipirona', cat: 'analgesia', nome: 'Dipirona (metamizol)',
+        apresentacao: 'Amp 1 g/2 mL (500 mg/mL)',
+        diluicao: 'Diluir em 100 mL SF e infundir lento (15–20 min).',
+        doses: [
+          { uso: 'Analgesia/antitérmico', min: 25, max: 30, unid: 'mg/kg', via: 'IV lento', maxAbs: 2000, maxTxt: 'adulto 1–2 g 6/6 h' }
+        ],
+        indicacoes: 'Dor leve a moderada e febre; base da analgesia multimodal pós-operatória no Brasil.',
+        contraindicacoes: 'Alergia/anafilaxia prévia a pirazolonas; agranulocitose prévia; deficiência de G6PD; gestação (1º e 3º trimestres — evitar).',
+        alertas: 'Hipotensão em bolus rápido (infundir diluído e lento); agranulocitose (rara); rash.' },
+
+      { id: 'paracetamolev', cat: 'analgesia', nome: 'Paracetamol IV',
+        apresentacao: 'Fr 1 g/100 mL',
+        diluicao: 'Infundir em 15 min.',
+        doses: [
+          { uso: 'Analgesia (≥ 50 kg)', fixo: '1 g IV 6/6 h (máx 4 g/dia)', via: 'IV' },
+          { uso: 'Analgesia (< 50 kg)', min: 15, max: 15, unid: 'mg/kg', via: 'IV', maxAbs: 1000, maxTxt: 'máx 1 g/dose' }
+        ],
+        indicacoes: 'Analgesia multimodal e antitérmico quando via oral indisponível.',
+        contraindicacoes: 'Insuficiência hepática grave; alergia.',
+        alertas: 'Ajustar dose em hepatopatia, etilismo e desnutrição; hepatotoxicidade em superdose.' },
+
+      { id: 'cetoprofeno', cat: 'analgesia', nome: 'Cetoprofeno',
+        apresentacao: 'Fr-amp 100 mg (IV)',
+        diluicao: '100 mg em 100 mL SF em 20 min.',
+        doses: [
+          { uso: 'Analgesia/anti-inflamatório', fixo: '100 mg IV 12/12 h', via: 'IV' }
+        ],
+        indicacoes: 'Dor com componente inflamatório (ortopedia, partes moles) na analgesia multimodal.',
+        contraindicacoes: 'Comum a AINEs: insuficiência renal, hipovolemia, sangramento ativo/úlcera péptica, asma induzida por AAS, coagulopatia, gestação 3º trimestre, cirurgia com risco de sangramento elevado.',
+        alertas: 'Lesão renal aguda em hipovolêmicos e idosos; evitar associação de dois AINEs; gastroproteção em risco.' },
+
+      { id: 'tenoxicam', cat: 'analgesia', nome: 'Tenoxicam',
+        apresentacao: 'Fr-amp 20 mg ou 40 mg',
+        diluicao: 'Reconstituir e IV lento.',
+        doses: [
+          { uso: 'Analgesia/anti-inflamatório', fixo: '20–40 mg IV 1×/dia', via: 'IV' }
+        ],
+        indicacoes: 'Analgesia anti-inflamatória de longa duração (dose única diária).',
+        contraindicacoes: 'Mesmas dos AINEs (renal, digestiva, sangramento, asma por AAS).',
+        alertas: 'Meia-vida longa — cautela em idosos e função renal limítrofe.' },
+
+      { id: 'cetorolaco', cat: 'analgesia', nome: 'Cetorolaco',
+        apresentacao: 'Amp 30 mg/1 mL',
+        diluicao: 'IV lento.',
+        doses: [
+          { uso: 'Analgesia', fixo: '15–30 mg IV 6/6–8/8 h (máx 5 dias)', via: 'IV' }
+        ],
+        indicacoes: 'Dor aguda moderada a intensa por curto período (potência analgésica alta entre AINEs).',
+        contraindicacoes: 'Mesmas dos AINEs; sangramento perioperatório ativo; uso > 5 dias.',
+        alertas: 'Maior risco digestivo/renal entre AINEs — respeitar limite de tempo; reduzir dose em idosos (15 mg).' },
+
+      { id: 'parecoxibe', cat: 'analgesia', nome: 'Parecoxibe',
+        apresentacao: 'Fr-amp 40 mg',
+        diluicao: 'Reconstituir com diluente próprio, IV/IM.',
+        doses: [
+          { uso: 'Analgesia pós-operatória', fixo: '40 mg IV, depois 20–40 mg 12/12 h (máx 80 mg/dia)', via: 'IV' }
+        ],
+        indicacoes: 'Analgesia pós-operatória com menor efeito plaquetário (COX-2 seletivo).',
+        contraindicacoes: 'Pós-revascularização miocárdica; alergia a sulfa; doença cardiovascular/cerebrovascular estabelecida (cautela); demais restrições de AINEs.',
+        alertas: 'Risco cardiovascular dos coxibes; mesma precaução renal dos AINEs.' },
+
+      /* ================== ANTIBIOTICOPROFILAXIA ================== */
+      { id: 'cefazolina', cat: 'atb', nome: 'Cefazolina',
+        apresentacao: 'Fr-amp 1 g (pó)',
+        diluicao: 'Reconstituir e diluir em 50–100 mL SF; infundir em 15–30 min, 30–60 min antes da incisão.',
+        doses: [
+          { uso: 'Profilaxia adulto', fixo: '2 g IV (3 g se ≥ 120 kg); repique 4/4 h de cirurgia', via: 'IV' },
+          { uso: 'Profilaxia criança', min: 30, max: 30, unid: 'mg/kg', via: 'IV', maxAbs: 2000, maxTxt: 'máx 2 g' }
+        ],
+        indicacoes: 'Profilaxia cirúrgica padrão (pele/partes moles, ortopedia, cardíaca, cesariana, hérnias).',
+        contraindicacoes: 'Anafilaxia prévia a betalactâmicos (usar clindamicina/vancomicina).',
+        alertas: 'Administrar antes da incisão (idealmente 30–60 min); repicar a cada 4 h ou sangramento > 1.500 mL.' },
+
+      { id: 'cefuroxima', cat: 'atb', nome: 'Cefuroxima',
+        apresentacao: 'Fr-amp 750 mg (pó)',
+        diluicao: 'Diluir em 50–100 mL SF, 15–30 min.',
+        doses: [
+          { uso: 'Profilaxia', fixo: '1,5 g IV; repique 4/4 h', via: 'IV' }
+        ],
+        indicacoes: 'Profilaxia em serviços que a padronizam (2ª geração, cobertura ampliada).',
+        contraindicacoes: 'Anafilaxia a betalactâmicos.',
+        alertas: 'Mesmo princípio de tempo pré-incisão e repique.' },
+
+      { id: 'clindamicina', cat: 'atb', nome: 'Clindamicina',
+        apresentacao: 'Amp 600 mg/4 mL',
+        diluicao: 'Diluir em 100 mL SF; infundir em 20–30 min (nunca bolus).',
+        doses: [
+          { uso: 'Profilaxia (alérgicos)', fixo: '900 mg IV', via: 'IV' },
+          { uso: 'Criança', min: 10, max: 10, unid: 'mg/kg', via: 'IV', maxAbs: 900, maxTxt: 'máx 900 mg' }
+        ],
+        indicacoes: 'Alternativa de profilaxia em alergia grave a betalactâmicos; cobertura anaeróbia.',
+        contraindicacoes: 'Alergia à clindamicina; colite prévia por C. difficile (relativa).',
+        alertas: 'Bolus rápido causa hipotensão e potencializa BNM; risco de colite pseudomembranosa.' },
+
+      { id: 'vancomicina', cat: 'atb', nome: 'Vancomicina',
+        apresentacao: 'Fr-amp 500 mg (pó)',
+        diluicao: 'Diluir a ≤ 5 mg/mL; infundir em ≥ 60 min.',
+        doses: [
+          { uso: 'Profilaxia (MRSA/alérgicos)', min: 15, max: 15, unid: 'mg/kg', via: 'IV em 60 min', maxAbs: 2000, maxTxt: 'máx usual 2 g' }
+        ],
+        indicacoes: 'Profilaxia com risco de MRSA (colonizados, prótese, reinternação) ou alergia grave a betalactâmicos.',
+        contraindicacoes: 'Alergia à vancomicina.',
+        alertas: 'Síndrome do homem vermelho em infusão rápida (não é alergia — alentecer); nefrotoxicidade com aminoglicosídeo; iniciar 60–120 min antes da incisão.' },
+
+      { id: 'gentamicina', cat: 'atb', nome: 'Gentamicina',
+        apresentacao: 'Amp 80 mg/2 mL',
+        diluicao: 'Diluir em 100 mL SF, 30 min.',
+        doses: [
+          { uso: 'Profilaxia (dose única)', min: 5, max: 5, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Profilaxia em urologia/colorretal conforme protocolo; associação com clindamicina em alérgicos.',
+        contraindicacoes: 'Miastenia gravis; insuficiência renal (ajustar); alergia a aminoglicosídeos.',
+        alertas: 'Nefro e ototoxicidade; potencializa bloqueio neuromuscular.' },
+
+      { id: 'metronidazol', cat: 'atb', nome: 'Metronidazol',
+        apresentacao: 'Bolsa 500 mg/100 mL',
+        diluicao: 'Infundir em 30–60 min.',
+        doses: [
+          { uso: 'Profilaxia (colorretal, com cefalosporina)', fixo: '500 mg–1 g IV', via: 'IV' },
+          { uso: 'Criança', min: 15, max: 15, unid: 'mg/kg', via: 'IV', maxAbs: 1000, maxTxt: 'máx 1 g' }
+        ],
+        indicacoes: 'Cobertura anaeróbia na profilaxia colorretal, ginecológica e apendicectomia.',
+        contraindicacoes: 'Alergia; 1º trimestre de gestação (relativa).',
+        alertas: 'Efeito dissulfiram com álcool; gosto metálico.' },
+
+      /* ================== INALATÓRIOS ================== */
+      { id: 'sevoflurano', cat: 'inalatorios', nome: 'Sevoflurano',
+        apresentacao: 'Fr 100/250 mL líquido volátil (vaporizador calibrado)',
+        diluicao: 'CAM ~2% (adulto); ajustar por idade e adjuvantes.',
+        doses: [
+          { uso: 'Indução inalatória', fixo: '6–8% com O2 alto fluxo', via: 'Inalatória' },
+          { uso: 'Manutenção', fixo: '0,8–1,2 CAM (1,5–2,5%)', via: 'Inalatória' }
+        ],
+        indicacoes: 'Manutenção de anestesia geral; indução inalatória (crianças e via aérea difícil prevista) — não irritante.',
+        contraindicacoes: 'História de hipertermia maligna (absoluta); hipovolemia grave não corrigida (relativa).',
+        alertas: 'Gatilho de hipertermia maligna; hipotensão dose-dependente; agitação ao despertar em crianças.' },
+
+      { id: 'isoflurano', cat: 'inalatorios', nome: 'Isoflurano',
+        apresentacao: 'Fr 100/240 mL líquido volátil',
+        diluicao: 'CAM ~1,15% (adulto).',
+        doses: [
+          { uso: 'Manutenção', fixo: '0,8–1,2 CAM (0,9–1,4%)', via: 'Inalatória' }
+        ],
+        indicacoes: 'Manutenção de anestesia geral (custo baixo, estabilidade); menor metabolização hepática.',
+        contraindicacoes: 'Hipertermia maligna prévia; indução inalatória (irritante de via aérea).',
+        alertas: 'Pungente — tosse/laringoespasmo em plano superficial; vasodilatação e taquicardia.' },
+
+      { id: 'desflurano', cat: 'inalatorios', nome: 'Desflurano',
+        apresentacao: 'Fr 240 mL (vaporizador aquecido específico)',
+        diluicao: 'CAM ~6% (adulto).',
+        doses: [
+          { uso: 'Manutenção', fixo: '0,8–1,2 CAM (4–7%)', via: 'Inalatória' }
+        ],
+        indicacoes: 'Despertar rápido (obesos, cirurgias longas, ambulatoriais).',
+        contraindicacoes: 'Hipertermia maligna prévia; indução inalatória (muito irritante); via aérea reativa/asma (relativa).',
+        alertas: 'Aumentos bruscos de concentração causam taquicardia e hipertensão simpática; alto impacto ambiental.' },
+
+      { id: 'oxidonitroso', cat: 'inalatorios', nome: 'Óxido nitroso (N2O)',
+        apresentacao: 'Cilindro/rede — usar sempre com O2 ≥ 30%',
+        diluicao: '50–70% em mistura com oxigênio.',
+        doses: [
+          { uso: 'Adjuvante analgésico/hipnótico', fixo: '50–70% com O2', via: 'Inalatória' }
+        ],
+        indicacoes: 'Adjuvante que reduz CAM dos halogenados; analgesia em obstetrícia e procedimentos curtos.',
+        contraindicacoes: 'Pneumotórax, obstrução intestinal com distensão, cirurgia de ouvido médio/olho com gás intraocular, embolia gasosa, hipertensão pulmonar grave, cirurgia com risco de pneumoencéfalo.',
+        alertas: 'Expande cavidades aéreas fechadas; hipóxia por difusão ao desligar (dar O2 100%); inativa vitamina B12 em exposições repetidas.' },
+
+      /* ================== OBSTETRÍCIA ================== */
+      { id: 'ocitocina', cat: 'obstetricia', nome: 'Ocitocina',
+        apresentacao: 'Amp 5 UI/1 mL',
+        diluicao: 'Cesárea: 5 UI em 100 mL SF em 5–10 min; manutenção 20–40 UI em 500 mL.',
+        doses: [
+          { uso: 'Cesárea (após clampeamento)', fixo: '3–5 UI IV LENTO/infusão; manutenção 20–40 UI em 500 mL', via: 'IV' }
+        ],
+        indicacoes: 'Prevenção e tratamento de atonia uterina após o parto.',
+        contraindicacoes: 'Nenhuma no pós-parto imediato; NUNCA em bolus IV rápido.',
+        alertas: 'Bolus rápido: hipotensão grave, taquicardia e isquemia — sempre lento/diluído; efeito antidiurético em infusões prolongadas.' },
+
+      { id: 'metilergometrina', cat: 'obstetricia', nome: 'Metilergometrina',
+        apresentacao: 'Amp 0,2 mg/1 mL',
+        diluicao: 'Via IM preferencial.',
+        doses: [
+          { uso: 'Atonia refratária', fixo: '0,2 mg IM; repetir em 2–4 h se preciso', via: 'IM' }
+        ],
+        indicacoes: 'Atonia uterina refratária à ocitocina (2ª linha).',
+        contraindicacoes: 'Hipertensão, pré-eclâmpsia/eclâmpsia, coronariopatia, vasculopatia (contraindicação importante).',
+        alertas: 'Crise hipertensiva e vasoespasmo (evitar IV; se inevitável, muito lento e diluído); náusea/vômito.' },
+
+      { id: 'misoprostol', cat: 'obstetricia', nome: 'Misoprostol',
+        apresentacao: 'Comp 200 mcg (uso retal/sublingual hospitalar)',
+        diluicao: 'Não injetável.',
+        doses: [
+          { uso: 'Atonia (adjuvante)', fixo: '600–800 mcg VR/SL', via: 'VR/SL' }
+        ],
+        indicacoes: 'Hemorragia pós-parto por atonia como adjuvante/3ª linha.',
+        contraindicacoes: 'Alergia a prostaglandinas.',
+        alertas: 'Febre e tremores dose-dependentes; taquicardia.' },
+
+      /* ================== EMERGÊNCIA / SUPORTE ================== */
+      { id: 'bicarbonato', cat: 'emergencia', nome: 'Bicarbonato de sódio 8,4%',
+        apresentacao: 'Amp 10 mL (1 mEq/mL)',
+        diluicao: 'IV lento; lavar linha (incompatível com catecolaminas/cálcio).',
+        doses: [
+          { uso: 'Acidose grave / hipercalemia', min: 1, max: 1, unid: 'mEq/kg', via: 'IV lento' }
+        ],
+        indicacoes: 'Hipercalemia com alteração de ECG; acidose metabólica grave documentada; intoxicação por tricíclicos.',
+        contraindicacoes: 'Alcalose; hipocalemia; uso rotineiro na PCR sem indicação específica.',
+        alertas: 'Hipernatremia e sobrecarga; piora acidose intracelular se ventilação inadequada; extravasamento causa necrose.' },
+
+      { id: 'glicose50', cat: 'emergencia', nome: 'Glicose 50%',
+        apresentacao: 'Amp 10 mL (5 g)',
+        diluicao: 'Adulto: puro em veia calibrosa; criança: diluir para 10–25%.',
+        doses: [
+          { uso: 'Hipoglicemia (adulto)', fixo: '20–40 mL IV (10–20 g)', via: 'IV' },
+          { uso: 'Criança (como G10%)', min: 0.5, max: 1, unid: 'g/kg', via: 'IV', obs: '2–5 mL/kg de G10%' }
+        ],
+        indicacoes: 'Hipoglicemia; associação com insulina no manejo da hipercalemia.',
+        contraindicacoes: 'Hiperglicemia; cautela em AVC agudo sem hipoglicemia.',
+        alertas: 'Flebite/necrose em extravasamento (hipertônica); dosar glicemia após.' },
+
+      { id: 'insulina', cat: 'emergencia', nome: 'Insulina regular',
+        apresentacao: 'Fr 100 UI/mL',
+        diluicao: 'Hipercalemia: 10 UI + 50 mL de G50% IV.',
+        doses: [
+          { uso: 'Hipercalemia', fixo: '10 UI IV + glicose 25–50 g', via: 'IV' },
+          { uso: 'Hiperglicemia (correção)', fixo: 'Titulação conforme glicemia (ex.: 0,05–0,1 UI/kg/h)', via: 'IV' }
+        ],
+        indicacoes: 'Hipercalemia (shift de potássio); controle glicêmico perioperatório.',
+        contraindicacoes: 'Hipoglicemia; hipocalemia grave sem reposição.',
+        alertas: 'Monitorar glicemia 30/30 min após dose de hipercalemia; hipoglicemia tardia.' },
+
+      { id: 'hidrocortisona', cat: 'emergencia', nome: 'Hidrocortisona',
+        apresentacao: 'Fr-amp 100 mg ou 500 mg (pó)',
+        diluicao: 'Reconstituir; IV lento ou infusão.',
+        doses: [
+          { uso: 'Anafilaxia / broncoespasmo (adjuvante)', fixo: '200 mg IV', via: 'IV' },
+          { uso: 'Insuficiência adrenal (estresse cirúrgico)', fixo: '100 mg IV na indução + 50 mg 8/8 h', via: 'IV' },
+          { uso: 'Criança', min: 2, max: 4, unid: 'mg/kg', via: 'IV', maxAbs: 200, maxTxt: 'máx 200 mg' }
+        ],
+        indicacoes: 'Cobertura de estresse em uso crônico de corticoide; adjuvante em anafilaxia e broncoespasmo grave; insuficiência adrenal.',
+        contraindicacoes: 'Nenhuma absoluta na emergência.',
+        alertas: 'Não substitui adrenalina na anafilaxia (ação lenta); hiperglicemia.' },
+
+      { id: 'salbutamol', cat: 'emergencia', nome: 'Salbutamol',
+        apresentacao: 'Spray 100 mcg/jato; sol. nebulização 5 mg/mL',
+        diluicao: 'Via inalatória preferencial; adaptar ao circuito com espaçador.',
+        doses: [
+          { uso: 'Broncoespasmo (spray no TOT)', fixo: '4–10 jatos, repetir conforme resposta', via: 'Inalatória' },
+          { uso: 'Nebulização', fixo: '2,5–5 mg (10–20 gotas) em SF', via: 'NBZ' }
+        ],
+        indicacoes: 'Broncoespasmo intraoperatório e crise asmática (1ª linha broncodilatadora).',
+        contraindicacoes: 'Cautela em taquiarritmias e coronariopatia instável.',
+        alertas: 'Taquicardia e tremor; hipocalemia em doses repetidas; aprofundar plano anestésico também trata broncoespasmo.' },
+
+      { id: 'transamin', cat: 'emergencia', nome: 'Ácido tranexâmico',
+        apresentacao: 'Amp 250 mg/5 mL (50 mg/mL)',
+        diluicao: 'Diluir em 50–100 mL SF; infundir em 10 min.',
+        doses: [
+          { uso: 'Trauma / hemorragia obstétrica', fixo: '1 g IV em 10 min; repetir 1 g em 8 h', via: 'IV' },
+          { uso: 'Profilaxia cirúrgica', min: 10, max: 20, unid: 'mg/kg', via: 'IV' }
+        ],
+        indicacoes: 'Redução de sangramento (ortopedia, cardíaca, trauma < 3 h, hemorragia pós-parto).',
+        contraindicacoes: 'Tromboembolismo ativo; hemorragia subaracnóidea aneurismática (relativa); convulsões prévias com doses altas; hematúria macroscópica de vias altas.',
+        alertas: 'Convulsões em doses altas (cirurgia cardíaca); NUNCA intratecal (letal) — conferir ampola antes de bloqueios; injeção IV rápida causa hipotensão.' },
+
+      { id: 'heparina', cat: 'emergencia', nome: 'Heparina não fracionada',
+        apresentacao: 'Fr 5.000 UI/mL',
+        diluicao: 'Bolus conforme indicação; controle por TCA/TTPa.',
+        doses: [
+          { uso: 'Anticoagulação vascular', fixo: '80–100 UI/kg IV (conforme protocolo)', via: 'IV' },
+          { uso: 'Profilaxia', fixo: '5.000 UI SC 8/8–12/12 h', via: 'SC' }
+        ],
+        indicacoes: 'Anticoagulação em cirurgia vascular/cardíaca (antes do clampeamento); tromboembolismo.',
+        contraindicacoes: 'Sangramento ativo; plaquetopenia induzida por heparina (HIT); neuroeixo recente (respeitar intervalos).',
+        alertas: 'Monitorar TCA; reversão com protamina; respeitar intervalo para punção/retirada de cateter de neuroeixo.' },
+
+      { id: 'manitol', cat: 'emergencia', nome: 'Manitol 20%',
+        apresentacao: 'Fr 250 mL (200 mg/mL)',
+        diluicao: 'Infundir em 15–30 min com filtro (cristaliza).',
+        doses: [
+          { uso: 'Hipertensão intracraniana', min: 0.25, max: 1, unid: 'g/kg', via: 'IV em 15–30 min' }
+        ],
+        indicacoes: 'Redução aguda da PIC; proteção renal em cirurgias específicas conforme protocolo.',
+        contraindicacoes: 'Anúria estabelecida; edema pulmonar/congestão; hipovolemia; hiperosmolaridade grave.',
+        alertas: 'Efeito rebote; distúrbios eletrolíticos; sonda vesical para controle de diurese.' },
+
+      { id: 'fenitoina', cat: 'emergencia', nome: 'Fenitoína',
+        apresentacao: 'Amp 250 mg/5 mL',
+        diluicao: 'Somente em SF (precipita em glicose); ≤ 50 mg/min com monitorização.',
+        doses: [
+          { uso: 'Estado de mal epiléptico', min: 15, max: 20, unid: 'mg/kg', via: 'IV lento' }
+        ],
+        indicacoes: 'Convulsões persistentes após benzodiazepínico; profilaxia em neurocirurgia conforme protocolo.',
+        contraindicacoes: 'Bradicardia/BAV avançado; hipotensão grave; porfiria.',
+        alertas: 'Hipotensão e arritmia na infusão rápida; púrpura/síndrome da luva roxa em extravasamento; monitorizar ECG e PA.' }
+    ];
+
+    const KITS = [
+      { id: 'kit-geral', nome: 'Geral balanceada', icone: 'fa-lungs',
+        itens: [
+          { ref: 'fentanil', doseIdx: 0, momento: 'Indução' },
+          { ref: 'propofol', doseIdx: 0, momento: 'Indução' },
+          { ref: 'rocuronio', doseIdx: 0, momento: 'Indução' },
+          { ref: 'sevoflurano', doseIdx: 1, momento: 'Manutenção' },
+          { ref: 'dexametasona', doseIdx: 0, momento: 'Após indução' },
+          { ref: 'ondansetrona', doseIdx: 0, momento: 'Ao fechamento' },
+          { ref: 'dipirona', doseIdx: 0, momento: 'Ao fechamento' },
+          { ref: 'cefazolina', doseIdx: 0, momento: 'Antes da incisão' },
+          { ref: 'neostigmina', doseIdx: 0, momento: 'Reversão (TOF ≥ 2)' }
+        ] },
+      { id: 'kit-sr', nome: 'Sequência rápida', icone: 'fa-bolt',
+        itens: [
+          { ref: 'fentanil', doseIdx: 0, momento: 'Pré-indução' },
+          { ref: 'propofol', doseIdx: 0, momento: 'Indução', obs: 'Ou etomidato 0,3 mg/kg se instável' },
+          { ref: 'succinilcolina', doseIdx: 0, momento: 'Indução', obs: 'Ou rocurônio 1,2 mg/kg' },
+          { ref: 'sevoflurano', doseIdx: 1, momento: 'Manutenção' }
+        ] },
+      { id: 'kit-raqui', nome: 'Raquianestesia', icone: 'fa-syringe',
+        itens: [
+          { ref: 'bupipesada', doseIdx: 0, momento: 'Bloqueio' },
+          { ref: 'morfina', doseIdx: 1, momento: 'Bloqueio', obs: 'Se analgesia prolongada desejada' },
+          { ref: 'midazolam', doseIdx: 0, momento: 'Sedação na sala' },
+          { ref: 'efedrina', doseIdx: 0, momento: 'SOS hipotensão' },
+          { ref: 'ondansetrona', doseIdx: 0, momento: 'Profilaxia' },
+          { ref: 'dipirona', doseIdx: 0, momento: 'Ao término' }
+        ] },
+      { id: 'kit-sedacao', nome: 'Sedação (EDA/colono)', icone: 'fa-bed',
+        itens: [
+          { ref: 'midazolam', doseIdx: 0, momento: 'Início' },
+          { ref: 'fentanil', doseIdx: 1, momento: 'Início' },
+          { ref: 'propofol', doseIdx: 2, momento: 'Titulação contínua' }
+        ] },
+      { id: 'kit-cesariana', nome: 'Cesariana (raqui)', icone: 'fa-baby',
+        itens: [
+          { ref: 'bupipesada', doseIdx: 1, momento: 'Bloqueio' },
+          { ref: 'morfina', doseIdx: 1, momento: 'Bloqueio' },
+          { ref: 'cefazolina', doseIdx: 0, momento: 'Antes da incisão' },
+          { ref: 'fenilefrina', doseIdx: 0, momento: 'SOS hipotensão' },
+          { ref: 'ocitocina', doseIdx: 0, momento: 'Após clampeamento' },
+          { ref: 'ondansetrona', doseIdx: 0, momento: 'Profilaxia' }
+        ] },
+      { id: 'kit-analgesia', nome: 'Analgesia pós-op', icone: 'fa-hand-holding-medical',
+        itens: [
+          { ref: 'dipirona', doseIdx: 0, momento: '6/6 h' },
+          { ref: 'cetoprofeno', doseIdx: 0, momento: '12/12 h', obs: 'Se sem contraindicação a AINE' },
+          { ref: 'ondansetrona', doseIdx: 0, momento: 'SOS náusea' },
+          { ref: 'tramadol', doseIdx: 0, momento: 'SOS dor moderada' },
+          { ref: 'morfina', doseIdx: 0, momento: 'SOS dor intensa' }
+        ] }
+    ];

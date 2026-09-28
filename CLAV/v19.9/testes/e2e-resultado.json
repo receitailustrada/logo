@@ -1,0 +1,217 @@
+{
+  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-fix",
+  "versao": "2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas",
+  "data": "2026-09-28T00:48:00.296Z",
+  "resultados": [
+    {
+      "name": "Index: módulo principal carregou e login habilitado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: login por validarLogin e sessão persistida",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: HTML_VERSION igual à versão do servidor (sem aviso de divergência)",
+      "ok": true,
+      "detail": "2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas vs 2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas"
+    },
+    {
+      "name": "Index: abrirRegistro(ATD-1) carregou o atendimento",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: URL da ficha leva caso, slot e sessão no fragmento",
+      "ok": true,
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp"
+    },
+    {
+      "name": "Index: URL da ficha não leva o token na query",
+      "ok": true,
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp"
+    },
+    {
+      "name": "Index: botão \"Abrir a ficha em outra aba\" abre a URL com sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Index: PA 180/80 gera alerta SV_PAS_CRITICO no painel",
+      "ok": true,
+      "detail": "SV_PAS_CRITICO,BETA_HCG_PENDENTE,RISCO_PROCEDIMENTO_AUSENTE,RISCO_PACIENTE_AUSENTE,ABERTURA_ORAL_AUSENTE,PROTRUSAO_MANDIBULAR_AUSENTE,MOBILIDADE_CERVICAL_AUSENTE,DTM_AUSENTE,CIRCUNFERENCIA_CERVICAL_AUSENTE,CONCLUSAO_AUSENTE"
+    },
+    {
+      "name": "Index: resumo da triagem destaca a PA 180/80 para o médico",
+      "ok": true,
+      "detail": "[\"PA180/80 mmHg · Crítico\"]"
+    },
+    {
+      "name": "Index: salvar após a ficha gravar → conflito resolvido sozinho e gravação confirmada",
+      "ok": true,
+      "detail": "{\"salvo\":true,\"db\":{\"revision\":3,\"fr\":\"18\",\"intraop\":\"preservado\",\"tecnica\":\"Geral balanceada\"},\"enviados\":[{\"temIntraop\":false,\"base\":1},{\"temIntraop\":false,\"base\":2}]}"
+    },
+    {
+      "name": "Index: o bloco intraop da ficha foi preservado (Index não o envia)",
+      "ok": true,
+      "detail": "{\"db\":{\"revision\":3,\"fr\":\"18\",\"intraop\":\"preservado\",\"tecnica\":\"Geral balanceada\"},\"enviados\":[{\"temIntraop\":false,\"base\":1},{\"temIntraop\":false,\"base\":2}]}"
+    },
+    {
+      "name": "Index: a tela incorporou o intraop gravado pela ficha",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: chip de salvamento indica planilha salva",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Index: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: ficha vinculada com o token do fragmento",
+      "ok": true,
+      "detail": "Vinculado · Maria da Silva"
+    },
+    {
+      "name": "Intra: token persistido no armazenamento da própria aba",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: fragmento apagado da URL após a leitura (history.replace com hash vazio e page=intra)",
+      "ok": true,
+      "detail": "[{\"op\":\"replace\",\"params\":{\"page\":\"intra\",\"caso\":\"ATD-1\",\"slot\":\"1\",\"modo\":\"completo\"},\"hash\":\"\"}]"
+    },
+    {
+      "name": "Intra: veil de login não aparece quando há sessão",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: contexto do paciente aplicado (peso, ASA, alergia)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: biblioteca de fármacos carregada (88 fármacos)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: busca de fármaco calcula dose total pelo peso (70 kg)",
+      "ok": true,
+      "detail": "Indutores e hipnóticosPropofol 1%Amp/fr 200 mg/20 mL (10 mg/mL), emulsão lipídicaDiluição: Uso puro; se diluir, SG 5% até no mínimo 2 mg/mL. Assepsia rigorosa e desprezar sobras (meio de cultura).Indu"
+    },
+    {
+      "name": "Intra: salvar no prontuário confirma (intraopSalvar)",
+      "ok": true,
+      "detail": "Salvo no prontuário às 00:47:56 · rev. 2"
+    },
+    {
+      "name": "Intra: após o Index gravar, a ficha relê a revisão e reenvia (conflito resolvido)",
+      "ok": true,
+      "detail": "{\"s2\":true,\"revAntes\":3,\"revDepois\":4,\"conflitos\":3}"
+    },
+    {
+      "name": "Intra: código de erro do servidor lido de error.code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: atendimento encerrado → para de insistir e avisa",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sessão expirada durante a cirurgia abre o login na própria ficha",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: após reentrar, a ficha volta a gravar no prontuário",
+      "ok": true,
+      "detail": "Salvo no prontuário às 00:47:56 · rev. 5"
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem token → veil de login aberto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: senha errada mostra a mensagem do servidor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: login correto vincula a ficha ao atendimento",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: fila do dia aparece com o paciente do dia",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: tocar no paciente abre a ficha vinculada com a sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: prontuário mais novo prevalece sobre o rascunho antigo deste aparelho",
+      "ok": true,
+      "detail": "PRONTUARIO NOVO"
+    },
+    {
+      "name": "Intra: o rascunho antigo NÃO foi enviado ao prontuário",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra RO: vinculada em modo visualização, banner visível e botão Fila oculto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra RO: \"Abrir em outra aba para registrar\" abre a ficha de registro com sessão",
+      "ok": true,
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789\",\"name\":\"clav-intra-1\"}]"
+    },
+    {
+      "name": "Intra RO: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intra: \"</script>\" no parâmetro caso não executa código",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

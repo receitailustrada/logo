@@ -1,0 +1,8 @@
+Dois arquivos alterados na v19.9 NAO estao nesta pasta publica:
+
+  08_Planilha_Base.gs  (alteracao: ensureHeaders_ nao formata/oculta colunas quando o esquema diverge)
+  28_Versao.gs         (alteracao: CLAV_BUILD_ 19.9 com historico e modulo 30_Catalogo_Correcoes no manifesto)
+
+Motivo: contem telefones, e-mails e hashes de senha da equipe (usuarios semente e lista de acesso da Analise).
+Nao devem ficar em repositorio publico. Os dois foram entregues completos no ZIP privado enviado no chat
+(CLAV_v19.9_completo_36_arquivos.zip), junto com os outros 34.
