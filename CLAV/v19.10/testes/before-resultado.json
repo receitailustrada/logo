@@ -1,0 +1,58 @@
+{
+  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-src",
+  "versao": "2026.09.27-clav-perioperatorio-v19.8-cartao-paciente-vinculo-intraop",
+  "resultados": [
+    {
+      "nome": "URL da ficha gerada pelo Index",
+      "resultado": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1"
+    },
+    {
+      "nome": "Alerta SV_PAS_CRITICO para PA 180/80",
+      "resultado": "NÃO (só BETA_HCG_PENDENTE,RISCO_PROCEDIMENTO_AUSENTE,RISCO_PACIENTE_AUSENTE,ABERTURA_ORAL_AUSENTE,PROTRUSAO_MANDIBULAR_AUSENTE,MOBILIDADE_CERVICAL_AUSENTE,DTM_AUSENTE,CIRCUNFERENCIA_CERVICAL_AUSENTE,CONCLUSAO_AUSENTE)"
+    },
+    {
+      "nome": "Resumo da triagem marca a PA como fora da faixa",
+      "resultado": "NÃO"
+    },
+    {
+      "nome": "Salvar no Index depois de a ficha gravar",
+      "resultado": "retorno=false | FR gravada=16 | chip=\"Conflito: rascunho preservado\""
+    },
+    {
+      "nome": "Index envia o bloco intraop no salvamento",
+      "resultado": "SIM (sobrescreveria a ficha se a revisão passasse)"
+    },
+    {
+      "nome": "Chip da ficha",
+      "resultado": "Sem sessão"
+    },
+    {
+      "nome": "Existe login na própria ficha",
+      "resultado": "NÃO"
+    },
+    {
+      "nome": "Salvar na ficha após o Index gravar",
+      "resultado": "retorno=false | carimbo=\"Não salvo no prontuário: Este atendimento foi alterado em outra aba ou por outro usuário. Reabra o registro antes de salvar. (rascunho preservado aqui)\""
+    },
+    {
+      "nome": "Biblioteca de fármacos na ficha",
+      "resultado": "NÃO (arquivo IntraFarmacos não incluído)"
+    },
+    {
+      "nome": "Chip da ficha",
+      "resultado": "Ficha sem vínculo"
+    },
+    {
+      "nome": "Fila do dia disponível",
+      "resultado": "NÃO"
+    },
+    {
+      "nome": "Observações da ficha após abrir",
+      "resultado": "RASCUNHO ANTIGO"
+    },
+    {
+      "nome": "Rascunho antigo enviado ao prontuário",
+      "resultado": "SIM (perda de dados)"
+    }
+  ]
+}

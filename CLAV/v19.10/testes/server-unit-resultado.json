@@ -1,0 +1,146 @@
+{
+  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-fix",
+  "data": "2026-09-28T13:04:35.432Z",
+  "resultados": [
+    {
+      "name": "Meniscectomia (SIDE na aba) com \"Direita\" não gera LATERALIDADE_INDEVIDA",
+      "ok": true
+    },
+    {
+      "name": "Dacriocistorrinostomia (SIDE na aba, regex antiga não reconhecia) sem lado → aviso LATERALIDADE_AUSENTE",
+      "ok": true
+    },
+    {
+      "name": "Colecistectomia (NA) com \"Direita\" continua alerta grave LATERALIDADE_INDEVIDA",
+      "ok": true
+    },
+    {
+      "name": "Colecistectomia (NA) com \"Bilateral\" vira aviso (LATERALIDADE_BILATERAL_CONFERIR), sem alerta grave",
+      "ok": true
+    },
+    {
+      "name": "Ooforectomia (SIDE na aba) com \"Bilateral\" não gera alerta de lateralidade",
+      "ok": true
+    },
+    {
+      "name": "Procedimento fora do catálogo cai na inferência pelo nome (joelho → lado esperado)",
+      "ok": true
+    },
+    {
+      "name": "Catálogo lido uma vez por execução (cache)",
+      "ok": true
+    },
+    {
+      "name": "texto civil \"2026-09-29\" → 2026-09-29",
+      "ok": true
+    },
+    {
+      "name": "hora local \"2026-09-29T10:30\" → 2026-09-29",
+      "ok": true
+    },
+    {
+      "name": "legado meia-noite UTC \"2026-09-29T00:00:00Z\" → 2026-09-29 (antes: 2026-09-28)",
+      "ok": true
+    },
+    {
+      "name": "legado \"2026-09-29T00:00:00.000Z\" → 2026-09-29",
+      "ok": true
+    },
+    {
+      "name": "instante real \"2026-09-29T02:30:00Z\" (23:30 do dia 28 em SP) → 2026-09-28",
+      "ok": true
+    },
+    {
+      "name": "instante local com fuso \"2026-09-29T00:00:00-03:00\" → 2026-09-29",
+      "ok": true
+    },
+    {
+      "name": "célula Date (meia-noite de SP) com planilha em SP → 2026-09-29",
+      "ok": true
+    },
+    {
+      "name": "célula Date (meia-noite UTC) com planilha em UTC → 2026-09-29 (antes: 2026-09-28)",
+      "ok": true
+    },
+    {
+      "name": "valor inválido → vazio",
+      "ok": true
+    },
+    {
+      "name": "nascimento legado \"1970-05-03T00:00:00Z\" → 1970-05-03 (patientFieldValue_)",
+      "ok": true
+    },
+    {
+      "name": "diagnóstico ignora linhas já civis (ATD-A) e lista B, C e D",
+      "ok": true
+    },
+    {
+      "name": "ATD-B: legado UTC → dia 29 (antes lia 28) e texto proposto civil",
+      "ok": true
+    },
+    {
+      "name": "ATD-C: célula de data → texto civil (cirurgia) e data+hora local (consulta)",
+      "ok": true
+    },
+    {
+      "name": "ATD-D: instante real vira hora local de SP (09:00) no mesmo dia",
+      "ok": true
+    },
+    {
+      "name": "normalização sem \"true\" não grava nada",
+      "ok": true
+    },
+    {
+      "name": "normalização com \"true\" regrava só as 4 células fora do padrão, como texto, e formata as duas colunas",
+      "ok": true
+    },
+    {
+      "name": "depois da normalização, a agenda lê o dia certo para todos (linhas B e C → 29)",
+      "ok": true
+    },
+    {
+      "name": "lista nunca tocada e vazia → medicações em uso (comportamento antigo)",
+      "ok": true
+    },
+    {
+      "name": "lista tocada e vazia → \"Sem medicações de uso contínuo…\"",
+      "ok": true
+    },
+    {
+      "name": "lista tocada com tudo suspenso → \"Sem medicações…\" (não volta tudo)",
+      "ok": true
+    },
+    {
+      "name": "lista com item mantido → só ele",
+      "ok": true
+    },
+    {
+      "name": "normalizePayload_ garante os campos novos",
+      "ok": true
+    },
+    {
+      "name": "normalizeSaveMeta_ só aceita true literal",
+      "ok": true
+    },
+    {
+      "name": "assertTransitionRevision_ com forcarRevisao não lança mesmo com revisão diferente",
+      "ok": true
+    },
+    {
+      "name": "assertTransitionRevision_ sem forçar continua lançando CONFLITO_REVISAO",
+      "ok": true
+    },
+    {
+      "name": "21_PDF_Secoes: \"Observações finais para o bloco cirúrgico\" no lugar de \"Prescrição pré-anestésica\"",
+      "ok": true
+    },
+    {
+      "name": "21_PDF_Secoes: título \"ESTRATIFICAÇÃO FINAL / ASA\"",
+      "ok": true
+    },
+    {
+      "name": "20_PDF_Layout: \"Não tabagista\"",
+      "ok": true
+    }
+  ]
+}

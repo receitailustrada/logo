@@ -1,0 +1,17 @@
+Arquivos do projeto que NAO estao nesta pasta publica:
+
+  28_Versao.gs         (alterado na v19.10: CLAV_BUILD_ 19.10 e CLAV_MANIFESTO_ regenerado, 384 funcoes,
+                        config_hash 49e27033f50712b8; na v19.9.1 ganhou adminSelarManifestoHtml / clavSeloHtml_)
+  08_Planilha_Base.gs  (alterado na v19.9, sem mudanca desde entao)
+  02_Admin.gs          (sem mudanca desde a v19.9; contem telefones da equipe)
+
+Motivo: contem telefones, e-mails e hashes de senha da equipe (usuarios semente e lista de acesso da Analise).
+Nao devem ficar em repositorio publico. Foram entregues completos no ZIP privado enviado no chat
+(CLAV_v19.10_completo_36_arquivos.zip), junto com os outros arquivos.
+
+Na v19.10 mudaram 12 arquivos: Index.html, 00_Config.gs, 04_Atendimentos.gs, 10_Payload_Clinico.gs, 12_Calculos.gs,
+13_Catalogo.gs, 19_PDF_Core.gs, 20_PDF_Layout.gs, 21_PDF_Secoes.gs, 25_Salvamento.gs, 99_Diagnostico.gs (aqui) e 28_Versao.gs (ZIP).
+Na v19.9.3 mudaram: Index.html, 04_Atendimentos.gs, 25_Salvamento.gs, 00_Config.gs (aqui) e 28_Versao.gs (ZIP).
+Na v19.9.2 mudaram: Index.html, Intra.html, 00_Config.gs (aqui) e 28_Versao.gs (ZIP).
+Na v19.9.1 mudaram: Index.html, 00_Config.gs, 04_Atendimentos.gs (aqui) e 28_Versao.gs (ZIP).
+Esta pasta contem os arquivos publicos alterados desde a v19.9 (versao atual de cada um); os demais sao identicos a exportacao original.
