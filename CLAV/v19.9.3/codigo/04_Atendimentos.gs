@@ -85,12 +85,23 @@ function salvarAtendimento(payload, token, requestMeta, userAgent) {
         throw appError_('ATENDIMENTO_BLOQUEADO', 'Este atendimento está encerrado. Reabra-o antes de alterar e salvar.');
       }
 
+      var rebaseFicha = null;
       if (existingInfo && meta.baseRevision !== null && Number(meta.baseRevision) !== serverRevision) {
-        throw appError_(
-          'CONFLITO_REVISAO',
-          'Este atendimento foi alterado em outra aba ou por outro usuário. Reabra o registro antes de salvar.',
-          { expectedRevision: serverRevision, receivedRevision: meta.baseRevision }
-        );
+        // v19.9.3: se todas as revisões desde a lida pela tela vieram da ficha (bloco
+        // intraop), o salvamento segue: este payload não traz intraop e o merge preserva
+        // a ficha. Abrir a ficha "só para ver" já sobe a revisão (marcações pelo relógio),
+        // e o sistema principal caía em "alterado em outra aba" ao salvar ou encerrar.
+        var somenteFicha = !origemFicha && Number(meta.baseRevision) < serverRevision
+          && (!rawPayload || rawPayload.intraop === undefined)
+          && revisoesSomenteDaFicha_(id, Number(meta.baseRevision), serverRevision);
+        if (!somenteFicha) {
+          throw appError_(
+            'CONFLITO_REVISAO',
+            'Este atendimento foi alterado em outra aba ou por outro usuário. Reabra o registro antes de salvar.',
+            { expectedRevision: serverRevision, receivedRevision: meta.baseRevision }
+          );
+        }
+        rebaseFicha = { de: Number(meta.baseRevision), para: serverRevision };
       }
 
       if (existingPayload) {
@@ -214,7 +225,7 @@ function salvarAtendimento(payload, token, requestMeta, userAgent) {
           'ATENDIMENTOS',
           payload.atendimento.atendimento_id,
           before,
-          { revision: nextRevision, payload_hash: meaningfulHash, request_id: meta.requestId },
+          { revision: nextRevision, payload_hash: meaningfulHash, request_id: meta.requestId, rebase_ficha: rebaseFicha },
           'OK',
           userAgent
         );

@@ -1786,7 +1786,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
     logo depois por google.script.run.inicializar(). Assim, a página também mostra
     uma mensagem útil quando a ponte do Apps Script ou a autorização falham.
   -->
-  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9.2-ajustes-visuais-blocos-reordenaveis","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
+  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9.3-encerrar-apos-ficha","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
   <script>
     // Defesa adicional para Google Sites: mesmo que uma extensão do navegador
     // ou uma manutenção futura introduza uma tag <form>, a navegação nativa
@@ -3074,6 +3074,18 @@ html[data-clav-ia-theme]{color-scheme:light;}
       const bar = $('#topbar');
       if (!bar) return;
       document.documentElement.style.setProperty('--topbar-h', Math.round(bar.getBoundingClientRect().height) + 'px');
+      // v19.9.3: o cabeçalho muda de altura quando os chips quebram linha (texto do
+      // status, versão); sem observar isso, o cartão do paciente e a barra do
+      // pré-anestésico ficavam presos com o deslocamento antigo.
+      if (!bar._alturaObservada && 'ResizeObserver' in window) {
+        try {
+          bar._alturaObservada = new ResizeObserver(() => {
+            const h = Math.round(bar.getBoundingClientRect().height) + 'px';
+            if (document.documentElement.style.getPropertyValue('--topbar-h') !== h) document.documentElement.style.setProperty('--topbar-h', h);
+          });
+          bar._alturaObservada.observe(bar);
+        } catch (ignored) { bar._alturaObservada = null; }
+      }
     }
     function toggleHeaderCollapsed() {
       const bar = $('#topbar');
@@ -5007,6 +5019,9 @@ html[data-clav-ia-theme]{color-scheme:light;}
         if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') { e.preventDefault(); if (STATE.loaded && STATE.user) salvarAgora(); }
         if (e.key === 'Escape') { closeAlertDrawer(); closeAckModal(); }
       });
+      // v19.9.3: ao voltar para a aba, sincroniza a revisão gravada pela ficha.
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sincronizarRevisaoDaFicha('visivel'); });
+      window.addEventListener('focus', () => sincronizarRevisaoDaFicha('foco'));
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && STATE.loaded && STATE.dirty) saveLocalDraft({ silent: true }); });
       window.addEventListener('pagehide', () => { if (STATE.loaded && STATE.dirty) saveLocalDraft({ silent: true }); broadcastActiveCase('closed'); });
       window.addEventListener('resize', () => { if ($('#sec-intraop')?.classList.contains('active')) resizeGestureCanvas(); });
@@ -7200,6 +7215,9 @@ html[data-clav-ia-theme]{color-scheme:light;}
       if (STATE.lifecycleInFlight) return;
       liberarRecalculoPendente();
       const origin = captureCaseContext();
+      // v19.9.3: absorve antes a revisão que a ficha possa ter gravado (evita "alterado em outra aba").
+      await sincronizarRevisaoDaFicha('encerrar');
+      if (!isActiveCaseContext(origin)) return;
       if (STATE.dirty || STATE.saveInFlight) {
         const saved = await salvarAgora();
         if (!saved || !isActiveCaseContext(origin)) return;
@@ -11413,29 +11431,68 @@ html[data-clav-ia-theme]{color-scheme:light;}
     function semIntraopNemMetadados(data) {
       const c = structuredCloneSafe(data || {});
       delete c.intraop; delete c.calculos;
-      if (c.atendimento) { delete c.atendimento.revision; delete c.atendimento.updated_at; delete c.atendimento.updated_by; delete c.atendimento._saveReceipt; }
-      if (c.triagem && c.triagem.sv_classificacao !== undefined) delete c.triagem.sv_classificacao;
-      return stableStringifyClient(c);
+      // v19.9.3: mesmas exclusões da impressão digital (revisão, carimbos, classificação
+      // derivada e relatório narrativo gerado); antes, o narrativo regravado com hora
+      // fazia a comparação falhar e o conflito da ficha não se resolvia.
+      return fingerprintData(c);
     }
     async function adotarIntraopDoServidor(context) {
       try {
         const id = String(context && context.atendimentoId || '');
-        if (!id || !STATE.serverBase || String(getNested(STATE.serverBase, 'atendimento.atendimento_id') || '') !== id) return false;
+        if (!id) return false;
+        let base = (STATE.serverBase && String(getNested(STATE.serverBase, 'atendimento.atendimento_id') || '') === id) ? STATE.serverBase : null;
+        // v19.9.3: sem cópia do servidor (caso restaurado do rascunho ao recarregar a página ou
+        // por "Retomar rascunho local"), o próprio formulário serve de base quando está igual ao
+        // último estado sincronizado. Antes, nesses estados o conflito da ficha nunca se resolvia.
+        if (!base && !STATE.dirty && !STATE.pendingSave && STATE.lastServerFingerprint && String(getNested(STATE.current || {}, 'atendimento.atendimento_id') || '') === id) {
+          const atual = collectForm();
+          if (fingerprintData(atual) === STATE.lastServerFingerprint) base = atual;
+        }
+        if (!base) return false;
         const res = await server('obterAtendimento', id, context.token);
         if (!isActiveCaseContext(context)) return false;
         const srv = normalizeClientData(res.atendimento);
         if (String(getNested(srv, 'atendimento.atendimento_id') || '') !== id) return false;
-        // Só rebaseia quando a única diferença do servidor em relação à última leitura é o intraop.
-        if (semIntraopNemMetadados(srv) !== semIntraopNemMetadados(STATE.serverBase)) return false;
         const revisao = Number(getNested(srv, 'atendimento.revision') || 0);
         if (!revisao) return false;
+        if (revisao === Number(getNested(STATE.current || {}, 'atendimento.revision') || 0) && STATE.serverBase) return false;
+        // Só rebaseia quando a única diferença do servidor em relação à última leitura é o intraop.
+        if (semIntraopNemMetadados(srv) !== semIntraopNemMetadados(base)) return false;
         STATE.current = STATE.current || {};
         STATE.current.intraop = structuredCloneSafe(srv.intraop || {});
         setNested(STATE.current, 'atendimento.revision', revisao);
         setNested(STATE.current, 'atendimento.updated_at', getNested(srv, 'atendimento.updated_at') || '');
         STATE.serverBase = structuredCloneSafe(srv);
+        // O estado sincronizado passa a ser o do servidor (com a ficha nova); edições locais continuam pendentes.
+        STATE.lastServerFingerprint = fingerprintData(srv);
         return true;
       } catch (ignored) { return false; }
+    }
+    // v19.9.3: ao voltar para esta aba (ex.: depois de abrir a ficha em outra aba), a revisão
+    // gravada pela ficha é absorvida em silêncio. Sem isso, Salvar e Encerrar esbarravam em
+    // "alterado em outra aba" mesmo sem ninguém ter mexido no atendimento.
+    async function sincronizarRevisaoDaFicha(motivo) {
+      if (!STATE.user || !STATE.loaded || STATE.saveInFlight || STATE.lifecycleInFlight || STATE.sincronizandoFicha) return false;
+      const id = String(getNested(STATE.current || {}, 'atendimento.atendimento_id') || '');
+      if (!id || document.body.classList.contains('atendimento-encerrado')) return false;
+      const agora = Date.now();
+      if (motivo !== 'encerrar' && agora - (STATE.ultimaSincFicha || 0) < 8000) return false;
+      STATE.ultimaSincFicha = agora;
+      STATE.sincronizandoFicha = true;
+      try {
+        const context = captureCaseContext();
+        const adotou = await adotarIntraopDoServidor(context);
+        if (adotou && isActiveCaseContext(context)) {
+          try { atualizarChipIntra(); } catch (ignoredChip) {}
+          saveLocalDraft({ silent: true });
+          const rev = getNested(STATE.current, 'atendimento.revision') || '';
+          if (STATE.dirty) setSaveStatus('pending', 'Ficha atualizada (rev. ' + rev + ') | alterações locais pendentes');
+          else setSaveStatus('saved', 'Ficha atualizada · rev. ' + rev);
+          if (typeof renderPacienteSituacao === 'function') renderPacienteSituacao();
+        }
+        return adotou;
+      } catch (ignored) { return false; }
+      finally { STATE.sincronizandoFicha = false; }
     }
     function fingerprintData(data) {
       const copy = structuredCloneSafe(data || {});
@@ -11456,6 +11513,11 @@ html[data-clav-ia-theme]{color-scheme:light;}
       // após um salvamento bem-sucedido, travando o encerramento. O texto que o usuário
       // vê e edita (documentos.resumo) continua contando como alteração.
       if (copy.documentos && copy.documentos.relatorio_narrativo !== undefined) delete copy.documentos.relatorio_narrativo;
+      // v19.9.3: "calculos" é derivado (IMC, scores, clav_score) dos campos que já entram na
+      // impressão digital, e é recalculado pela tela e pelo servidor; comparado byte a byte,
+      // acusava "novas alterações pendentes" logo após um salvamento bem-sucedido (ex.: ao
+      // absorver a ficha, o score muda) e travava o Encerrar.
+      if (copy.calculos !== undefined) delete copy.calculos;
       return stableStringifyClient(copy);
     }
     function stableStringifyClient(value) {

@@ -406,6 +406,55 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       await ctx.close();
     }
 
+    /* ===================== INDEX: v19.9.3 — encerrar depois de a ficha gravar ===================== */
+    console.log('\n[INDEX] v19.9.3: abrir a ficha "só para ver" não pode travar Salvar/Encerrar');
+    const editarFr = () => { const el = document.querySelector('[data-field="triagem.fr"]'); el.value = '18'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
+    {
+      /* (a) caso restaurado sem cópia do servidor (recarregar / Retomar rascunho) + ficha gravou + Encerrar */
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page, () => { window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao = 'Apto'; });
+      await page.evaluate(async () => { acknowledgeAllVisibleAlerts(); await salvarAgora(); });
+      await page.waitForFunction(() => typeof STATE !== 'undefined' && STATE.dirty === false && !STATE.saveInFlight, null, { timeout: 15000 });
+      await page.evaluate(() => { STATE.serverBase = null; });
+      await page.evaluate(() => window.__MOCK_SERVER__.simulateFichaSave('ATD-1'));
+      const sinc = await page.evaluate(async () => { const ok = await sincronizarRevisaoDaFicha('foco'); return { ok, rev: Number(getNested(STATE.current, 'atendimento.revision') || 0), dbrev: window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].revision, base: !!STATE.serverBase, sinais: (getNested(STATE.current, 'intraop.sinais') || []).length, pendente: hasUnpersistedChanges(), tipo: STATE.saveStatus.type }; });
+      check('v19.9.3: ao voltar para a aba, a revisão da ficha é absorvida em silêncio, mesmo sem cópia do servidor', sinc.ok && sinc.rev === sinc.dbrev && sinc.base && sinc.sinais === 1 && sinc.pendente === false && sinc.tipo !== 'error', JSON.stringify(sinc));
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => getNested(STATE.current, 'atendimento.status') === 'ENCERRADO', null, { timeout: 20000 }).catch(() => {});
+      const fimA = await page.evaluate(() => ({ status: getNested(STATE.current, 'atendimento.status'), tipo: STATE.saveStatus.type, locked: window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].locked }));
+      check('v19.9.3: Encerrar conclui depois de a ficha ter gravado (sem "alterado em outra aba")', fimA.status === 'ENCERRADO' && fimA.locked === true && fimA.tipo !== 'error', JSON.stringify(fimA));
+      check('v19.9.3 (a): sem erros de JavaScript', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+    {
+      /* (b) edição local pendente + ficha gravou depois da leitura: o salvamento do Encerrar segue pelo servidor (revisões só da ficha) */
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page, () => { window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao = 'Apto'; });
+      await page.evaluate(() => acknowledgeAllVisibleAlerts());
+      await page.evaluate(editarFr);
+      await page.evaluate(() => { STATE.serverBase = null; window.__MOCK_SERVER__.simulateFichaSave('ATD-1'); });
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => getNested(STATE.current, 'atendimento.status') === 'ENCERRADO', null, { timeout: 25000 }).catch(() => {});
+      const fimB = await page.evaluate(() => { const a = window.__MOCK_SERVER__.DB.atendimentos['ATD-1']; return { status: getNested(STATE.current, 'atendimento.status'), tipo: STATE.saveStatus.type, locked: a.locked, fr: a.payload.triagem.fr, sinais: (a.payload.intraop.sinais || []).length, ops: (window.__MOCK_SERVER__.DB.ops['ATD-1'] || []).map(o => o.rid.slice(0, 6)) }; });
+      check('v19.9.3: com edição pendente, o servidor aceita a gravação por cima das revisões da ficha, preserva a ficha e encerra', fimB.status === 'ENCERRADO' && fimB.locked === true && fimB.fr === '18' && fimB.sinais === 1 && fimB.tipo !== 'error', JSON.stringify(fimB));
+      check('v19.9.3 (b): sem erros de JavaScript', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+    {
+      /* (c) outra pessoa gravou (não é a ficha): o conflito verdadeiro continua protegendo */
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page, () => { window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao = 'Apto'; });
+      await page.evaluate(() => acknowledgeAllVisibleAlerts());
+      await page.evaluate(editarFr);
+      await page.evaluate(() => window.__MOCK_SERVER__.simulateIndexSave('ATD-1'));
+      await page.click('#closeCaseBtn');
+      await sleep(4000);
+      const fimC = await page.evaluate(() => { const a = window.__MOCK_SERVER__.DB.atendimentos['ATD-1']; return { status: getNested(STATE.current, 'atendimento.status'), tipo: STATE.saveStatus.type, texto: STATE.saveStatus.text, locked: a.locked, fr: a.payload.triagem.fr, fc: a.payload.triagem.fc }; });
+      check('v19.9.3: gravação de outra pessoa continua sendo conflito (nada sobrescrito, caso não encerrado)', fimC.status !== 'ENCERRADO' && fimC.locked === false && fimC.tipo === 'error' && fimC.fr !== '18' && fimC.fc === '99', JSON.stringify(fimC));
+      check('v19.9.3 (c): sem erros de JavaScript', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+
     /* ===================== INTRA: XSS refletido ===================== */
     console.log('\n[INTRA] parâmetro malicioso no template');
     {

@@ -21,7 +21,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   await page.waitForFunction(()=>window.__CLAV_CLIENT_READY__===true,null,{timeout:20000});
   await page.waitForFunction(()=>{const b=document.getElementById('loginBtn');return b&&!b.disabled;},null,{timeout:20000});
   const modo=process.argv[3]||'B';
-  if(modo==='C') await page.evaluate(()=>{ window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao='Apto'; });
+  if(modo==='C'||modo==='B3') await page.evaluate(()=>{ window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao='Apto'; });
   await page.fill('#loginUser','denis'); await page.fill('#loginPass','Senha!12345'); await page.click('#loginBtn');
   await page.waitForFunction(()=>typeof STATE!=='undefined'&&STATE.user&&STATE.user.usuario==='denis',null,{timeout:20000});
   await page.evaluate(async()=>{ await abrirRegistro('ATD-1'); });
@@ -35,6 +35,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     await page.click('#closeCaseBtn'); await sleep(2500); await snap('encerrar#1');
     await page.evaluate(()=>document.querySelectorAll('#alertAckList [data-ack-confirm]').forEach(x=>{x.checked=true;}));
     await page.click('#confirmAckBtn'); await sleep(1500); await snap('confirm+1.5s'); await sleep(4000); await snap('confirm+5.5s');
+  } else if(modo==='B3'){
+    await page.evaluate(()=>{ acknowledgeAllVisibleAlerts(); const el=document.querySelector('[data-field="triagem.fr"]'); el.value='18'; el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }); await sleep(300); await snap('editado');
+    await page.evaluate(()=>{ STATE.serverBase=null; window.__MOCK_SERVER__.simulateFichaSave('ATD-1'); }); await snap('fichaGravou');
+    await page.click('#closeCaseBtn'); await sleep(1500); await snap('encerrar+1.5s'); await sleep(4000); await snap('encerrar+5.5s');
+    console.log('modal:', await page.evaluate(()=>({aberto:!document.getElementById('alertAckModal').classList.contains('hide'), titulo:document.getElementById('alertAckTitle').textContent, itens:Array.from(document.querySelectorAll('#alertAckList b')).map(b=>b.textContent)})));
   } else {
     await page.evaluate(()=>{ acknowledgeAllVisibleAlerts(); }); await sleep(400); await snap('ackAll');
     await page.evaluate(()=>{ window.__MOCK_SERVER__.forcarBloqueio='ANESTESIOLOGISTA_OBRIGATORIO'; });

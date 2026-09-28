@@ -468,12 +468,51 @@ function verifyStoredSave_(info, expectedPayload, revision, meaningfulHash, requ
   } catch (ignoredDiff) {}
 }
 
+// v19.9.3 — Conflito causado só pela ficha intraoperatória.
+// A ficha grava pelo mesmo salvarAtendimento (requestId "INTRA5-…", apenas o bloco
+// intraop) e cada gravação fica em OPERACOES com a revisão que produziu. Quando TODAS
+// as revisões entre a que a tela leu e a atual vieram da ficha, o sistema principal
+// pode gravar ou encerrar por cima: ele nunca envia intraop e o merge preserva o que a
+// ficha registrou. Qualquer revisão sem registro, ou de outra origem (outro usuário,
+// encerrar, reabrir), continua sendo conflito. Só é consultado no caminho do conflito.
+function revisoesSomenteDaFicha_(atendimentoId, baseRevision, revisaoAtual) {
+  try {
+    var id = String(atendimentoId || '');
+    var base = Number(baseRevision);
+    var atual = Number(revisaoAtual);
+    if (!id || !isFinite(base) || !isFinite(atual) || base >= atual || atual - base > 200) return false;
+    var porRevisao = {};
+    allRowsWithNumbers_('OPERACOES').forEach(function (r) {
+      var o = r.obj || {};
+      if (String(o.entity_id || '') !== id || String(o.operacao || '') !== 'SALVAR_ATENDIMENTO') return;
+      var rev = Number(o.revision || 0);
+      if (!porRevisao[rev]) porRevisao[rev] = [];
+      porRevisao[rev].push(String(o.request_id || ''));
+    });
+    for (var rev = base + 1; rev <= atual; rev++) {
+      var ids = porRevisao[rev];
+      if (!ids || !ids.length) return false;
+      for (var i = 0; i < ids.length; i++) {
+        if (!/^INTRA5-/.test(ids[i])) return false;
+      }
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 function assertTransitionRevision_(info, requestMeta) {
   var base = requestMeta && requestMeta.baseRevision;
   if (base === undefined || base === null || base === '' || !isFinite(Number(base))) {
     throw appError_('REVISAO_OBRIGATORIA', 'Atualize a tela antes de encerrar ou reabrir o atendimento.');
   }
-  if (Number(base) !== Number(info.obj.revision || 0)) throw appError_('CONFLITO_REVISAO', 'O atendimento recebeu outra versão. Reabra e confira antes de mudar sua situação.');
+  var atual = Number(info.obj.revision || 0);
+  if (Number(base) === atual) return;
+  // v19.9.3: revisões intermediárias vindas só da ficha não impedem encerrar/reabrir;
+  // a transição usa o registro atual da planilha (com a ficha), nada vem do navegador.
+  if (Number(base) < atual && revisoesSomenteDaFicha_(info.obj.atendimento_id, Number(base), atual)) return;
+  throw appError_('CONFLITO_REVISAO', 'O atendimento recebeu outra versão. Reabra e confira antes de mudar sua situação.');
 }
 
 function assertSaveDates_(payload, incoming, previous) {

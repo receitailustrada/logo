@@ -148,3 +148,18 @@ Onze pedidos do Daniel após a v19.9.1, cada um anotado e avaliado antes de qual
 | 10.6 | Rascunhos locais não têm prazo de validade; o código nunca apaga rascunho para liberar quota. A exposição real é a janela de autosave (30 s). | Sem alteração; anotado. |
 
 **Verificações v19.9.2:** sintaxe 42 blocos / 0 erros; cruzamento sem faltas; manifesto 32/32 + config; Playwright 72 OK / 0 falhas, zero erros de console (18 novas), zero erros de console.
+
+---
+
+# Conflito ao encerrar depois de abrir a ficha → v19.9.3 (28/09/2026)
+
+| # | Achado | Onde | Correção |
+|---|---|---|---|
+| 11.1 | Abrir a ficha de registro de um caso já iniciado ativa marcações pelo relógio e grava no prontuário (15 s ou ao trocar de aba): "abrir só para ver" sobe a revisão. | `Intra.html` `ativarPorTempo` (636–639), `CLAV_PONTE.agendar` (1672), `visibilitychange` (1731) | Comportamento mantido (é o espelho da ficha); o sistema principal passa a conviver com ele. |
+| 11.2 | A resolução automática do conflito da ficha (v19.9) exigia `STATE.serverBase`; ao recarregar a página o caso volta do rascunho com `serverBase = null` (`Index.html` init) e o mesmo em "Retomar rascunho local": nesses estados o conflito nunca se resolvia. | `Index.html` `adotarIntraopDoServidor` | Base alternativa: o próprio formulário quando está igual ao último estado sincronizado; `lastServerFingerprint` atualizado ao adotar. |
+| 11.3 | A comparação "só o intraop mudou" incluía `documentos.relatorio_narrativo` (regravado com hora) e por isso falhava mesmo sem edição de ninguém. | `Index.html` `semIntraopNemMetadados` | Passa a usar as exclusões da impressão digital. |
+| 11.4 | `calculos` (IMC, scores, clav_score) entrava na impressão digital de "alterações pendentes"; ao absorver a ficha o score muda e o Encerrar respondia "Há novas alterações pendentes" logo após salvar. | `Index.html` `fingerprintData` | `calculos` fora da comparação (é derivado dos campos que já entram). |
+| 11.5 | O servidor não tinha como saber que as revisões intermediárias eram só da ficha. | `25_Salvamento.gs` `revisoesSomenteDaFicha_` / `assertTransitionRevision_`; `04_Atendimentos.gs` `salvarAtendimento` | Consulta OPERACOES revisão por revisão (`request_id` "INTRA5-…"); aceita salvar/encerrar/reabrir por cima; auditoria registra `rebase_ficha`. Revisão sem registro ou de outra origem continua conflito. |
+| 11.6 | `--topbar-h` só era medido em momentos fixos; quando um chip quebrava linha o cabeçalho crescia e o cartão do paciente e a barra do pré-anestésico ficavam com deslocamento antigo. | `Index.html` `atualizarAlturaTopbar` | `ResizeObserver` no cabeçalho. |
+
+**Verificações v19.9.3:** sintaxe 42 blocos / 0 erros; cruzamento sem faltas; manifesto 32/32 + config; Playwright 79 OK / 0 falhas, zero erros de console (cenários novos: caso sem cópia do servidor + ficha gravou + Encerrar; edição pendente + ficha gravou → salva por cima e encerra preservando a ficha; gravação de outra pessoa continua conflito).
