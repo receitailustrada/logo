@@ -328,11 +328,16 @@ function encerrarAtendimento(atendimentoId, token, userAgent, requestMeta) {
       var alertas = gerarAlertasServidor_(payload, user);
       var graves = alertas.filter(function (a) { return a.tipo === 'danger'; });
       var cientes = Array.isArray(payload.seguranca.alertas_cientes) ? payload.seguranca.alertas_cientes : [];
+      // v19.9.1: a comparação do texto ignora diferenças de espaçamento. A tela
+      // registra a ciência com o id e o texto exatamente como exibidos (inclusive
+      // dos alertas que só o servidor gera); qualquer outra divergência de texto
+      // continua exigindo nova ciência, porque o alerta mudou de conteúdo.
       var faltantes = graves.filter(function (a) {
+        var textoAtual = String(a.texto || '').replace(/\s+/g, ' ').trim();
         return !cientes.some(function (c) {
           var sameId = String(c.alerta_id || c.id || '') === String(a.id || '');
-          var storedText = String(c.texto || '');
-          return sameId && (!storedText || storedText === String(a.texto || ''));
+          var storedText = String(c.texto || '').replace(/\s+/g, ' ').trim();
+          return sameId && (!storedText || storedText === textoAtual);
         });
       });
 

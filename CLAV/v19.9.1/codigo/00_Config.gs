@@ -38,7 +38,7 @@ var CLAV = {
   // na aba CONFIG da planilha, sem alterar código.
   NOME_INSTITUICAO: 'Clínica de Anestesiologia de Vacaria',
   CIDADE_INSTITUICAO: 'Vacaria/RS',
-  VERSION: '2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas',
+  VERSION: '2026.09.28-clav-perioperatorio-v19.9.1-encerramento-cartao-manifesto',
   // Catálogo não mudou neste patch; evita sincronização só por mudança do build.
   CATALOG_VERSION: '2026.09.08-clav-perioperatorio-cfm-q200-v18.2-revisao-adversarial-auditada',
   SCHEMA_VERSION: '8',

@@ -102,3 +102,32 @@ Legenda: **CORRIGIDO** (v19.9) · **MITIGADO** (reduzido, não eliminado) · **D
 - Núcleo de gravação: lock, esquema, idempotência com recibo, revisão, hash significativo, releitura verificada, HISTORICO/OPERACOES/AUDITORIA. A base real confirma (227/227).
 - Motor de faixas de sinais vitais único cliente/servidor com "completo não é normal" e 20 casos de teste.
 - Perfis bem isolados; leituras leves por coluna; soft delete respeitado; PDFs privados por bytes; logo em cache; carimbo por perfil.
+
+---
+
+# Pós-implantação da v19.9 → v19.9.1 (28/09/2026)
+
+## Evidência recebida
+Cinco capturas de tela e o texto da Análise do sistema (23:26): modal "Ciência de alertas graves" com seis itens marcáveis, entre eles "CONDUTA · Conclusão e conduta final ausentes"; abas SRPA e Triagem roladas com o cartão do paciente cortado no topo do menu lateral; Pré-anestésico com a faixa própria visível; Análise dizendo "DIFERENTE DO PACOTE 19.9 (manifesto pendente…)" para 19 módulos e "PENDENTE DE CONFERÊNCIA NO GAS" para os três HTML; `testarFaixasSV` 20 OK no GAS.
+
+## 7. Encerramento (anestesiologista e suporte)
+| # | Achado | Onde | Correção |
+|---|---|---|---|
+| 7.1 | A planilha lança `NOME_OBRIGATORIO`, `PROCEDIMENTO_OBRIGATORIO`, `ANESTESIOLOGISTA_OBRIGATORIO`, `CONCLUSAO_OBRIGATORIA`, `NASCIMENTO_FUTURO` e `INTRA_RESPONSAVEL_OBRIGATORIO` **antes** da checagem de ciência; a tela abria a ciência primeiro e listava "Conclusão e conduta final ausentes" como item marcável. Resultado: ciência marcada, encerramento recusado por um aviso passageiro sem indicar o campo. | `04_Atendimentos.gs` `encerrarAtendimento`; `Index.html` `encerrarAtendimentoUI` | `impedimentosEncerramento()` espelha os seis bloqueios e abre "Encerramento bloqueado" com "Ir ao campo" antes da ciência; bloqueio devolvido pelo servidor cai no mesmo modal. |
+| 7.2 | Três alertas graves existem só no servidor (`LATERALIDADE_INDEVIDA`, `DATA_NASCIMENTO_FUTURA`, `ANESTESIOLOGISTA_AUSENTE`). `acknowledgeAlert` procurava só em `STATE.currentAlerts` e saía em silêncio; a planilha (que compara id + texto) pedia o mesmo alerta para sempre. Idem quando o texto do alerta mudava. | `Index.html` `acknowledgeAlert`, `openAckModal`, `confirmAcknowledgementsAndClose` | Lista do modal guardada e usada como origem; ciência renovada quando o texto muda; trava de repetição com aviso claro; servidor compara texto normalizado por espaços. |
+| 7.3 | `documentos.relatorio_narrativo` (gerado a cada render, com hora e "[ciência registrada]") entrava em `fingerprintData`; após salvar a ciência, `hasUnpersistedChanges()` voltava verdadeiro e o Encerrar dizia "Há novas alterações pendentes". Reproduzido: impressão digital divergindo exatamente nesse campo. | `Index.html` `gerarResumo`, `fingerprintData` | Campo gerado fora da impressão digital; `documentos.resumo` (editável) continua contando. |
+| 7.4 | `unacknowledgedSevereAlerts()` usava `STATE.currentAlerts \|\| gerarAlertas(...)`: lista vazia (verdadeira) pulava a conferência local; após salvar, a lista passa a ser a do servidor, sem estado de ciência. | `Index.html` | Recalcula do formulário; estado de ciência mesclado nos alertas devolvidos pelo salvamento. |
+
+## 8. Cartão do paciente (todas as personas)
+| # | Achado | Onde | Correção |
+|---|---|---|---|
+| 8.1 | Menu lateral sticky com ~1.800 px de altura (1400×800): perto do fim da página o navegador empurra o menu inteiro para cima e o cartão do paciente sai da tela; nas abas curtas isso ocorre com pouca rolagem (SRPA: topo do cartão em −13 px; Documentos −24; Registros −41; Relatórios −68). | `Index.html` CSS `.rail`, `.rail-paciente` | `.rail .rail-card.rail-paciente { position: sticky; top: calc(var(--topbar-h) + 8px); z-index: 3; background: #fff }` em telas ≥1201 px. Medido depois: topo em +102 px (logo abaixo do cabeçalho) em SRPA e Documentos. |
+
+## 9. Análise do sistema (suporte)
+| # | Achado | Onde | Correção |
+|---|---|---|---|
+| 9.1 | Manifesto de `28_Versao.gs` datado de 22/09 (19.4.1) com o módulo 30 sem hash; a v19.9 exigia rodar `adminGerarManifesto` e colar. | `28_Versao.gs` | Algoritmo (`clavHashModulo_`/`clavHashConfig_`) reproduzido em Node (`testes/manifest_tool.js`) e validado: 25/25 módulos intocados iguais ao manifesto antigo; os 19 "DIFERENTE" da Análise real coincidem com a reprodução. Manifesto regenerado com 32 módulos / 376 funções e `config_hash`. |
+| 9.2 | HTML só pode ser medido pelo HtmlService (a hipótese "conteúdo bruto do arquivo" não fechou com a impressão digital impressa pela Análise real), então não foi preenchido às cegas. | `28_Versao.gs` | `adminSelarManifestoHtml` grava o selo (build, data, hashes) em propriedade do script; `clavInventario_` usa o selo quando o manifesto não traz hash; veredito diz exatamente o que executar. |
+
+## Verificações v19.9.1
+Sintaxe 42 blocos / 0 erros; cruzamento de chamadas e IDs sem faltas; manifesto 32/32 + config; Playwright **54 OK / 0 falhas** (12 novas); a suíte na v19.9 reproduz o defeito (46 OK / 8 falhas na v19.9, e as 8 falhas são exatamente as verificações novas: o modal de ciência lista "Conclusão e conduta final ausentes" como item marcável, o alerta que só a planilha gera nunca encerra o caso, e o cartão do paciente fica a −886 px no fim da aba SRPA).

@@ -1,0 +1,11 @@
+Arquivos do projeto que NAO estao nesta pasta publica:
+
+  28_Versao.gs         (alterado na v19.9.1: CLAV_BUILD_ 19.9.1, CLAV_MANIFESTO_ com hashes reais,
+                        adminSelarManifestoHtml / clavSeloHtml_, clavInventario_ usando o selo)
+  08_Planilha_Base.gs  (alterado na v19.9, sem mudanca na v19.9.1)
+
+Motivo: contem telefones, e-mails e hashes de senha da equipe (usuarios semente e lista de acesso da Analise).
+Nao devem ficar em repositorio publico. Os dois foram entregues completos no ZIP privado enviado no chat
+(CLAV_v19.9.1_completo_36_arquivos.zip), junto com os outros 34.
+
+Na v19.9.1 mudaram 4 arquivos: Index.html, 00_Config.gs, 04_Atendimentos.gs (aqui) e 28_Versao.gs (ZIP).

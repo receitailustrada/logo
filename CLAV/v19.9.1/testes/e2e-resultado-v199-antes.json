@@ -1,7 +1,7 @@
 {
-  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-fix",
+  "src": "/tmp/claude-0/-home-user-logo/0bcdd223-28e8-5b08-8a09-725cac696f7a/scratchpad/clav-v199",
   "versao": "2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas",
-  "data": "2026-09-28T00:48:00.296Z",
+  "data": "2026-09-28T03:27:08.024Z",
   "resultados": [
     {
       "name": "Index: módulo principal carregou e login habilitado",
@@ -26,17 +26,17 @@
     {
       "name": "Index: URL da ficha leva caso, slot e sessão no fragmento",
       "ok": true,
-      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp"
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-kw03mbtvqf"
     },
     {
       "name": "Index: URL da ficha não leva o token na query",
       "ok": true,
-      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp"
+      "detail": "https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-kw03mbtvqf"
     },
     {
       "name": "Index: botão \"Abrir a ficha em outra aba\" abre a URL com sessão",
       "ok": true,
-      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-uhb8ig6c5zp\",\"name\":\"clav-intra-1\"}]"
+      "detail": "[{\"url\":\"https://script.google.com/macros/s/MOCK_DEPLOY/exec?page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-kw03mbtvqf\",\"name\":\"clav-intra-1\"}]"
     },
     {
       "name": "Index: PA 180/80 gera alerta SV_PAS_CRITICO no painel",
@@ -111,7 +111,7 @@
     {
       "name": "Intra: salvar no prontuário confirma (intraopSalvar)",
       "ok": true,
-      "detail": "Salvo no prontuário às 00:47:56 · rev. 2"
+      "detail": "Salvo no prontuário às 03:25:26 · rev. 2"
     },
     {
       "name": "Intra: após o Index gravar, a ficha relê a revisão e reenvia (conflito resolvido)",
@@ -136,7 +136,7 @@
     {
       "name": "Intra: após reentrar, a ficha volta a gravar no prontuário",
       "ok": true,
-      "detail": "Salvo no prontuário às 00:47:56 · rev. 5"
+      "detail": "Salvo no prontuário às 03:25:26 · rev. 5"
     },
     {
       "name": "Intra: sem erros de JavaScript no console",
@@ -205,6 +205,66 @@
     },
     {
       "name": "Intra RO: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: conclusão em branco abre \"Encerramento bloqueado\" (sem checkbox, sem chamar a planilha)",
+      "ok": false,
+      "detail": "{\"aberto\":true,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[\"SV_PAS_CRITICO\",\"CONCLUSAO_AUSENTE\"],\"confirmVisivel\":true,\"chamadasEncerrar\":0,\"toasts\":[\"Acesso autorizado.\",\"Atendimento carregado. Rascunhos anteriores permanecem em Retomar rascunho local.\"]}"
+    },
+    {
+      "name": "Encerrar: \"Ir ao campo\" abre o pré-anestésico, expande o bloco e foca a Conclusão",
+      "ok": false,
+      "detail": "{\"secao\":false,\"modalFechado\":false,\"boxAberto\":true,\"focado\":false}"
+    },
+    {
+      "name": "Encerrar: Conclusão \"Apto\" gravada no formulário pelo controle pesquisável",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: com a conclusão preenchida, pede a ciência dos alertas graves da tela (PAS 180)",
+      "ok": true,
+      "detail": "{\"aberto\":true,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[\"SV_PAS_CRITICO\"],\"confirmVisivel\":true,\"chamadasEncerrar\":0,\"toasts\":[\"Acesso autorizado.\",\"Atendimento carregado. Rascunhos anteriores permanecem em Retomar rascunho local.\",\"Salvo com sucesso na planilha.\"]}"
+    },
+    {
+      "name": "Encerrar: alerta que só a planilha gera (lateralidade indevida) chega ao modal de ciência",
+      "ok": false,
+      "detail": "{\"aberto\":false,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[\"SV_PAS_CRITICO\"],\"confirmVisivel\":true,\"chamadasEncerrar\":0,\"toasts\":[]}"
+    },
+    {
+      "name": "Encerrar: ciência do alerta do servidor gravada com o texto exato e atendimento ENCERRADO na planilha",
+      "ok": false,
+      "detail": "{\"status\":\"ABERTO\",\"textoLat\":null,\"modalFechado\":true,\"chamadas\":0,\"locked\":false}"
+    },
+    {
+      "name": "Encerrar: sem erros de JavaScript no console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Encerrar: bloqueio devolvido pela planilha vira \"Encerramento bloqueado\" com a mensagem do servidor e botão para o campo",
+      "ok": false,
+      "detail": "{\"aberto\":false,\"titulo\":\"Ciência de alertas graves\",\"impedimentos\":[],\"textos\":[],\"acks\":[],\"confirmVisivel\":true,\"chamadasEncerrar\":0,\"toasts\":[]}"
+    },
+    {
+      "name": "Encerrar: se a planilha repete a mesma exigência após a ciência salva, a tela avisa em vez de reabrir o modal sem fim",
+      "ok": false,
+      "detail": "{\"antes\":[],\"depois\":{\"aberto\":false,\"chamadas\":0,\"toasts\":[]}}"
+    },
+    {
+      "name": "Cartão do paciente: no fim da aba SRPA continua inteiro e visível logo abaixo do cabeçalho",
+      "ok": false,
+      "detail": "{\"scrollY\":1220,\"top\":-886,\"bottom\":-715,\"topbarBottom\":146,\"altura\":800,\"nome\":\"Maria da Silva\",\"railAltura\":1722}"
+    },
+    {
+      "name": "Cartão do paciente: idem na aba Documentos",
+      "ok": false,
+      "detail": "{\"scrollY\":1220,\"top\":-886,\"topbarBottom\":146,\"bottom\":-715,\"altura\":800}"
+    },
+    {
+      "name": "Encerrar/cartão: sem erros de JavaScript no console",
       "ok": true,
       "detail": ""
     },

@@ -706,6 +706,12 @@
     .ack-check { display:flex; gap:9px; align-items:flex-start; border:1px solid var(--line); border-radius:14px; padding:10px; background:#fff; }
     .ack-check input { width:18px; height:18px; flex:0 0 auto; }
     .ack-check span { font-size:10.5px; line-height:1.45; }
+    /* v19.9.1: impedimentos do encerramento (bloqueios da planilha) no mesmo modal da ciência */
+    .ack-check.ack-impedimento { align-items:center; }
+    .ack-check.ack-impedimento > i { color:#b42318; font-size:18px; flex:0 0 auto; }
+    .ack-check.ack-impedimento > span { flex:1; min-width:0; }
+    .ack-check.ack-impedimento .btn { flex:0 0 auto; padding:6px 10px; font-size:11px; white-space:nowrap; }
+    .campo-impedimento { outline:3px solid rgba(180,35,24,.55); outline-offset:3px; border-radius:14px; transition:outline-color .6s ease; }
     .intra-quick { display:grid; gap:10px; }
     .touch-row { display:flex; flex-wrap:wrap; gap:8px; }
     .touch-chip { min-height:46px; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--muted); padding:10px 13px; font-size:11px; font-weight:900; }
@@ -829,6 +835,13 @@
        Fica no topo do menu lateral (sticky no computador) e, quando o menu está
        recolhido ou empilhado (tablet/celular), vira a faixa fixa do cabeçalho. */
     .rail-card.rail-paciente { border-left:4px solid var(--brand); padding:13px 14px 14px; }
+    /* v19.9.1: o cartão do paciente fica preso sob o cabeçalho mesmo quando o menu
+       lateral é mais alto que a tela. Antes, perto do fim da página, o menu inteiro
+       era empurrado para cima e o nome do paciente saía de vista (SRPA, Triagem,
+       Documentos, Registros…); só o pré-anestésico, que tem faixa própria, não sofria. */
+    @media (min-width:1201px) {
+      .rail .rail-card.rail-paciente { position:-webkit-sticky; position:sticky; top:calc(var(--topbar-h, 88px) + 8px); z-index:3; background:#fff; }
+    }
     .rail-paciente > strong { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--brand); }
     .rail-paciente .pcard-card { display:grid; grid-template-columns:46px minmax(0,1fr); gap:10px; align-items:center; margin:9px 0 0; }
     .pcard-avatar { position:relative; width:46px; height:46px; border-radius:50%; background:#e2e8f0; color:#64748b; display:grid; place-items:center; font-size:22px; flex:0 0 auto; }
@@ -1745,7 +1758,7 @@ html[data-clav-ia-theme]{color-scheme:light;}
     logo depois por google.script.run.inicializar(). Assim, a página também mostra
     uma mensagem útil quando a ponte do Apps Script ou a autorização falham.
   -->
-  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9-ficha-sessao-integridade-alertas","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
+  <script id="clavBootstrapData" type="application/json">{"appName":"CLAV | Sistema Perioperatório","shortName":"CLAV","version":"2026.09.28-clav-perioperatorio-v19.9.1-encerramento-cartao-manifesto","schemaVersion":"8","logoUrl":"https://raw.githubusercontent.com/receitailustrada/logo/refs/heads/main/clav-logotipo-fundo-branco.png","installed":false,"installationMessage":"","localAutosaveSeconds":30,"spreadsheetSaveMode":"MANUAL_ONLY","webAppUrl":""}</script>
   <script>
     // Defesa adicional para Google Sites: mesmo que uma extensão do navegador
     // ou uma manutenção futura introduza uma tag <form>, a navegação nativa
@@ -2487,6 +2500,9 @@ html[data-clav-ia-theme]{color-scheme:light;}
       lookups: {},
       current: null,
       records: [],
+      ackModalAlerts: [],
+      impedimentosModal: [],
+      ackUltimaAssinatura: '',
       conditionStates: {},
       localAutosaveInterval: null,
       localAutosaveSeconds: Math.max(10, Number(BOOT.localAutosaveSeconds || 30)),
@@ -6941,7 +6957,12 @@ html[data-clav-ia-theme]{color-scheme:light;}
           STATE.current = changedDuringRequest ? mergeSavedIdentity(liveData, canonical, STATE.lastSavedAt) : canonical;
           fillForm(STATE.current);
           // Recalcula alertas do conteúdo atual; uma resposta antiga não substitui alertas da edição nova.
-          if (!changedDuringRequest && Array.isArray(res.alertas)) renderAlertas(res.alertas.map(a => Object.assign({}, a, { ciente: !!a.ciente })));
+          // v19.9.1: o servidor não devolve o estado de ciência; sem isto, alertas já lidos
+          // reapareciam como "Ciência pendente" logo após salvar.
+          if (!changedDuringRequest && Array.isArray(res.alertas)) {
+            const cientesSalvos = new Set(((getNested(STATE.current, 'seguranca.alertas_cientes') || []).map(x => String(x.alerta_id || x.id || ''))));
+            renderAlertas(res.alertas.map(a => Object.assign({}, a, { ciente: !!a.ciente || cientesSalvos.has(String(a.id || '')) })));
+          }
           STATE.dirty = changedDuringRequest;
           saveLocalDraft({ silent: true });
           retireSavedDraftAlias(context.draftKey, draftStorageKey());
@@ -7026,6 +7047,12 @@ html[data-clav-ia-theme]{color-scheme:light;}
       if (hasUnpersistedChanges()) { toast('Há novas alterações pendentes. Salve-as antes de encerrar.', 'warning', 7500); return; }
       const id = getNested(STATE.current, 'atendimento.atendimento_id');
       if (!id) { toast('Salve o atendimento na planilha antes de encerrar.', 'warning'); return; }
+      // v19.9.1: os bloqueios rígidos da planilha (nome, procedimento, anestesiologista
+      // responsável, conclusão, nascimento válido, responsável da ficha iniciada) são
+      // conferidos ANTES da ciência de alertas. Antes, a tela pedia a ciência, o médico
+      // marcava tudo e a planilha recusava o encerramento sem indicar o campo.
+      const impedimentos = impedimentosEncerramento(collectForm());
+      if (impedimentos.length) { STATE.pendingCloseAfterAck = false; openImpedimentosModal(impedimentos); return; }
       const unread = unacknowledgedSevereAlerts();
       if (unread.length) { STATE.pendingCloseAfterAck = true; STATE.ackCaseContext = captureCaseContext(); openAckModal(unread); return; }
       const context = captureCaseContext();
@@ -7036,9 +7063,22 @@ html[data-clav-ia-theme]{color-scheme:light;}
         const res = await server('encerrarAtendimento', id, context.token, navigator.userAgent, { baseRevision: Number(getNested(before, 'atendimento.revision') || 0) });
         if (!isActiveCaseContext(context)) return;
         if (res.requiresAcknowledgement) {
-          STATE.pendingCloseAfterAck = true; STATE.ackCaseContext = context; openAckModal(res.alertas || []);
+          const pendentes = (Array.isArray(res.alertas) ? res.alertas : []).filter(a => a && a.id);
+          // v19.9.1: se a planilha devolve exatamente a mesma exigência logo depois de a
+          // ciência ter sido registrada e salva, algo impediu a gravação; avisar é melhor
+          // do que reabrir o mesmo modal sem fim ("não deixa encerrar mesmo marcando").
+          const assinatura = pendentes.map(a => String(a.id || '') + '\u0001' + String(a.texto || '')).join('\u0002');
+          if (assinatura && assinatura === STATE.ackUltimaAssinatura) {
+            STATE.ackUltimaAssinatura = '';
+            setSaveStatus('error', 'Ciência não reconhecida pela planilha');
+            toast('A planilha não reconheceu a ciência registrada para: ' + pendentes.map(a => a.categoria || a.id).join(', ') + '. Salve o atendimento, recarregue a página e tente encerrar de novo; se persistir, abra um chamado informando o horário.', 'error', 12000);
+            return;
+          }
+          STATE.ackUltimaAssinatura = assinatura;
+          STATE.pendingCloseAfterAck = true; STATE.ackCaseContext = context; openAckModal(pendentes);
           setSaveStatus('pending', 'Ciência de alertas necessária'); return;
         }
+        STATE.ackUltimaAssinatura = '';
         const canonical = normalizeClientData(res.atendimento);
         assertSaveIdentity(before, canonical);
         const live = collectForm();
@@ -7057,7 +7097,13 @@ html[data-clav-ia-theme]{color-scheme:light;}
         else { $('#encerramentoModal').classList.remove('hide'); toast('Atendimento encerrado. Alertas graves, quando presentes, ficaram registrados com ciência.', 'success', 6500); }
         broadcastActiveCase('closed');
       } catch (err) {
-        if (isActiveCaseContext(context)) { saveLocalDraft({ silent: true }); setSaveStatus('error', 'Falha ao encerrar'); toast(err.message || 'Não foi possível encerrar.', 'error', 7500); }
+        if (isActiveCaseContext(context)) {
+          saveLocalDraft({ silent: true }); setSaveStatus('error', 'Falha ao encerrar');
+          // v19.9.1: bloqueio devolvido pela planilha vira o mesmo modal de impedimentos, com botão para o campo.
+          const impedimento = impedimentoDoErroServidor(err);
+          if (impedimento) openImpedimentosModal([impedimento]);
+          else toast(err.message || 'Não foi possível encerrar.', 'error', 7500);
+        }
       } finally { if (STATE.lifecycleInFlight === context) STATE.lifecycleInFlight = null; }
     }
 
@@ -9715,19 +9761,32 @@ html[data-clav-ia-theme]{color-scheme:light;}
     function openAlertDrawer() { $('#alertDrawer').classList.add('open'); $('#alertDrawerBackdrop').classList.add('open'); }
     function closeAlertDrawer() { $('#alertDrawer').classList.remove('open'); $('#alertDrawerBackdrop').classList.remove('open'); }
 
-    function acknowledgeAlert(alertId) {
-      const alert = (STATE.currentAlerts || []).find(x => x.id === alertId && x.tipo === 'danger');
-      if (!alert || alert.ciente) return;
+    function acknowledgeAlert(alertId, origem) {
+      alertId = String(alertId || '');
+      // v19.9.1: procura primeiro na lista exibida no modal (pode conter alertas que só a
+      // planilha gera, como lateralidade indevida) e depois nos alertas da tela. Antes,
+      // um alerta desconhecido pela tela era ignorado em silêncio e o encerramento
+      // voltava a pedir a mesma ciência para sempre.
+      const fontes = [];
+      if (Array.isArray(origem) && origem.length) fontes.push(origem);
+      fontes.push(STATE.currentAlerts || []);
+      let alert = null;
+      for (const lista of fontes) { alert = lista.find(x => x && String(x.id || '') === alertId && x.tipo === 'danger') || null; if (alert) break; }
+      if (!alert) return false;
       STATE.current = collectForm();
-      const list = STATE.current.seguranca.alertas_cientes || [];
-      if (!list.some(x => String(x.alerta_id || x.id || '') === alertId)) {
-        list.push({ alerta_id: alertId, texto: alert.texto, categoria: alert.categoria, ciente_por: STATE.user ? STATE.user.nome : '', ciente_em: new Date().toISOString(), aba_id: TAB_ID });
-      }
+      const list = Array.isArray(STATE.current.seguranca.alertas_cientes) ? STATE.current.seguranca.alertas_cientes : [];
+      const atual = list.find(x => String(x.alerta_id || x.id || '') === alertId);
+      // A planilha compara id e texto: se o alerta mudou de redação (valor novo do
+      // sinal vital), a ciência é renovada com o texto exibido agora.
+      if (atual && String(atual.texto || '') === String(alert.texto || '')) return true;
+      const registro = { alerta_id: alertId, texto: alert.texto, categoria: alert.categoria, ciente_por: STATE.user ? STATE.user.nome : '', ciente_em: new Date().toISOString(), aba_id: TAB_ID };
+      if (atual) Object.assign(atual, registro); else list.push(registro);
       STATE.current.seguranca.alertas_cientes = list;
       markDirty();
       calcularTudo();
       saveLocalDraft({ silent: true });
       toast('Ciência registrada no rascunho. Salve na planilha para consolidar a auditoria.', 'success', 6000);
+      return true;
     }
 
     function acknowledgeAllVisibleAlerts() {
@@ -9735,11 +9794,108 @@ html[data-clav-ia-theme]{color-scheme:light;}
     }
 
     function unacknowledgedSevereAlerts() {
-      return (STATE.currentAlerts || gerarAlertas(collectForm())).filter(x => x.tipo === 'danger' && !x.ciente);
+      // v19.9.1: recalcula do formulário atual. A lista em memória pode ser a devolvida
+      // pelo servidor no último salvamento (sem o estado de ciência desta tela) ou estar
+      // vazia, e uma lista vazia pulava a conferência local.
+      return gerarAlertas(collectForm()).filter(x => x.tipo === 'danger' && !x.ciente);
+    }
+
+    // ------------------------------------------------------------------
+    // v19.9.1 — Encerramento: impedimentos (bloqueios rígidos da planilha)
+    // separados da ciência de alertas graves. Espelha as validações de
+    // encerrarAtendimento (04_Atendimentos.gs): mesma ordem, mesmos códigos.
+    // ------------------------------------------------------------------
+    const IMPEDIMENTOS_ENCERRAMENTO = {
+      NOME_OBRIGATORIO: { rotulo: 'Nome do paciente', secao: 'paciente', seletor: '#pacienteNome', texto: 'Informe o nome completo do paciente em "Paciente e agenda".' },
+      PROCEDIMENTO_OBRIGATORIO: { rotulo: 'Procedimento proposto', secao: 'paciente', seletor: '#procSearch', texto: 'Selecione o procedimento proposto em "Paciente e agenda".' },
+      ANESTESIOLOGISTA_OBRIGATORIO: { rotulo: 'Anestesiologista responsável', secao: 'preop', seletor: '#anestSelect', texto: 'Defina o anestesiologista responsável no cabeçalho da consulta pré-anestésica (Resolução CFM nº 2.174/2017).' },
+      CONCLUSAO_OBRIGATORIA: { rotulo: 'Conclusão da avaliação pré-anestésica', secao: 'preop', seletor: '#conclusao', texto: 'Escolha a Conclusão (Apto, Apto com recomendações, Pendente de exames/parecer…) no bloco "Solicitações, avaliações complementares e pareceres" da consulta pré-anestésica.' },
+      NASCIMENTO_FUTURO: { rotulo: 'Data de nascimento', secao: 'paciente', seletor: '#nascimentoMask', texto: 'A data de nascimento informada está no futuro. Corrija-a em "Paciente e agenda".' },
+      INTRA_RESPONSAVEL_OBRIGATORIO: { rotulo: 'Anestesiologista responsável na ficha intraoperatória', secao: 'intraop', seletor: '', texto: 'A ficha intraoperatória foi iniciada sem anestesiologista responsável. Abra a ficha e informe-o antes de encerrar.' }
+    };
+    function impedimentosEncerramento(d) {
+      d = normalizeClientData(d || collectForm());
+      const lista = [];
+      const add = (codigo, texto) => { const base = IMPEDIMENTOS_ENCERRAMENTO[codigo] || {}; lista.push(Object.assign({ codigo }, base, texto ? { texto } : {})); };
+      const p = d.paciente || {}, pr = d.procedimento || {}, pre = d.preop || {}, cond = d.conduta || {}, intra = d.intraop || {}, at = d.atendimento || {};
+      if (!String(p.nome || '').trim()) add('NOME_OBRIGATORIO');
+      if (!String(pr.nome || '').trim()) add('PROCEDIMENTO_OBRIGATORIO');
+      if (!String(pre.anestesiologista || at.anestesiologista || '').trim()) add('ANESTESIOLOGISTA_OBRIGATORIO');
+      if (!String(cond.conclusao || '').trim()) add('CONCLUSAO_OBRIGATORIA');
+      const nascIso = String(p.nascimento || '').slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(nascIso)) {
+        const hoje = new Date();
+        const hojeIso = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+        if (nascIso > hojeIso) add('NASCIMENTO_FUTURO', 'A data de nascimento (' + isoToBr(nascIso) + ') está no futuro. Corrija-a em "Paciente e agenda".');
+      }
+      const intraIniciado = !!(intra.inicio_anestesia || (Array.isArray(intra.sinais) && intra.sinais.length));
+      if (intraIniciado && !String(intra.anestesiologistas_responsaveis || '').trim()) add('INTRA_RESPONSAVEL_OBRIGATORIO');
+      return lista;
+    }
+    function impedimentoDoErroServidor(err) {
+      const codigo = String((err && err.code) || '');
+      const base = IMPEDIMENTOS_ENCERRAMENTO[codigo];
+      if (!base) return null;
+      return Object.assign({ codigo }, base, err && err.message ? { texto: String(err.message) } : {});
+    }
+    const ACK_MODAL_TEXTOS = {
+      titulo: 'Ciência de alertas graves',
+      subtitulo: 'Os alertas abaixo foram exibidos. Marque cada item como lido para registrar a ciência e concluir o encerramento.',
+      tituloImpedimentos: 'Encerramento bloqueado',
+      subtituloImpedimentos: 'A planilha não encerra o atendimento enquanto os itens abaixo estiverem em branco. Corrija-os e clique em Encerrar de novo; se houver alertas graves, a ciência será pedida em seguida.'
+    };
+    function prepararModalCiencia(modo) {
+      const bloqueio = modo === 'impedimentos';
+      const titulo = $('#alertAckTitle');
+      const subtitulo = titulo ? titulo.nextElementSibling : null;
+      if (titulo) titulo.textContent = bloqueio ? ACK_MODAL_TEXTOS.tituloImpedimentos : ACK_MODAL_TEXTOS.titulo;
+      if (subtitulo && subtitulo.tagName === 'P') subtitulo.textContent = bloqueio ? ACK_MODAL_TEXTOS.subtituloImpedimentos : ACK_MODAL_TEXTOS.subtitulo;
+      const aviso = $('#alertAckModal .notice-q200'); if (aviso) aviso.classList.toggle('hide', bloqueio);
+      const confirmar = $('#confirmAckBtn'); if (confirmar) confirmar.classList.toggle('hide', bloqueio);
+      const modal = $('#alertAckModal'); if (modal) modal.classList.toggle('modo-impedimentos', bloqueio);
+    }
+    function openImpedimentosModal(lista) {
+      STATE.impedimentosModal = (Array.isArray(lista) ? lista : []).filter(Boolean);
+      STATE.ackModalAlerts = [];
+      STATE.ackUltimaAssinatura = '';
+      prepararModalCiencia('impedimentos');
+      const root = $('#alertAckList');
+      root.innerHTML = STATE.impedimentosModal.map((imp, i) => `<div class="ack-check ack-impedimento"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i><span><b>${escapeHtml(imp.rotulo || 'Campo obrigatório')}</b><small>${escapeHtml(imp.texto || '')}</small></span>${imp.secao ? `<button type="button" class="btn btn-outline" data-ir-impedimento="${i}"><i class="fa-solid fa-arrow-right"></i> Ir ao campo</button>` : ''}</div>`).join('') || '<div class="alert ok">Nenhum impedimento.</div>';
+      root.querySelectorAll('[data-ir-impedimento]').forEach(btn => btn.addEventListener('click', () => irParaImpedimento(STATE.impedimentosModal[Number(btn.dataset.irImpedimento)])));
+      $('#alertAckModal').classList.remove('hide');
+      document.body.classList.add('modal-open');
+    }
+    function irParaImpedimento(imp) {
+      closeAckModal();
+      if (!imp || !imp.secao) return;
+      showSection(imp.secao);
+      if (!imp.seletor) { toast(imp.texto || 'Corrija o item indicado antes de encerrar.', 'warning', 8000); return; }
+      setTimeout(() => {
+        const el = $(imp.seletor);
+        if (!el) { toast(imp.texto || 'Corrija o item indicado antes de encerrar.', 'warning', 8000); return; }
+        const box = el.closest('.subbox.collapsible');
+        if (box && box.classList.contains('collapsed')) { box.classList.remove('collapsed'); atualizarResumoSubbox(box); }
+        const detalhes = el.closest('details'); if (detalhes) detalhes.open = true;
+        const alvo = el.closest('.field') || el;
+        const stickyHeader = imp.secao === 'preop' ? ($('.preop-sticky-header') || $('#preopJumpBar')) : null;
+        const offset = (($('#topbar') && $('#topbar').offsetHeight) || 60) + ((stickyHeader && stickyHeader.offsetHeight) || 0) + 24;
+        const y = alvo.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        alvo.classList.add('campo-impedimento');
+        setTimeout(() => alvo.classList.remove('campo-impedimento'), 3600);
+        // Selects pesquisáveis escondem o <select>: o foco vai para a caixa visível.
+        const foco = (el.tagName === 'SELECT' && el._q200Enhanced && el._q200Enhanced.input) ? el._q200Enhanced.input : el;
+        setTimeout(() => { try { foco.focus({ preventScroll: true }); } catch (ignored) {} }, 420);
+      }, 160);
     }
 
     function openAckModal(alerts) {
-      const list = Array.isArray(alerts) ? alerts : unacknowledgedSevereAlerts();
+      const list = (Array.isArray(alerts) ? alerts : unacknowledgedSevereAlerts()).filter(a => a && a.id);
+      // v19.9.1: guarda os alertas exatamente como exibidos (inclusive os que só a
+      // planilha gera) para que a ciência seja registrada com o mesmo id e texto.
+      STATE.ackModalAlerts = list.map(a => ({ id: String(a.id), tipo: 'danger', texto: String(a.texto || ''), categoria: String(a.categoria || 'Alerta grave') }));
+      STATE.impedimentosModal = [];
+      prepararModalCiencia('ciencia');
       $('#alertAckList').innerHTML = list.map(a => `<label class="ack-check"><input type="checkbox" data-ack-confirm="${escapeAttr(a.id)}"><span><b>${escapeHtml(a.categoria || 'Alerta grave')}</b><small>${escapeHtml(a.texto)}</small></span></label>`).join('') || '<div class="alert ok">Nenhum alerta grave pendente.</div>';
       $('#alertAckModal').classList.remove('hide');
       document.body.classList.add('modal-open');
@@ -9749,6 +9905,9 @@ html[data-clav-ia-theme]{color-scheme:light;}
       $('#alertAckModal').classList.add('hide');
       document.body.classList.remove('modal-open');
       STATE.pendingCloseAfterAck = false;
+      STATE.ackUltimaAssinatura = '';
+      STATE.impedimentosModal = [];
+      prepararModalCiencia('ciencia');
     }
 
     async function confirmAcknowledgementsAndClose() {
@@ -9756,7 +9915,8 @@ html[data-clav-ia-theme]{color-scheme:light;}
       if (!isActiveCaseContext(context)) { closeAckModal(); return; }
       const boxes = $$('[data-ack-confirm]');
       if (boxes.length && boxes.some(x => !x.checked)) { toast('Marque cada alerta como lido antes de prosseguir.', 'warning', 5200); return; }
-      boxes.forEach(box => acknowledgeAlert(box.dataset.ackConfirm));
+      const exibidos = STATE.ackModalAlerts || [];
+      boxes.forEach(box => acknowledgeAlert(box.dataset.ackConfirm, exibidos));
       $('#alertAckModal').classList.add('hide');
       document.body.classList.remove('modal-open');
       const shouldClose = STATE.pendingCloseAfterAck;
@@ -11127,6 +11287,12 @@ html[data-clav-ia-theme]{color-scheme:light;}
       // para que registros gravados antes desta versão não apareçam como
       // "alterados" só por terem sido abertos.
       if (copy.triagem && copy.triagem.sv_classificacao !== undefined) delete copy.triagem.sv_classificacao;
+      // v19.9.1: documentos.relatorio_narrativo é sempre escrito pelo gerador
+      // (gerarResumo) e traz a hora da prévia e o estado de ciência dos alertas; ele é
+      // regravado a cada render e fazia a tela acusar "novas alterações pendentes" logo
+      // após um salvamento bem-sucedido, travando o encerramento. O texto que o usuário
+      // vê e edita (documentos.resumo) continua contando como alteração.
+      if (copy.documentos && copy.documentos.relatorio_narrativo !== undefined) delete copy.documentos.relatorio_narrativo;
       return stableStringifyClient(copy);
     }
     function stableStringifyClient(value) {

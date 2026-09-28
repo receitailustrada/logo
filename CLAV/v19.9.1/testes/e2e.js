@@ -49,7 +49,7 @@ const MOCK = require('./mock.js')({ VERSION, WEB_URL, FAIXAS });
 const results = [];
 function check(name, cond, detail) { results.push({ name, ok: !!cond, detail: detail === undefined ? '' : String(detail).slice(0, 300) }); console.log((cond ? '  OK   ' : '  FALHA') + ' ' + name + (cond ? '' : '  → ' + String(detail).slice(0, 300))); }
 async function newPage(browser, opts) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await browser.newContext({ viewport: (opts && opts.viewport) || { width: 1280, height: 900 } });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + (e && e.message ? e.message : String(e))));
@@ -221,6 +221,93 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       const opened = await page.evaluate(() => window.__OPENED__);
       check('Intra RO: "Abrir em outra aba para registrar" abre a ficha de registro com sessão', opened.length === 1 && /page=intra&caso=ATD-1&slot=1#clavtk=TOKEN-DENIS-0123456789ABCDEF0123456789/.test(opened[0].url), JSON.stringify(opened));
       check('Intra RO: sem erros de JavaScript no console', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+
+    /* ===================== INDEX: encerramento (v19.9.1) ===================== */
+    console.log('\n[INDEX] encerramento: impedimentos antes da ciência, alerta que só a planilha gera, trava de repetição, cartão do paciente fixo');
+    async function entrarEAbrir(page, antes) {
+      await page.goto(BASE + '/Index.html', { waitUntil: 'load' });
+      await page.waitForFunction(() => window.__CLAV_CLIENT_READY__ === true, null, { timeout: 20000 });
+      await page.waitForFunction(() => { const b = document.getElementById('loginBtn'); return b && !b.disabled; }, null, { timeout: 20000 });
+      if (antes) await page.evaluate(antes);
+      await page.fill('#loginUser', 'denis'); await page.fill('#loginPass', 'Senha!12345'); await page.click('#loginBtn');
+      await page.waitForFunction(() => typeof STATE !== 'undefined' && STATE.user && STATE.user.usuario === 'denis', null, { timeout: 20000 });
+      await page.evaluate(async () => { await abrirRegistro('ATD-1'); });
+      await page.waitForFunction(() => document.getElementById('railPacNome').textContent.includes('Maria'), null, { timeout: 15000 });
+    }
+    const modalEstado = () => ({ aberto: !document.getElementById('alertAckModal').classList.contains('hide'), titulo: document.getElementById('alertAckTitle').textContent.trim(), impedimentos: Array.from(document.querySelectorAll('#alertAckList .ack-impedimento b')).map(b => b.textContent.trim()), textos: Array.from(document.querySelectorAll('#alertAckList .ack-impedimento small')).map(b => b.textContent.trim()), acks: Array.from(document.querySelectorAll('#alertAckList [data-ack-confirm]')).map(x => x.dataset.ackConfirm), confirmVisivel: !document.getElementById('confirmAckBtn').classList.contains('hide'), chamadasEncerrar: window.__MOCK_SERVER__.calls.filter(c => c.fn === 'encerrarAtendimento').length, toasts: Array.from(document.querySelectorAll('#toastWrap .toast')).map(t => t.textContent.trim()) });
+    {
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page);
+      /* 1. conclusão em branco: impedimento, sem chamar a planilha */
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => !document.getElementById('alertAckModal').classList.contains('hide'), null, { timeout: 15000 }).catch(() => {});
+      const m1 = await page.evaluate(modalEstado);
+      check('Encerrar: conclusão em branco abre "Encerramento bloqueado" (sem checkbox, sem chamar a planilha)', m1.aberto && m1.titulo === 'Encerramento bloqueado' && m1.impedimentos.some(t => /Conclusão/.test(t)) && !m1.confirmVisivel && m1.chamadasEncerrar === 0, JSON.stringify(m1));
+      /* 2. Ir ao campo */
+      const irBtn = await page.$('#alertAckList [data-ir-impedimento]');
+      if (irBtn) { await irBtn.click(); await sleep(1100); }
+      const nav = await page.evaluate(() => { const el = document.getElementById('conclusao'); const box = el ? el.closest('.subbox') : null; const visivel = el && el._q200Enhanced ? el._q200Enhanced.input : el; return { secao: document.getElementById('sec-preop').classList.contains('active'), modalFechado: document.getElementById('alertAckModal').classList.contains('hide'), boxAberto: !(box && box.classList.contains('collapsed')), focado: document.activeElement === visivel }; });
+      check('Encerrar: "Ir ao campo" abre o pré-anestésico, expande o bloco e foca a Conclusão', !!irBtn && nav.secao && nav.modalFechado && nav.boxAberto && nav.focado, JSON.stringify(nav));
+      /* 3. conclusão preenchida → ciência dos alertas da tela; a planilha ainda devolve um alerta que só ela gera */
+      await page.evaluate(() => { try { closeAckModal(); } catch (e) {} showSection('preop'); });
+      // preenche a Conclusão pelo controle pesquisável (mesmo caminho do usuário: digitar e Enter)
+      await page.evaluate(() => { const s = document.getElementById('conclusao'); const inp = s._q200Enhanced ? s._q200Enhanced.input : null; if (inp) { inp.focus(); inp.value = 'Apto'; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); inp.blur(); } else { s.value = 'Apto'; s.dispatchEvent(new Event('change', { bubbles: true })); } });
+      await sleep(400);
+      check('Encerrar: Conclusão "Apto" gravada no formulário pelo controle pesquisável', await page.evaluate(() => document.getElementById('conclusao').value === 'Apto' && collectForm().conduta.conclusao === 'Apto'));
+      await page.evaluate(() => { window.__MOCK_SERVER__.alertaSoServidor = { id: 'LATERALIDADE_INDEVIDA', tipo: 'danger', texto: 'Procedimento sem lateralidade anatômica registrado como "Direita". Confirme o procedimento e o lado antes do time out: nomes parecidos (umbilical x inguinal) mudam o sítio cirúrgico.', categoria: 'PROCEDIMENTO' }; });
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => !document.getElementById('alertAckModal').classList.contains('hide') && document.querySelectorAll('#alertAckList [data-ack-confirm]').length > 0, null, { timeout: 20000 }).catch(() => {});
+      const m2 = await page.evaluate(modalEstado);
+      check('Encerrar: com a conclusão preenchida, pede a ciência dos alertas graves da tela (PAS 180)', m2.aberto && m2.titulo === 'Ciência de alertas graves' && m2.acks.includes('SV_PAS_CRITICO') && !m2.acks.includes('LATERALIDADE_INDEVIDA'), JSON.stringify(m2));
+      await page.evaluate(() => document.querySelectorAll('#alertAckList [data-ack-confirm]').forEach(x => { x.checked = true; }));
+      await page.click('#confirmAckBtn');
+      await page.waitForFunction(() => !document.getElementById('alertAckModal').classList.contains('hide') && Array.from(document.querySelectorAll('#alertAckList [data-ack-confirm]')).some(x => x.dataset.ackConfirm === 'LATERALIDADE_INDEVIDA'), null, { timeout: 25000 }).catch(() => {});
+      const m3 = await page.evaluate(modalEstado);
+      check('Encerrar: alerta que só a planilha gera (lateralidade indevida) chega ao modal de ciência', m3.aberto && m3.acks.includes('LATERALIDADE_INDEVIDA'), JSON.stringify(m3));
+      await page.evaluate(() => document.querySelectorAll('#alertAckList [data-ack-confirm]').forEach(x => { x.checked = true; }));
+      if (m3.aberto) await page.click('#confirmAckBtn');
+      await page.waitForFunction(() => typeof STATE !== 'undefined' && STATE.current && STATE.current.atendimento && STATE.current.atendimento.status === 'ENCERRADO', null, { timeout: 25000 }).catch(() => {});
+      const fim = await page.evaluate(() => { const c = (STATE.current.seguranca.alertas_cientes || []); const lat = c.find(x => x.alerta_id === 'LATERALIDADE_INDEVIDA'); return { status: STATE.current.atendimento.status, textoLat: lat ? lat.texto : null, modalFechado: document.getElementById('alertAckModal').classList.contains('hide'), chamadas: window.__MOCK_SERVER__.calls.filter(x => x.fn === 'encerrarAtendimento').length, locked: window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].locked }; });
+      check('Encerrar: ciência do alerta do servidor gravada com o texto exato e atendimento ENCERRADO na planilha', fim.status === 'ENCERRADO' && /lateralidade anatômica/.test(fim.textoLat || '') && fim.modalFechado && fim.locked === true, JSON.stringify(fim));
+      check('Encerrar: sem erros de JavaScript no console', errors.length === 0, errors.join(' | '));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await newPage(browser, { viewport: { width: 1400, height: 800 } });
+      await entrarEAbrir(page, () => { window.__MOCK_SERVER__.DB.atendimentos['ATD-1'].payload.conduta.conclusao = 'Apto'; });
+      /* 4. bloqueio devolvido pela planilha (a tela não previu) */
+      await page.evaluate(() => { try { closeAckModal(); } catch (e) {} acknowledgeAllVisibleAlerts(); window.__MOCK_SERVER__.forcarBloqueio = 'ANESTESIOLOGISTA_OBRIGATORIO'; });
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => !document.getElementById('alertAckModal').classList.contains('hide') && document.getElementById('alertAckTitle').textContent.trim() === 'Encerramento bloqueado', null, { timeout: 20000 }).catch(() => {});
+      const m4 = await page.evaluate(modalEstado);
+      check('Encerrar: bloqueio devolvido pela planilha vira "Encerramento bloqueado" com a mensagem do servidor e botão para o campo', m4.aberto && m4.titulo === 'Encerramento bloqueado' && m4.textos.some(t => /simulado pela planilha/.test(t)) && m4.impedimentos.some(t => /Anestesiologista/.test(t)), JSON.stringify(m4));
+      await page.evaluate(() => { try { closeAckModal(); } catch (e) {} });
+      /* 5. trava de repetição: a planilha repete a mesma exigência depois da ciência salva */
+      await page.evaluate(() => { window.__MOCK_SERVER__.repetirCiencia = true; });
+      await page.click('#closeCaseBtn');
+      await page.waitForFunction(() => !document.getElementById('alertAckModal').classList.contains('hide') && document.querySelectorAll('#alertAckList [data-ack-confirm]').length > 0, null, { timeout: 20000 }).catch(() => {});
+      const antes = await page.evaluate(modalEstado);
+      await page.evaluate(() => document.querySelectorAll('#alertAckList [data-ack-confirm]').forEach(x => { x.checked = true; }));
+      if (antes.aberto) await page.click('#confirmAckBtn');
+      await sleep(3500);
+      const trava = await page.evaluate(modalEstado);
+      check('Encerrar: se a planilha repete a mesma exigência após a ciência salva, a tela avisa em vez de reabrir o modal sem fim', antes.aberto && antes.acks.includes('SO_SERVIDOR_TEIMOSO') && !trava.aberto && trava.toasts.some(t => /não reconheceu a ciência/i.test(t)) && trava.chamadasEncerrar === 3, JSON.stringify({ antes: antes.acks, depois: { aberto: trava.aberto, chamadas: trava.chamadasEncerrar, toasts: trava.toasts.slice(-2) } }));
+      /* 6. cartão do paciente preso sob o cabeçalho no fim de uma aba curta (1400×800) */
+      await page.evaluate(() => { closeAckModal(); showSection('srpa'); });
+      await sleep(500);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await sleep(600);
+      const st = await page.evaluate(() => { const r = document.getElementById('railPacienteCard').getBoundingClientRect(); const tb = document.getElementById('topbar').getBoundingClientRect(); return { scrollY: Math.round(window.scrollY), top: Math.round(r.top), bottom: Math.round(r.bottom), topbarBottom: Math.round(tb.bottom), altura: window.innerHeight, nome: document.getElementById('railPacNome').textContent.trim(), railAltura: Math.round(document.querySelector('.rail').getBoundingClientRect().height) }; });
+      check('Cartão do paciente: no fim da aba SRPA continua inteiro e visível logo abaixo do cabeçalho', st.scrollY > 200 && st.top >= st.topbarBottom - 2 && st.bottom <= st.altura && /Maria/.test(st.nome), JSON.stringify(st));
+      await page.evaluate(() => showSection('documentos'));
+      await sleep(500);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await sleep(600);
+      const st2 = await page.evaluate(() => { const r = document.getElementById('railPacienteCard').getBoundingClientRect(); const tb = document.getElementById('topbar').getBoundingClientRect(); return { scrollY: Math.round(window.scrollY), top: Math.round(r.top), topbarBottom: Math.round(tb.bottom), bottom: Math.round(r.bottom), altura: window.innerHeight }; });
+      check('Cartão do paciente: idem na aba Documentos', st2.scrollY > 200 && st2.top >= st2.topbarBottom - 2 && st2.bottom <= st2.altura, JSON.stringify(st2));
+      check('Encerrar/cartão: sem erros de JavaScript no console', errors.length === 0, errors.join(' | '));
       await ctx.close();
     }
 
